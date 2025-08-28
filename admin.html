@@ -1,14 +1,14 @@
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin — GrowIndia Jobs</title>
-  <link rel="stylesheet" href="/assets/app.css"/>
+
+  <link rel="stylesheet" href="/app.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=2"></script>
-  <script src="/assets/components.js"></script>
+  <script src="/components.js"></script>
 </head>
 <body>
   <div class="container" style="padding-top:18px">
@@ -37,7 +37,7 @@
   </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", async ()=>{
+document.addEventListener("DOMContentLoaded", async ()=> {
   const s=await GI.requireAuth(); if(!s) return;
   const admin=await GI.isAdmin(); GI.header(s.user, admin);
   document.getElementById("logoutBtn").addEventListener("click", async ()=>{ await sbAuth.signOut(); location.href="/index.html"; });
