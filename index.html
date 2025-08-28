@@ -1,46 +1,50 @@
-
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GrowIndia Jobs — Login</title>
-  <link rel="stylesheet" href="/app.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=1"></script>
-  <script src="/components.js?v=1"></script>
+  <link rel="stylesheet" href="/app.css" />
 </head>
 <body>
-  <header class="header"><nav><a class="brand" href="/jobs.html">GrowIndia Jobs</a><div class="nav"><a class="btn ghost" href="/jobs.html">Browse Jobs</a></div></nav></header>
-  <div class="container">
-    <p class="kicker">Welcome back</p>
-    <h1 class="h1">Sign in to post jobs and manage your company.</h1>
+  <main class="container" style="max-width:760px;margin:48px auto;">
+    <h1>Welcome back</h1>
+    <p>Sign in to post jobs and manage your company.</p>
 
-    <form id="loginForm" class="card grid">
-      <label>Email
-        <input id="email" class="input" type="email" placeholder="you@example.com" required/>
-      </label>
-      <button class="btn primary" type="submit">Send magic link</button>
-      <div id="msg" class="muted"></div>
+    <form id="loginform" class="card" style="padding:16px;">
+      <label for="email" class="label">Email</label>
+      <input id="email" type="email" class="input" placeholder="you@example.com" required />
+      <button id="sendbtn" class="btn primary" type="submit" style="margin-top:12px;">Send magic link</button>
+      <p id="msg" class="muted" style="margin-top:12px;"></p>
     </form>
-  </div>
+  </main>
 
-<script>
-const form = document.getElementById("loginForm");
-const msg = document.getElementById("msg");
-form.addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  msg.textContent = "";
-  const email = document.getElementById("email").value.trim();
-  try{
-    const redirectTo = `${location.origin}/post-auth.html`;
-    const { error } = await sbAuth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo }});
-    if(error) throw error;
-    msg.textContent = "Check your email for the sign-in link.";
-  }catch(err){
-    msg.textContent = "Error: " + (err.message || err);
-  }
-});
-</script>
+  <!-- JS (order matters!) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=5"></script>
+  <script src="/components.js?v=5"></script>
+
+  <script>
+    (async () => {
+      // If already signed in, bounce to post-auth
+      const s = await GI.getSession();
+      if (s) location.href = "/post-auth.html";
+
+      const form = document.getElementById("loginform");
+      const email = document.getElementById("email");
+      const msg = document.getElementById("msg");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        msg.textContent = "Sending magic link…";
+        const { error } = await sbAuth.signInWithOtp({
+          email: email.value,
+          options: {
+            emailRedirectTo: `${location.origin}/post-auth.html`,
+          }
+        });
+        msg.textContent = error ? `Error: ${error.message}` : "Check your email for the sign-in link.";
+      });
+    })();
+  </script>
 </body>
 </html>
