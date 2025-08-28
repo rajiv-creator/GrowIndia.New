@@ -1,53 +1,155 @@
-
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Admin — GrowIndia</title>
-  <link rel="stylesheet" href="/app.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=1"></script>
-  <script src="/components.js?v=1"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — GrowIndia Jobs</title>
+  <link rel="stylesheet" href="/app.css" />
 </head>
 <body>
-  <div class="container">
-    <div id="banner" class="card warn hidden">You are not an admin.</div>
+  <!-- scripts (bump the v= numbers) -->
+  <script src="/config.js?v=3"></script>
+  <script src="/components.js?v=4"></script>
 
-    <div class="card">
-      <h2 class="h2">Companies</h2>
-      <table class="table"><thead><tr><th>Name</th><th>Owner</th><th>Website</th><th>Created</th></tr></thead>
-      <tbody id="companiesBody"></tbody></table>
+  <header id="site-header"></header>
+
+  <main class="container" style="margin-top: 24px;">
+    <div id="notAdmin" class="alert warn" style="display:none;">
+      You are not an admin.
     </div>
 
-    <div class="card">
-      <h2 class="h2">Jobs</h2>
-      <table class="table"><thead><tr><th>Title</th><th>Company</th><th>Published</th><th>Created</th></tr></thead>
-      <tbody id="jobsBody"></tbody></table>
-    </div>
-  </div>
+    <section class="card">
+      <div class="card-head">
+        <h2>Companies</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="table" id="companiesTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Owner</th>
+              <th>Website</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="companiesBody">
+            <tr><td colspan="4" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-<script>
-(async()=>{
-  const s = await requireAuth();
-  const admin = await isAdmin();
-  header(s?.user, admin);
-  if(!admin){ document.getElementById("banner").classList.remove("hidden"); return; }
+    <section class="card">
+      <div class="card-head">
+        <h2>Jobs</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="table" id="jobsTable">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Company</th>
+              <th>Published</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="jobsBody">
+            <tr><td colspan="4" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-  const cbody = document.getElementById("companiesBody");
-  const jbody = document.getElementById("jobsBody");
-  cbody.innerHTML = spinnerRow(); jbody.innerHTML = spinnerRow();
+  <script>
+  (async () => {
+    // Ensure logged in
+    const session = await requireAuth();
+    if (!session) return;
 
-  const { data: companies, error: cerr } = await sb.from("companies")
-    .select("name, website, created_at, owner_id").order("created_at", {ascending:false});
-  cbody.innerHTML = cerr ? `<tr><td colspan="99">Error: ${cerr.message}</td></tr>` :
-    companies.map(c=>`<tr><td>${c.name}</td><td class="small">${c.owner_id}</td><td>${c.website||""}</td><td>${fmtDate(c.created_at)}</td></tr>`).join("");
+    // Check admin
+    const admin = await isAdmin();
+    const notAdmin = document.getElementById('notAdmin');
+    if (!admin) {
+      notAdmin.style.display = 'block';
+      // stop here for non-admins
+      document.querySelector('#companiesBody').innerHTML =
+        '<tr><td colspan="4" class="muted">Sign in as an admin to view companies.</td></tr>';
+      document.querySelector('#jobsBody').innerHTML =
+        '<tr><td colspan="4" class="muted">Sign in as an admin to view jobs.</td></tr>';
+      return;
+    } else {
+      notAdmin.style.display = 'none';
+    }
 
-  const { data: jobs, error: jerr } = await sb.from("jobs")
-    .select("title, published, created_at, companies(name)").order("created_at",{ascending:false});
-  jbody.innerHTML = jerr ? `<tr><td colspan="99">Error: ${jerr.message}</td></tr>` :
-    jobs.map(j=>`<tr><td>${j.title}</td><td>${j.companies?.name||""}</td><td>${j.published?'yes':'no'}</td><td>${fmtDate(j.created_at)}</td></tr>`).join("");
-})();
-</script>
+    // ---------- Load companies (admins see ALL) ----------
+    const { data: companies, error: compErr } = await supabase
+      .from('companies')
+      .select('id, name, website, owner_id, created_at')
+      .order('created_at', { ascending: false });
+
+    const cBody = document.getElementById('companiesBody');
+    if (compErr) {
+      console.error('companies error:', compErr);
+      cBody.innerHTML = `<tr><td colspan="4" class="muted">Load error: ${compErr.message}</td></tr>`;
+    } else if (!companies || companies.length === 0) {
+      cBody.innerHTML = `<tr><td colspan="4" class="muted">No companies yet.</td></tr>`;
+    } else {
+      cBody.innerHTML = companies.map(c => `
+        <tr>
+          <td>${escapeHtml(c.name || '')}</td>
+          <td class="muted">${escapeHtml(c.owner_id || '')}</td>
+          <td><a href="${escapeAttr(c.website || '#')}" target="_blank">${escapeHtml(c.website || '')}</a></td>
+          <td>${new Date(c.created_at).toLocaleString()}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ---------- Load jobs (admins see ALL) ----------
+    // If a FK exists from jobs.company_id -> companies.id, PostgREST can join:
+    // try to fetch company name; fallback to a simpler list if join fails.
+    let jobs = null, jobsErr = null;
+    try {
+      const res = await supabase
+        .from('jobs')
+        .select('id, title, published, created_at, companies!inner(name)')
+        .order('created_at', { ascending: false });
+      jobs = res.data; jobsErr = res.error;
+      if (!jobs && !jobsErr) throw new Error('No data');
+    } catch (e) {
+      // Fallback without join
+      const res2 = await supabase
+        .from('jobs')
+        .select('id, title, published, created_at')
+        .order('created_at', { ascending: false });
+      jobs = res2.data; jobsErr = res2.error;
+    }
+
+    const jBody = document.getElementById('jobsBody');
+    if (jobsErr) {
+      console.error('jobs error:', jobsErr);
+      jBody.innerHTML = `<tr><td colspan="4" class="muted">Load error: ${jobsErr.message}</td></tr>`;
+    } else if (!jobs || jobs.length === 0) {
+      jBody.innerHTML = `<tr><td colspan="4" class="muted">No jobs yet.</td></tr>`;
+    } else {
+      jBody.innerHTML = jobs.map(j => `
+        <tr>
+          <td>${escapeHtml(j.title || '')}</td>
+          <td>${escapeHtml((j.companies && j.companies.name) || '')}</td>
+          <td>${j.published ? 'Yes' : 'No'}</td>
+          <td>${new Date(j.created_at).toLocaleString()}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ---- tiny HTML escapers to keep things safe ----
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function escapeAttr(s) {
+      return escapeHtml(s);
+    }
+  })();
+  </script>
 </body>
 </html>
