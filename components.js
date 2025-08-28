@@ -1,10 +1,13 @@
-
-/** GrowIndia Jobs - shared helpers */
+/** GrowIndia Jobs — shared helpers */
 const sb = window.supabase;
 const sbAuth = window.sbAuth;
 
+/* ---------- Theme ---------- */
 function setThemeFromStorage(){
-  try{ const t = localStorage.getItem("theme"); if(t==="dark") document.documentElement.classList.add("dark"); }catch(_){}
+  try {
+    const t = localStorage.getItem("theme");
+    if (t === "dark") document.documentElement.classList.add("dark");
+  } catch (_) {}
 }
 setThemeFromStorage();
 
@@ -13,47 +16,78 @@ function toggleTheme(){
   localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 
+/* ---------- Session helpers ---------- */
 async function getSession(){
   const { data } = await sbAuth.getSession();
-  return data.session;
+  return data?.session || null;
 }
 
 async function requireAuth(){
   const s = await getSession();
-  if(!s){ location.href="/index.html"; return null; }
+  if (!s) { location.href = "/index.html"; return null; }
   return s;
 }
 
 async function isAdmin(){
   const s = await getSession();
-  if(!s) return false;
-  const { data, error } = await sb.from("admins").select("user_id").eq("user_id", s.user.id).maybeSingle();
-  if(error) return false;
+  if (!s) return false;
+  const { data, error } = await sb
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", s.user.id)
+    .maybeSingle();
+  if (error) return false;
   return !!data;
 }
 
-function header(user, admin=false){
+/* ---------- Header ---------- */
+function header(user, admin = false){
   const left = `<a class="brand" href="/jobs.html">GrowIndia Jobs</a>`;
   const right = `
     <div class="nav">
       <a class="btn ghost" href="/jobs.html">Jobs</a>
-      ${user?`<a class="btn ghost" href="/employer.html">Employer</a>`:""}
-      ${admin?`<a class="btn ghost" href="/admin.html">Admin</a>`:""}
+      ${user ? `<a class="btn" href="/employer.html">Employer</a>` : ""}
+      ${admin ? `<a class="btn ghost" href="/admin.html">Admin</a>` : ""}
       <button class="btn" id="themeBtn" type="button">🌓</button>
-      ${user?`<button class="btn" id="logoutBtn" type="button">Logout</button>`:`<a class="btn primary" href="/index.html">Login</a>`}
-    </div>`;
+      ${
+        user
+          ? `<button class="btn" id="logoutBtn" type="button">Logout</button>`
+          : `<a class="btn primary" href="/index.html">Login</a>`
+      }
+    </div>
+  `;
+
   const el = document.createElement("header");
   el.className = "header";
-  el.innerHTML = `<div class="header-inner">${left}${right}</div>`;
+  el.innerHTML = `<div class="container row" style="justify-content:space-between">${left}${right}</div>`;
   document.body.prepend(el);
-  document.getElementById("themeBtn").addEventListener("click", toggleTheme);
-  const lo = document.getElementById("logoutBtn"); if(lo) lo.addEventListener("click", async ()=>{ await sbAuth.signOut(); location.href="/index.html"; });
+
+  // wire up buttons
+  el.querySelector("#themeBtn")?.addEventListener("click", toggleTheme);
+  el.querySelector("#logoutBtn")?.addEventListener("click", async () => {
+    await sbAuth.signOut(); location.href = "/index.html";
+  });
 }
 
-function qs(name){ const u=new URL(location.href); return u.searchParams.get(name); }
-function timeAgo(iso){ if(!iso) return ""; const d=(Date.now()-new Date(iso))/1000;
-  const u=[["y",31536000],["mo",2592000],["d",86400],["h",3600],["m",60]];
-  for(const [l,s] of u){ if(d>=s) return Math.floor(d/s)+l; } return Math.max(1,Math.floor(d))+"s"; }
-function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#39;" }[m])); }
+/* ---------- Utilities ---------- */
+function escapeHtml(s=""){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
-window.GI = { getSession, requireAuth, isAdmin, header, qs, timeAgo, escapeHtml };
+function timeAgo(iso){
+  const d = new Date(iso); const n = Date.now();
+  const sec = Math.max(1, Math.round((n - d.getTime())/1000));
+  const units = [[31536000,"y"],[2592000,"mo"],[604800,"w"],[86400,"d"],[3600,"h"],[60,"m"],[1,"s"]];
+  for (const [s,u] of units) if (sec >= s) return Math.floor(sec/s) + u;
+  return "now";
+}
+
+function qs(key){ return new URLSearchParams(location.search).get(key); }
+
+/* expose */
+window.GI = { getSession, requireAuth, isAdmin, header, escapeHtml, timeAgo, qs };
