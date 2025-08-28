@@ -1,0 +1,12 @@
+{
+  "headers": [
+    {
+      "source": "/config.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ],
+  "rewrites": [{ "source": "/", "destination": "/jobs.html" }],
+  "cleanUrls": true
+}
