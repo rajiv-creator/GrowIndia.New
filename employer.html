@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="/app.css" />
   <!-- Supabase + config + shared components -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=3"></script>
-  <script src="/components.js?v=3"></script>
+  <script src="/config.js?v=4"></script>
+  <script src="/components.js?v=4"></script>
 </head>
 <body>
   <main class="container">
@@ -72,9 +72,8 @@
 
   <script>
   (function () {
-    // Use RegExp constructor to avoid any parser issues with regex literals
+    // Use RegExp constructor to avoid regex-literal parsing issues
     const httpsRe = new RegExp('^https?://', 'i');
-
     let session = null;
 
     function note(id, text) {
@@ -85,16 +84,14 @@
     }
 
     async function init() {
-      // Require login and build header
       session = await GI.requireAuth();
       if (!session) return;
+
       GI.header(session.user, await GI.isAdmin());
 
-      // Wire buttons
       document.getElementById('createCompanyBtn').addEventListener('click', createCompany);
       document.getElementById('postJobBtn').addEventListener('click', postJob);
 
-      // Load data
       await loadCompanies();
       await loadJobs();
       await loadApps();
@@ -174,14 +171,39 @@
       note('jNote', 'Job posted.'); setTimeout(() => note('jNote', ''), 1500);
     }
 
+    // ---------- FIXED loader (no more parse error) ----------
     async function loadJobs() {
       const rows = document.getElementById('jobsRows');
       rows.innerHTML = '<tr><td colspan="4" class="muted">Loading…</td></tr>';
 
+      const uid = session.user.id;
+
+      // 1) get the list of company ids you own
+      const { data: cos, error: cErr } = await sb
+        .from('companies')
+        .select('id')
+        .eq('owner_id', uid);
+
+      if (cErr) {
+        console.error(cErr);
+        rows.innerHTML = `<tr><td colspan="4">Load error: ${GI.escapeHtml(cErr.message)}</td></tr>`;
+        return;
+      }
+
+      const ids = (cos || []).map(c => c.id);
+      // Quote UUIDs to be safe
+      const quoted = ids.map(id => `"${id}"`).join(',');
+
+      // 2) build OR expression using only root columns
+      let orExpr = `created_by.eq.${uid}`;
+      if (ids.length) {
+        orExpr += `,company_id.in.(${quoted})`;
+      }
+
       const { data, error } = await sb
         .from('jobs')
-        .select('id,title,published,created_at,companies(name,owner_id)')
-        .or(`created_by.eq.${session.user.id},companies.owner_id.eq.${session.user.id}`)
+        .select('id,title,published,created_at,companies(name)')
+        .or(orExpr)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -189,19 +211,22 @@
         rows.innerHTML = `<tr><td colspan="4">Load error: ${GI.escapeHtml(error.message)}</td></tr>`;
         return;
       }
+
       if (!data || data.length === 0) {
         rows.innerHTML = '<tr><td colspan="4" class="muted">No jobs yet.</td></tr>';
         return;
       }
+
       rows.innerHTML = data.map(j => `
         <tr>
-          <td>${GI.escapeHtml(j.title)}</td>
+          <td>${GI.escapeHtml(j.title)}${j.companies?.name ? ` <span class="muted">– ${GI.escapeHtml(j.companies.name)}</span>` : ''}</td>
           <td>${j.published ? '<span class="badge">Published</span>' : '<span class="badge">Draft</span>'}</td>
           <td class="muted">${new Date(j.created_at).toLocaleString()}</td>
           <td><a href="/job.html?id=${j.id}" target="_blank">View</a></td>
         </tr>
       `).join('');
     }
+    // --------------------------------------------------------
 
     async function loadApps() {
       const rows = document.getElementById('appsRows');
