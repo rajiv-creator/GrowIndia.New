@@ -1,0 +1,74 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Job — GrowIndia</title>
+  <link rel="stylesheet" href="/assets/app.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=1"></script>
+  <script src="/assets/components.js"></script>
+</head>
+<body>
+  <div class="container" style="padding-top:18px">
+    <a class="btn ghost" href="/jobs.html">← Back to jobs</a>
+    <div id="jobCard" class="card" style="margin-top:12px"></div>
+    <div class="card" style="margin-top:12px; max-width:720px">
+      <h3>Apply for this job</h3>
+      <div id="appNote" class="alert hidden"></div>
+      <div class="grid">
+        <label>Name<input id="aName" class="input"></label>
+        <label>Email<input id="aEmail" type="email" class="input"></label>
+        <label>Message<textarea id="aMsg"></textarea></label>
+        <button class="btn primary" id="applyBtn">Submit application</button>
+      </div>
+      <p class="muted" style="margin-top:6px">Your details will be shared with the employer. </p>
+    </div>
+  </div>
+
+<script>
+let JOB_ID = GI.qs("id");
+
+document.addEventListener("DOMContentLoaded", async ()=>{
+  const s=await GI.getSession(); const admin=await GI.isAdmin(); GI.header(s?.user, admin);
+  loadJob();
+  document.getElementById("applyBtn").addEventListener("click", submitApplication);
+});
+
+async function loadJob(){
+  const box=document.getElementById("jobCard");
+  const { data, error } = await sb.from("jobs").select("id,title,description,location,type,remote,min_salary,max_salary,currency,created_at,companies(name,website)").eq("id", JOB_ID).eq("published", true).maybeSingle();
+  if(error || !data){ box.innerHTML = "<div class='alert'>Job not found.</div>"; return; }
+  const j=data;
+  box.innerHTML = `
+    <h2 style="margin:0 0 6px 0">${GI.escapeHtml(j.title)}</h2>
+    <div class="muted">${GI.escapeHtml(j.companies?.name||"")}${j.companies?.website?` — <a href="${encodeURI(j.companies.website)}" target="_blank">Website</a>`:""}</div>
+    <div class="row" style="gap:8px;margin-top:6px">
+      ${j.location?`<span class="badge">📍 ${GI.escapeHtml(j.location)}</span>`:""}
+      ${j.type?`<span class="badge">🧭 ${GI.escapeHtml(j.type)}</span>`:""}
+      ${j.remote?`<span class="badge">🌐 Remote</span>`:""}
+    </div>
+    <div class="hr"></div>
+    <div>${(j.description||"").replace(/\n/g,"<br>")}</div>
+    <div class="hr"></div>
+    <div class="muted">Posted ${GI.timeAgo(j.created_at)} ago</div>
+  `;
+}
+
+async function submitApplication(){
+  const name=document.getElementById("aName").value.trim();
+  const email=document.getElementById("aEmail").value.trim();
+  const msg=document.getElementById("aMsg").value.trim();
+  const note=document.getElementById("appNote");
+  note.classList.add("hidden"); note.textContent="";
+  if(!name || !email){ note.textContent="Please enter name and a valid email."; note.classList.remove("hidden"); return; }
+  const btn=document.getElementById("applyBtn"); btn.disabled=true;
+  const { error } = await sb.from("applications").insert({ job_id: JOB_ID, candidate_name:name, candidate_email:email, message:msg || null });
+  btn.disabled=false;
+  if(error){ note.textContent="Submit error: " + error.message; note.classList.remove("hidden"); return; }
+  note.textContent="Application submitted. Thank you!"; note.classList.remove("hidden");
+}
+</script>
+</body>
+</html>

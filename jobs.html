@@ -1,0 +1,84 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Jobs — GrowIndia</title>
+  <link rel="stylesheet" href="/assets/app.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=1"></script>
+  <script src="/assets/components.js"></script>
+</head>
+<body>
+  <div class="container" style="padding-top:18px">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div>
+        <div class="kicker">Find your next role</div>
+        <h1 class="page-title">Open Jobs</h1>
+      </div>
+      <div class="row">
+        <input id="q" class="input" placeholder="Search title or location…" style="min-width:260px">
+        <select id="type" class="input" style="width:160px">
+          <option value="">All types</option>
+          <option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option>
+        </select>
+        <label class="row" style="gap:6px"><input type="checkbox" id="remoteOnly"> Remote</label>
+        <button class="btn" id="searchBtn">Search</button>
+      </div>
+    </div>
+
+    <div id="grid" class="grid cards" style="margin-top:14px"></div>
+    <div id="empty" class="muted" style="margin-top:10px"></div>
+    <div class="pagination">
+      <button class="btn" id="prevBtn">Prev</button>
+      <span id="pageInfo" class="muted"></span>
+      <button class="btn" id="nextBtn">Next</button>
+    </div>
+  </div>
+
+<script>
+const PAGE=9; let page=1, total=0, last={};
+
+document.addEventListener("DOMContentLoaded", async ()=>{
+  const s=await GI.getSession(); const admin=await GI.isAdmin(); GI.header(s?.user, admin);
+  document.getElementById("searchBtn").addEventListener("click", ()=>{ page=1; fetchJobs(); });
+  document.getElementById("prevBtn").addEventListener("click", ()=>{ if(page>1){ page--; fetchJobs(); }});
+  document.getElementById("nextBtn").addEventListener("click", ()=>{ if(page<Math.ceil(total/PAGE)){ page++; fetchJobs(); }});
+  fetchJobs();
+});
+
+async function fetchJobs(){
+  const q=document.getElementById("q").value.trim();
+  const type=document.getElementById("type").value;
+  const remoteOnly=document.getElementById("remoteOnly").checked;
+  last={q,type,remoteOnly};
+  let query = sb.from("jobs").select("id,title,location,type,remote,min_salary,max_salary,currency,created_at,companies(name,website)", { count:"exact" })
+    .eq("published", true)
+    .order("created_at", { ascending:false })
+    .range((page-1)*PAGE, (page*PAGE)-1);
+  if(q){ query = query.or(`title.ilike.%${q}%,location.ilike.%${q}%`); }
+  if(type){ query = query.eq("type", type); }
+  if(remoteOnly){ query = query.eq("remote", true); }
+  const { data, count, error } = await query;
+  const grid=document.getElementById("grid"); const empty=document.getElementById("empty"); const pi=document.getElementById("pageInfo");
+  if(error){ grid.innerHTML=""; empty.textContent="Error: "+error.message; return; }
+  total=count||0; pi.textContent = total? `Page ${page} of ${Math.max(1, Math.ceil(total/PAGE))}`:"";
+  if(!data || data.length===0){ grid.innerHTML=""; empty.textContent="No jobs found."; return; }
+  empty.textContent="";
+  grid.innerHTML = data.map(j => `
+    <a class="card" href="/job.html?id=${j.id}">
+      <h3>${GI.escapeHtml(j.title)}</h3>
+      <div class="muted">${GI.escapeHtml(j.companies?.name || "")}</div>
+      <div class="row" style="gap:8px;margin-top:6px">
+        ${j.location?`<span class="badge">📍 ${GI.escapeHtml(j.location)}</span>`:""}
+        ${j.type?`<span class="badge">🧭 ${GI.escapeHtml(j.type)}</span>`:""}
+        ${j.remote?`<span class="badge">🌐 Remote</span>`:""}
+      </div>
+      <div class="muted" style="margin-top:8px">Posted ${GI.timeAgo(j.created_at)} ago</div>
+    </a>
+  `).join("");
+}
+</script>
+</body>
+</html>
