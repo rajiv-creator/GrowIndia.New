@@ -1,34 +1,32 @@
-<!-- post-auth.html (inside <body>) -->
-<script src="/config.js?v=3"></script>
-<script src="/components.js?v=3"></script>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GrowIndia Jobs — Sign-in complete</title>
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+  <main class="container" style="max-width:900px;margin:48px auto;">
+    <h1>You're signed in.</h1>
+    <p>Go to <a href="/employer.html">Employer</a> or <a href="/jobs.html">browse jobs</a>.</p>
+    <p class="muted">If you see this page after clicking the email link, your session was created successfully.</p>
+  </main>
 
-<header id="site-header"></header>
+  <!-- JS (order matters!) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=5"></script>
+  <script src="/components.js?v=5"></script>
 
-<main class="container">
-  <h1>You're signed in</h1>
-  <p>
-    Go to <a class="link" href="/employer.html">Employer</a> or
-    <a class="link" href="/jobs.html">browse jobs</a>.
-    <a id="adminLink" class="btn hidden" href="/admin.html" style="margin-left:12px;">Admin</a>
-  </p>
-  <p class="muted">If you see this page after clicking the email link, your session was created successfully.</p>
-</main>
-
-<script>
-(async () => {
-  // Render header (it will show Login/Logout)
-  if (typeof header === 'function') header();
-
-  // Reveal Admin button if you're an admin
-  const { data: { session } } = await sbAuth.getSession();
-  if (session?.user?.id) {
-    // simpler than RPC: check admins table
-    const { data } = await supabase
-      .from('admins')
-      .select('user_id')
-      .eq('user_id', session.user.id)
-      .maybeSingle();
-    if (data) document.getElementById('adminLink').classList.remove('hidden');
-  }
-})();
-</script>
+  <script>
+    // nothing else needed — arriving here with the link is enough to set the session
+    (async () => {
+      // quick sanity check
+      const status = await fetch(`${window.SUPABASE_URL}/auth/v1/settings`, {
+        headers: { apikey: window.SUPABASE_ANON_KEY }
+      }).then(r => r.status);
+      console.log("auth settings status", status); // should be 200
+    })();
+  </script>
+</body>
+</html>
