@@ -1,23 +1,26 @@
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>GrowIndia Jobs — Login</title>
-  <link rel="stylesheet" href="/assets/app.css"/>
+
+  <link rel="stylesheet" href="/app.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=2"></script>
-  <script src="/assets/components.js"></script>
+  <script src="/components.js"></script>
 </head>
 <body>
   <div class="container" style="padding-top:30px">
     <div class="row right"><a class="btn ghost" href="/jobs.html">Browse Jobs</a></div>
     <h1 class="page-title">Welcome back</h1>
     <p class="muted">Sign in to post jobs and manage your company.</p>
+
     <div class="card" style="max-width:520px">
       <form id="loginForm" class="grid" novalidate>
-        <label>Email<input id="email" class="input" type="email" placeholder="you@example.com" required></label>
+        <label>Email
+          <input id="email" class="input" type="email" placeholder="you@example.com" required>
+        </label>
         <button class="btn primary" id="loginBtn" type="submit">Send magic link</button>
         <p id="msg" class="muted"></p>
       </form>
@@ -26,28 +29,43 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-  const s = await GI.getSession(); const admin = await GI.isAdmin();
-  GI.header(s?.user, admin);
+  try {
+    const s = await (window.GI?.getSession?.() ?? Promise.resolve({}));
+    const admin = await (window.GI?.isAdmin?.() ?? false);
+    window.GI?.header?.(s?.user, admin);
+  } catch {}
 });
+
 const form = document.getElementById("loginForm");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("email").value.trim();
-  const btn = document.getElementById("loginBtn"); const msg = document.getElementById("msg");
-  if(!email){ msg.textContent="Enter a valid email."; return; }
-  btn.disabled=true; msg.textContent="Sending magic link…";
-  const PROD_REDIRECT = "https://growindia-job-portal.vercel.app/post-auth.html";
-  const redirectTo = location.hostname.endsWith("vercel.app") ? PROD_REDIRECT : (location.origin + "/post-auth.html");
-  try{
-    const { error } = await sbAuth.signInWithOtp({ email, options:{ emailRedirectTo: redirectTo } });
-    if(error) throw error;
-    msg.textContent="Check your email for the sign-in link.";
-  }catch(err){
-    console.error(err); btn.disabled=false;
-    const t=String(err?.message||err);
-    if(t.includes("Failed to fetch")){
-      msg.innerHTML="Could not reach Supabase. In Supabase → Authentication → URL Configuration, set:<br>• Site URL: <code>https://growindia-job-portal.vercel.app</code><br>• Redirects: <code>https://growindia-job-portal.vercel.app/post-auth.html</code>";
-    }else{ msg.textContent="Error: "+t; }
+  const btn = document.getElementById("loginBtn");
+  const msg = document.getElementById("msg");
+  if (!email) { msg.textContent = "Enter a valid email."; return; }
+
+  btn.disabled = true; msg.textContent = "Sending magic link…";
+
+  const PROD_REDIRECT = "https://grow-india-new.vercel.app/post-auth.html";
+  const redirectTo = location.hostname.endsWith("vercel.app")
+    ? PROD_REDIRECT
+    : (location.origin + "/post-auth.html");
+
+  try {
+    const { error } = await window.sbAuth.signInWithOtp({
+      email, options: { emailRedirectTo: redirectTo }
+    });
+    if (error) throw error;
+    msg.textContent = "Check your email for the sign-in link.";
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    const t = String(err?.message || err);
+    if (t.includes("Failed to fetch")) {
+      msg.innerHTML = "Could not reach Supabase. In Supabase → Authentication → URL Configuration set:<br>• Site URL: <code>https://grow-india-new.vercel.app</code><br>• Redirects: <code>https://grow-india-new.vercel.app/post-auth.html</code>";
+    } else {
+      msg.textContent = "Error: " + t;
+    }
   }
 });
 </script>
