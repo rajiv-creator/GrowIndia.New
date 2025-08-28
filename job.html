@@ -1,14 +1,14 @@
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Job — GrowIndia</title>
-  <link rel="stylesheet" href="/assets/app.css"/>
+
+  <link rel="stylesheet" href="/app.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=2"></script>
-  <script src="/assets/components.js"></script>
+  <script src="/components.js"></script>
 </head>
 <body>
   <div class="container" style="padding-top:18px">
@@ -23,15 +23,16 @@
         <label>Message<textarea id="aMsg"></textarea></label>
         <button class="btn primary" id="applyBtn">Submit application</button>
       </div>
-      <p class="muted" style="margin-top:6px">Your details will be shared with the employer. </p>
+      <p class="muted" style="margin-top:6px">Your details will be shared with the employer.</p>
     </div>
   </div>
 
 <script>
-let JOB_ID = GI.qs("id");
+const JOB_ID = GI.qs("id");
 
-document.addEventListener("DOMContentLoaded", async ()=>{
-  const s=await GI.getSession(); const admin=await GI.isAdmin(); GI.header(s?.user, admin);
+document.addEventListener("DOMContentLoaded", async ()=> {
+  const s=await GI.getSession(); const admin=await GI.isAdmin();
+  GI.header(s?.user, admin);
   loadJob();
   document.getElementById("applyBtn").addEventListener("click", submitApplication);
 });
@@ -50,7 +51,7 @@ async function loadJob(){
       ${j.remote?`<span class="badge">🌐 Remote</span>`:""}
     </div>
     <div class="hr"></div>
-    <div>${(j.description||"").replace(/\n/g,"<br>")}</div>
+    <div>${(j.description||"").replace(/\\n/g,"<br>")}</div>
     <div class="hr"></div>
     <div class="muted">Posted ${GI.timeAgo(j.created_at)} ago</div>
   `;
