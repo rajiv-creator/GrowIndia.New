@@ -1,39 +1,28 @@
+
 <!doctype html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Post Auth</title>
-
-  <link rel="stylesheet" href="/app.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GrowIndia Jobs — Signed in</title>
+  <link rel="stylesheet" href="/app.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=2"></script>
-  <script src="/components.js"></script>
+  <script src="/config.js?v=1"></script>
+  <script src="/components.js?v=1"></script>
 </head>
 <body>
-  <div class="container" style="padding-top:30px">
-    <h1 class="page-title">You’re signed in</h1>
+  <div class="container">
     <div class="card">
-      <div class="row" id="status"><span class="badge">Loading…</span></div>
-      <div class="row" style="margin-top:10px">
-        <a class="btn primary" href="/employer.html">Go to Employer</a>
-        <a class="btn" href="/admin.html">Go to Admin</a>
-        <a class="btn ghost" href="/jobs.html">Browse Jobs</a>
-        <button class="btn" id="logoutBtn">Logout</button>
-      </div>
+      <h1 class="h1">You're signed in</h1>
+      <p>Go to <a href="/employer.html">Employer</a> or <a href="/jobs.html">browse jobs</a>.</p>
+      <p class="small muted">If you see this page after clicking the email link, your session was created successfully.</p>
     </div>
   </div>
-
 <script>
-document.addEventListener("DOMContentLoaded", async ()=> {
-  const s = await GI.getSession(); const admin = await GI.isAdmin();
-  GI.header(s?.user, admin);
-  document.getElementById("logoutBtn").addEventListener("click", async ()=>{ await sbAuth.signOut(); location.href="/index.html"; });
-  const row = document.getElementById("status");
-  row.innerHTML = s
-    ? `<span class="badge">Signed in as</span> <strong>${s.user.email}</strong> ${admin?'<span class="badge">Admin</span>':''}`
-    : "<span class='badge'>No active session</span>";
-});
+(async()=>{
+  const s = await getSession();
+  header(s?.user, await isAdmin());
+})();
 </script>
 </body>
 </html>

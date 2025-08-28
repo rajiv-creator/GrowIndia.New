@@ -1,7 +1,20 @@
 
--- GrowIndia Jobs - Database & RLS
+-- Enable extension for UUID generation
+create extension if not exists "pgcrypto";
 
--- Companies (you already created earlier; safe to re-run)
+-- Admins
+create table if not exists public.admins (
+  user_id uuid primary key references auth.users(id) on delete cascade
+);
+alter table public.admins enable row level security;
+
+-- Helper function to check admin
+create or replace function public.is_admin(uid uuid)
+returns boolean language sql stable as $$
+  select exists(select 1 from public.admins a where a.user_id = uid);
+$$;
+
+-- Companies
 create table if not exists public.companies (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -11,133 +24,107 @@ create table if not exists public.companies (
 );
 alter table public.companies enable row level security;
 
-drop policy if exists companies_select_own on public.companies;
-drop policy if exists companies_insert_own on public.companies;
-drop policy if exists companies_update_own on public.companies;
-drop policy if exists companies_delete_own on public.companies;
-drop policy if exists companies_select_admins_all on public.companies;
-
-create policy companies_select_own
-on public.companies for select to authenticated
-using (owner_id = auth.uid());
-
-create policy companies_insert_own
-on public.companies for insert to authenticated
-with check (owner_id = auth.uid());
-
-create policy companies_update_own
-on public.companies for update to authenticated
-using (owner_id = auth.uid());
-
-create policy companies_delete_own
-on public.companies for delete to authenticated
-using (owner_id = auth.uid());
-
-create table if not exists public.admins (
-  user_id uuid primary key references auth.users(id) on delete cascade
-);
-
-create policy companies_select_admins_all
-on public.companies for select to authenticated
-using (
-  owner_id = auth.uid()
-  or exists (select 1 from public.admins a where a.user_id = auth.uid())
-);
-
 -- Jobs
 create table if not exists public.jobs (
   id uuid primary key default gen_random_uuid(),
-  company_id uuid not null references public.companies(id) on delete cascade,
   title text not null,
-  description text not null,
   location text,
   type text,
-  remote boolean default false,
-  min_salary numeric, max_salary numeric, currency text,
-  published boolean default true,
-  created_by uuid not null references auth.users(id) on delete cascade,
+  min_salary text,
+  max_salary text,
+  currency text,
+  description text,
+  published boolean not null default true,
+  status text default 'open',
+  company_id uuid references public.companies(id) on delete set null,
+  created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now()
 );
 alter table public.jobs enable row level security;
 
-drop policy if exists jobs_select_public on public.jobs;
-drop policy if exists jobs_select_owner on public.jobs;
-drop policy if exists jobs_insert_owner on public.jobs;
-drop policy if exists jobs_update_owner on public.jobs;
-drop policy if exists jobs_delete_owner on public.jobs;
-drop policy if exists jobs_admin_read_all on public.jobs;
-
--- Public can read published jobs
-create policy jobs_select_public
-on public.jobs for select to anon, authenticated
-using (published = true);
-
--- Owners can read their own (and drafts)
-create policy jobs_select_owner
-on public.jobs for select to authenticated
-using (created_by = auth.uid() or exists (select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid()));
-
--- Owners can insert (only for their companies)
-create policy jobs_insert_owner
-on public.jobs for insert to authenticated
-with check (
-  created_by = auth.uid()
-  and exists (select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid())
-);
-
--- Owners can update/delete their jobs
-create policy jobs_update_owner
-on public.jobs for update to authenticated
-using (
-  created_by = auth.uid()
-  or exists (select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid())
-);
-
-create policy jobs_delete_owner
-on public.jobs for delete to authenticated
-using (
-  created_by = auth.uid()
-  or exists (select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid())
-);
-
--- Admins can read all jobs
-create policy jobs_admin_read_all
-on public.jobs for select to authenticated
-using (exists (select 1 from public.admins a where a.user_id = auth.uid()));
-
--- Applications (public can submit)
+-- Applications
 create table if not exists public.applications (
   id uuid primary key default gen_random_uuid(),
   job_id uuid not null references public.jobs(id) on delete cascade,
-  candidate_name text not null,
-  candidate_email text not null,
+  candidate_name text,
+  email text,
   message text,
   created_at timestamptz not null default now()
 );
 alter table public.applications enable row level security;
 
-drop policy if exists apps_insert_anon on public.applications;
-drop policy if exists apps_insert_auth on public.applications;
-drop policy if exists apps_select_owner_admin on public.applications;
+-- ---------------- RLS Policies ----------------
 
--- anyone can submit
-create policy apps_insert_anon
-on public.applications for insert to anon
-with check (true);
+-- admins: only admins can read/modify
+drop policy if exists admins_all on public.admins;
+create policy admins_all on public.admins
+  using (is_admin(auth.uid()))
+  with check (is_admin(auth.uid()));
 
-create policy apps_insert_auth
-on public.applications for insert to authenticated
-with check (true);
+-- companies
+drop policy if exists companies_select_own on public.companies;
+create policy companies_select_own on public.companies
+  for select using (owner_id = auth.uid() or is_admin(auth.uid()));
 
--- employers/admins can view applications for their jobs
-create policy apps_select_owner_admin
-on public.applications for select to authenticated
-using (
-  exists (
-    select 1 from public.jobs j
-    join public.companies c on c.id = j.company_id
-    where j.id = applications.job_id
-      and (j.created_by = auth.uid() or c.owner_id = auth.uid()
-           or exists (select 1 from public.admins a where a.user_id = auth.uid()))
+drop policy if exists companies_insert_own on public.companies;
+create policy companies_insert_own on public.companies
+  for insert with check (owner_id = auth.uid() or is_admin(auth.uid()));
+
+drop policy if exists companies_update_own on public.companies;
+create policy companies_update_own on public.companies
+  for update using (owner_id = auth.uid() or is_admin(auth.uid()))
+  with check (owner_id = auth.uid() or is_admin(auth.uid()));
+
+drop policy if exists companies_delete_own on public.companies;
+create policy companies_delete_own on public.companies
+  for delete using (owner_id = auth.uid() or is_admin(auth.uid()));
+
+-- jobs
+drop policy if exists jobs_public_select on public.jobs;
+create policy jobs_public_select on public.jobs
+  for select using ( published = true or is_admin(auth.uid()) or created_by = auth.uid() );
+
+drop policy if exists jobs_insert_own on public.jobs;
+create policy jobs_insert_own on public.jobs
+  for insert with check (
+    (created_by = auth.uid() and exists(select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid()))
+    or is_admin(auth.uid())
+  );
+
+drop policy if exists jobs_update_own on public.jobs;
+create policy jobs_update_own on public.jobs
+  for update using (
+    (created_by = auth.uid() and exists(select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid()))
+    or is_admin(auth.uid())
   )
-);
+  with check (
+    (created_by = auth.uid() and exists(select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid()))
+    or is_admin(auth.uid())
+  );
+
+drop policy if exists jobs_delete_own on public.jobs;
+create policy jobs_delete_own on public.jobs
+  for delete using (
+    (created_by = auth.uid() and exists(select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid()))
+    or is_admin(auth.uid())
+  );
+
+-- applications
+drop policy if exists apps_insert_any on public.applications;
+create policy apps_insert_any on public.applications
+  for insert with check ( true );  -- allow public submissions
+
+drop policy if exists apps_select_employer on public.applications;
+create policy apps_select_employer on public.applications
+  for select using (
+    is_admin(auth.uid()) or
+    exists(
+      select 1 from public.jobs j
+        join public.companies c on c.id = j.company_id
+      where j.id = applications.job_id and (j.created_by = auth.uid() or c.owner_id = auth.uid())
+    )
+  );
+
+-- -------------- Convenience: make yourself admin --------------
+-- insert into public.admins (user_id)
+--   select id from auth.users where email = 'YOUR_EMAIL@EXAMPLE.COM';

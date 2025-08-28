@@ -1,264 +1,136 @@
+
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Employer — GrowIndia Jobs</title>
-  <link rel="stylesheet" href="/app.css" />
-  <!-- Supabase + config + shared components -->
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Employer — GrowIndia</title>
+  <link rel="stylesheet" href="/app.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=4"></script>
-  <script src="/components.js?v=4"></script>
+  <script src="/config.js?v=1"></script>
+  <script src="/components.js?v=1"></script>
 </head>
 <body>
-  <main class="container">
-    <h1>Employer</h1>
+  <div class="container">
+    <div class="row" style="align-items:center">
+      <h1 class="h1" style="flex:unset">Employer</h1>
+      <a class="btn" href="/jobs.html">Public site</a>
+      <button class="btn" id="logoutTop">Logout</button>
+    </div>
 
-    <!-- Your company -->
-    <section class="card">
-      <h2>Your company</h2>
-      <select id="companySel" class="input"></select>
+    <div class="card">
+      <h2 class="h2">Your company</h2>
+      <div class="grid">
+        <select id="companySel" class="input"></select>
+        <input id="newCompany" class="input" placeholder="New company name"/>
+        <input id="website" class="input" placeholder="Website (https://…)"/>
+        <button id="createCompany" class="btn">Create company</button>
+      </div>
+    </div>
 
-      <input id="newCName" class="input" placeholder="New company name" />
-      <input id="newCWeb"  class="input" placeholder="Website (https://…)" />
-      <button id="createCompanyBtn" class="btn">Create company</button>
-      <div id="cNote" class="alert hidden"></div>
-    </section>
+    <div class="card">
+      <h2 class="h2">Post a job</h2>
+      <div class="grid">
+        <input id="title" class="input" placeholder="Job title"/>
+        <input id="location" class="input" placeholder="Location"/>
+        <select id="type" class="input">
+          <option value="Full-time">Full-time</option>
+          <option value="Part-time">Part-time</option>
+          <option value="Contract">Contract</option>
+          <option value="Internship">Internship</option>
+        </select>
+        <div class="row">
+          <input id="minSalary" class="input" placeholder="Min salary"/>
+          <input id="maxSalary" class="input" placeholder="Max salary"/>
+          <input id="currency" class="input" placeholder="Currency (e.g., USD, INR)"/>
+        </div>
+        <textarea id="description" placeholder="Description"></textarea>
+        <label><input type="checkbox" id="published" checked/> Published</label>
+        <button id="postJob" class="btn primary">Post job</button>
+        <div id="postMsg" class="muted"></div>
+      </div>
+    </div>
 
-    <!-- Post a job -->
-    <section class="card">
-      <h2>Post a job</h2>
-      <input id="jTitle" class="input" placeholder="Job title" />
-      <input id="jLocation" class="input" placeholder="Location" />
-
-      <select id="jType" class="input">
-        <option>Full-time</option>
-        <option>Part-time</option>
-        <option>Contract</option>
-        <option>Internship</option>
-      </select>
-
-      <label class="row"><input type="checkbox" id="jRemote" /> Remote</label>
-
-      <input id="jMin" class="input" placeholder="Min salary" />
-      <input id="jMax" class="input" placeholder="Max salary" />
-      <input id="jCur" class="input" placeholder="Currency (e.g., USD, INR)" />
-
-      <textarea id="jDesc" class="input" rows="6" placeholder="Description"></textarea>
-      <label class="row"><input type="checkbox" id="jPublished" checked /> Published</label>
-
-      <button id="postJobBtn" class="btn primary">Post job</button>
-      <div id="jNote" class="alert hidden"></div>
-    </section>
-
-    <!-- Your jobs -->
-    <section class="card">
-      <h2>Your jobs</h2>
+    <div class="card">
+      <h2 class="h2">Your jobs</h2>
       <table class="table">
-        <thead><tr><th>Title</th><th>Status</th><th>Created</th><th></th></tr></thead>
-        <tbody id="jobsRows"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+        <thead><tr><th>Title</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody id="jobsBody"></tbody>
       </table>
-    </section>
+    </div>
 
-    <!-- Applications -->
-    <section class="card">
-      <h2>Applications</h2>
-      <table class="table">
-        <thead><tr><th>Job</th><th>Candidate</th><th>Email</th><th>Message</th><th>Applied</th></tr></thead>
-        <tbody id="appsRows"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
-      </table>
-    </section>
-  </main>
+  </div>
 
-  <script>
-  (function () {
-    // Use RegExp constructor to avoid regex-literal parsing issues
-    const httpsRe = new RegExp('^https?://', 'i');
-    let session = null;
+<script>
+(async()=>{
+  const s = await requireAuth();
+  header(s?.user, await isAdmin());
+  document.getElementById("logoutTop").onclick = async()=>{ await sbAuth.signOut(); location.href="/index.html"; };
 
-    function note(id, text) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.textContent = text || '';
-      el.classList.toggle('hidden', !text);
+  const sel = document.getElementById("companySel");
+  const jobsBody = document.getElementById("jobsBody");
+  jobsBody.innerHTML = spinnerRow();
+
+  async function loadCompanies(){
+    sel.innerHTML = "";
+    const { data, error } = await sb.from("companies").select("id,name").eq("owner_id", s.user.id).order("created_at", {ascending:false});
+    if(error){ sel.innerHTML = `<option>Error loading companies</option>`; return; }
+    if(!data.length){ sel.innerHTML = `<option value="">(none)</option>`; }
+    else{
+      sel.innerHTML = data.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
     }
+  }
 
-    async function init() {
-      session = await GI.requireAuth();
-      if (!session) return;
+  async function loadJobs(){
+    jobsBody.innerHTML = spinnerRow();
+    const { data, error } = await sb.from("jobs").select("id,title,status,created_at").eq("created_by", s.user.id).order("created_at", {ascending:false});
+    if(error){ jobsBody.innerHTML = `<tr><td colspan="99">Error: ${error.message}</td></tr>`; return; }
+    if(!data.length){ jobsBody.innerHTML = `<tr><td colspan="99" class="muted">No jobs yet.</td></tr>`; return; }
+    jobsBody.innerHTML = data.map(j=>`<tr>
+      <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${j.title}</a></td>
+      <td>${j.status || 'open'}</td>
+      <td>${new Date(j.created_at).toLocaleString()}</td>
+    </tr>`).join("");
+  }
 
-      GI.header(session.user, await GI.isAdmin());
+  // create company
+  document.getElementById("createCompany").onclick = async ()=>{
+    const name = document.getElementById("newCompany").value.trim();
+    const website = document.getElementById("website").value.trim();
+    if(!name) return alert("Enter a company name");
+    const { error } = await sb.from("companies").insert({ name, website, owner_id: s.user.id });
+    if(error) return alert(error.message);
+    document.getElementById("newCompany").value="";
+    document.getElementById("website").value="";
+    await loadCompanies();
+  };
 
-      document.getElementById('createCompanyBtn').addEventListener('click', createCompany);
-      document.getElementById('postJobBtn').addEventListener('click', postJob);
+  // post job
+  document.getElementById("postJob").onclick = async ()=>{
+    const postMsg = document.getElementById("postMsg");
+    postMsg.textContent = "";
+    const payload = {
+      title: document.getElementById("title").value.trim(),
+      location: document.getElementById("location").value.trim(),
+      type: document.getElementById("type").value,
+      min_salary: document.getElementById("minSalary").value.trim(),
+      max_salary: document.getElementById("maxSalary").value.trim(),
+      currency: document.getElementById("currency").value.trim(),
+      description: document.getElementById("description").value.trim(),
+      published: document.getElementById("published").checked,
+      company_id: sel.value || null,
+      created_by: s.user.id
+    };
+    if(!payload.title) return postMsg.textContent="Title required";
+    if(!payload.company_id) return postMsg.textContent="Select a company (create one first)";
+    const { error } = await sb.from("jobs").insert(payload);
+    postMsg.textContent = error ? ("Error: "+error.message) : "Job posted!";
+    if(!error){ await loadJobs(); }
+  };
 
-      await loadCompanies();
-      await loadJobs();
-      await loadApps();
-    }
-
-    async function loadCompanies() {
-      const sel = document.getElementById('companySel');
-      sel.innerHTML = '<option value="">Loading…</option>';
-
-      const { data, error } = await sb
-        .from('companies')
-        .select('id,name')
-        .eq('owner_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error(error);
-        sel.innerHTML = '<option value="">Error loading companies</option>';
-        return;
-      }
-      if (!data || data.length === 0) {
-        sel.innerHTML = '<option value="">No company yet — create one below</option>';
-        return;
-      }
-      sel.innerHTML = data.map(c => `<option value="${c.id}">${GI.escapeHtml(c.name)}</option>`).join('');
-    }
-
-    async function createCompany() {
-      const nameEl = document.getElementById('newCName');
-      const webEl  = document.getElementById('newCWeb');
-      const name = nameEl.value.trim();
-      let website = webEl.value.trim();
-      note('cNote', '');
-
-      if (!name) { note('cNote', 'Enter a company name.'); return; }
-      if (website && !httpsRe.test(website)) website = 'https://' + website;
-
-      const { error } = await sb.from('companies').insert({
-        name,
-        website: website || null,
-        owner_id: session.user.id
-      });
-
-      if (error) { console.error(error); note('cNote', 'Create error: ' + error.message); return; }
-      nameEl.value = ''; webEl.value = '';
-      await loadCompanies();
-      note('cNote', 'Company created.'); setTimeout(() => note('cNote', ''), 1500);
-    }
-
-    async function postJob() {
-      const company_id = document.getElementById('companySel').value;
-      if (!company_id) { note('jNote', 'Select or create a company first.'); return; }
-
-      const title = document.getElementById('jTitle').value.trim();
-      const description = document.getElementById('jDesc').value.trim();
-      if (!title || !description) { note('jNote', 'Enter title and description.'); return; }
-
-      const payload = {
-        company_id,
-        title,
-        location: (document.getElementById('jLocation').value.trim() || null),
-        type: document.getElementById('jType').value,
-        remote: document.getElementById('jRemote').checked,
-        min_salary: (v => isNaN(v) ? null : v)(parseFloat(document.getElementById('jMin').value || '')),
-        max_salary: (v => isNaN(v) ? null : v)(parseFloat(document.getElementById('jMax').value || '')),
-        currency: (document.getElementById('jCur').value.trim() || null),
-        description,
-        published: document.getElementById('jPublished').checked,
-        created_by: session.user.id
-      };
-
-      const { error } = await sb.from('jobs').insert(payload);
-      if (error) { console.error(error); note('jNote', 'Post error: ' + error.message); return; }
-
-      ['jTitle','jLocation','jMin','jMax','jCur','jDesc'].forEach(id => document.getElementById(id).value = '');
-      await loadJobs();
-      note('jNote', 'Job posted.'); setTimeout(() => note('jNote', ''), 1500);
-    }
-
-    // ---------- FIXED loader (no more parse error) ----------
-    async function loadJobs() {
-      const rows = document.getElementById('jobsRows');
-      rows.innerHTML = '<tr><td colspan="4" class="muted">Loading…</td></tr>';
-
-      const uid = session.user.id;
-
-      // 1) get the list of company ids you own
-      const { data: cos, error: cErr } = await sb
-        .from('companies')
-        .select('id')
-        .eq('owner_id', uid);
-
-      if (cErr) {
-        console.error(cErr);
-        rows.innerHTML = `<tr><td colspan="4">Load error: ${GI.escapeHtml(cErr.message)}</td></tr>`;
-        return;
-      }
-
-      const ids = (cos || []).map(c => c.id);
-      // Quote UUIDs to be safe
-      const quoted = ids.map(id => `"${id}"`).join(',');
-
-      // 2) build OR expression using only root columns
-      let orExpr = `created_by.eq.${uid}`;
-      if (ids.length) {
-        orExpr += `,company_id.in.(${quoted})`;
-      }
-
-      const { data, error } = await sb
-        .from('jobs')
-        .select('id,title,published,created_at,companies(name)')
-        .or(orExpr)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error(error);
-        rows.innerHTML = `<tr><td colspan="4">Load error: ${GI.escapeHtml(error.message)}</td></tr>`;
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        rows.innerHTML = '<tr><td colspan="4" class="muted">No jobs yet.</td></tr>';
-        return;
-      }
-
-      rows.innerHTML = data.map(j => `
-        <tr>
-          <td>${GI.escapeHtml(j.title)}${j.companies?.name ? ` <span class="muted">– ${GI.escapeHtml(j.companies.name)}</span>` : ''}</td>
-          <td>${j.published ? '<span class="badge">Published</span>' : '<span class="badge">Draft</span>'}</td>
-          <td class="muted">${new Date(j.created_at).toLocaleString()}</td>
-          <td><a href="/job.html?id=${j.id}" target="_blank">View</a></td>
-        </tr>
-      `).join('');
-    }
-    // --------------------------------------------------------
-
-    async function loadApps() {
-      const rows = document.getElementById('appsRows');
-      rows.innerHTML = '<tr><td colspan="5" class="muted">Loading…</td></tr>';
-
-      const { data, error } = await sb
-        .from('applications')
-        .select('id,candidate_name,candidate_email,message,created_at,jobs(title,companies(owner_id),created_by))')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error(error);
-        rows.innerHTML = `<tr><td colspan="5">Load error: ${GI.escapeHtml(error.message)}</td></tr>`;
-        return;
-      }
-      if (!data || data.length === 0) {
-        rows.innerHTML = '<tr><td colspan="5" class="muted">No applications yet.</td></tr>';
-        return;
-      }
-      rows.innerHTML = data.map(a => `
-        <tr>
-          <td>${GI.escapeHtml(a.jobs?.title || '')}</td>
-          <td>${GI.escapeHtml(a.candidate_name || '')}</td>
-          <td><a href="mailto:${encodeURIComponent(a.candidate_email || '')}">${GI.escapeHtml(a.candidate_email || '')}</a></td>
-          <td>${GI.escapeHtml(a.message || '')}</td>
-          <td class="muted">${new Date(a.created_at).toLocaleString()}</td>
-        </tr>
-      `).join('');
-    }
-
-    init();
-  })();
-  </script>
+  await loadCompanies();
+  await loadJobs();
+})();
+</script>
 </body>
 </html>

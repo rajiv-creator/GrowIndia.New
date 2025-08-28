@@ -1,80 +1,53 @@
+
 <!doctype html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Admin — GrowIndia Jobs</title>
-
-  <link rel="stylesheet" href="/app.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin — GrowIndia</title>
+  <link rel="stylesheet" href="/app.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=2"></script>
-  <script src="/components.js"></script>
+  <script src="/config.js?v=1"></script>
+  <script src="/components.js?v=1"></script>
 </head>
 <body>
-  <div class="container" style="padding-top:18px">
-    <div class="row" style="justify-content:space-between">
-      <strong>Admin</strong>
-      <div class="row"><a class="btn ghost" href="/jobs.html">Back to site</a><button class="btn" id="logoutBtn">Logout</button></div>
-    </div>
-
-    <div id="guard" class="alert" style="display:none"></div>
+  <div class="container">
+    <div id="banner" class="card warn hidden">You are not an admin.</div>
 
     <div class="card">
-      <h3>Companies</h3>
-      <table class="table">
-        <thead><tr><th>Name</th><th>Website</th><th>Owner</th><th>Created</th></tr></thead>
-        <tbody id="cRows"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
-      </table>
+      <h2 class="h2">Companies</h2>
+      <table class="table"><thead><tr><th>Name</th><th>Owner</th><th>Website</th><th>Created</th></tr></thead>
+      <tbody id="companiesBody"></tbody></table>
     </div>
 
-    <div class="card" style="margin-top:12px">
-      <h3>Jobs</h3>
-      <table class="table">
-        <thead><tr><th>Title</th><th>Company</th><th>Status</th><th>Created</th></tr></thead>
-        <tbody id="jRows"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
-      </table>
+    <div class="card">
+      <h2 class="h2">Jobs</h2>
+      <table class="table"><thead><tr><th>Title</th><th>Company</th><th>Published</th><th>Created</th></tr></thead>
+      <tbody id="jobsBody"></tbody></table>
     </div>
   </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", async ()=> {
-  const s=await GI.requireAuth(); if(!s) return;
-  const admin=await GI.isAdmin(); GI.header(s.user, admin);
-  document.getElementById("logoutBtn").addEventListener("click", async ()=>{ await sbAuth.signOut(); location.href="/index.html"; });
-  if(!admin){
-    const g=document.getElementById("guard"); g.style.display="block"; g.textContent="You are not an admin.";
-    return;
-  }
-  loadCompanies(); loadJobs();
-});
+(async()=>{
+  const s = await requireAuth();
+  const admin = await isAdmin();
+  header(s?.user, admin);
+  if(!admin){ document.getElementById("banner").classList.remove("hidden"); return; }
 
-async function loadCompanies(){
-  const rows=document.getElementById("cRows");
-  const { data, error } = await sb.from("companies").select("id,name,website,owner_id,created_at").order("created_at",{ascending:false});
-  if(error){ rows.innerHTML=`<tr><td colspan="4"><div class="alert">Error: ${GI.escapeHtml(error.message)}</div></td></tr>`; return; }
-  rows.innerHTML = data.map(c=>`
-    <tr>
-      <td>${GI.escapeHtml(c.name)}</td>
-      <td>${c.website?`<a href="${encodeURI(c.website)}" target="_blank">${GI.escapeHtml(c.website)}</a>`:""}</td>
-      <td class="muted"><code>${c.owner_id}</code></td>
-      <td class="muted">${new Date(c.created_at).toLocaleString()}</td>
-    </tr>
-  `).join("");
-}
+  const cbody = document.getElementById("companiesBody");
+  const jbody = document.getElementById("jobsBody");
+  cbody.innerHTML = spinnerRow(); jbody.innerHTML = spinnerRow();
 
-async function loadJobs(){
-  const rows=document.getElementById("jRows");
-  const { data, error } = await sb.from("jobs").select("id,title,published,created_at,companies(name)").order("created_at",{ascending:false});
-  if(error){ rows.innerHTML=`<tr><td colspan="4"><div class="alert">Error: ${GI.escapeHtml(error.message)}</div></td></tr>`; return; }
-  rows.innerHTML = data.map(j=>`
-    <tr>
-      <td><a href="/job.html?id=${j.id}" target="_blank">${GI.escapeHtml(j.title)}</a></td>
-      <td>${GI.escapeHtml(j.companies?.name||"")}</td>
-      <td>${j.published?'<span class="badge">Published</span>':'<span class="badge">Draft</span>'}</td>
-      <td class="muted">${new Date(j.created_at).toLocaleString()}</td>
-    </tr>
-  `).join("");
-}
+  const { data: companies, error: cerr } = await sb.from("companies")
+    .select("name, website, created_at, owner_id").order("created_at", {ascending:false});
+  cbody.innerHTML = cerr ? `<tr><td colspan="99">Error: ${cerr.message}</td></tr>` :
+    companies.map(c=>`<tr><td>${c.name}</td><td class="small">${c.owner_id}</td><td>${c.website||""}</td><td>${fmtDate(c.created_at)}</td></tr>`).join("");
+
+  const { data: jobs, error: jerr } = await sb.from("jobs")
+    .select("title, published, created_at, companies(name)").order("created_at",{ascending:false});
+  jbody.innerHTML = jerr ? `<tr><td colspan="99">Error: ${jerr.message}</td></tr>` :
+    jobs.map(j=>`<tr><td>${j.title}</td><td>${j.companies?.name||""}</td><td>${j.published?'yes':'no'}</td><td>${fmtDate(j.created_at)}</td></tr>`).join("");
+})();
 </script>
 </body>
 </html>

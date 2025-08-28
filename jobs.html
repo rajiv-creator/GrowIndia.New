@@ -1,88 +1,72 @@
+
 <!doctype html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Jobs — GrowIndia</title>
-
-  <link rel="stylesheet" href="/app.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GrowIndia Jobs — Browse</title>
+  <link rel="stylesheet" href="/app.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=2"></script>
-  <script src="/components.js"></script>
+  <script src="/config.js?v=1"></script>
+  <script src="/components.js?v=1"></script>
 </head>
 <body>
-  <div class="container" style="padding-top:18px">
-    <div class="row" style="justify-content:space-between;align-items:flex-end">
-      <div>
-        <div class="kicker">Find your next role</div>
-        <h1 class="page-title">Open Jobs</h1>
-      </div>
-      <div class="row">
-        <input id="q" class="input" placeholder="Search title or location…" style="min-width:260px">
-        <select id="type" class="input" style="width:160px">
-          <option value="">All types</option>
-          <option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option>
-        </select>
-        <label class="row" style="gap:6px"><input type="checkbox" id="remoteOnly"> Remote</label>
-        <button class="btn" id="searchBtn">Search</button>
-      </div>
+  <div class="container">
+    <div class="row">
+      <div><h1 class="h1">Open positions</h1></div>
     </div>
-
-    <div id="grid" class="grid cards" style="margin-top:14px"></div>
-    <div id="empty" class="muted" style="margin-top:10px"></div>
+    <div class="search">
+      <input id="q" class="input" placeholder="Search title or location"/>
+      <button id="searchBtn" class="btn">Search</button>
+    </div>
+    <table class="table" id="tbl">
+      <thead><tr><th>Title</th><th>Company</th><th>Location</th><th>Created</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
     <div class="pagination">
-      <button class="btn" id="prevBtn">Prev</button>
-      <span id="pageInfo" class="muted"></span>
-      <button class="btn" id="nextBtn">Next</button>
+      <button class="btn" id="prev">Prev</button>
+      <span id="page" class="small muted"></span>
+      <button class="btn" id="next">Next</button>
     </div>
   </div>
 
 <script>
-const PAGE=9; let page=1, total=0;
+(async()=>{
+  const s = await getSession();
+  header(s?.user, await isAdmin());
 
-document.addEventListener("DOMContentLoaded", async ()=> {
-  const s=await GI.getSession(); const admin=await GI.isAdmin();
-  GI.header(s?.user, admin);
-  document.getElementById("searchBtn").addEventListener("click", ()=>{ page=1; fetchJobs(); });
-  document.getElementById("prevBtn").addEventListener("click", ()=>{ if(page>1){ page--; fetchJobs(); }});
-  document.getElementById("nextBtn").addEventListener("click", ()=>{ if(page<Math.ceil(total/PAGE)){ page++; fetchJobs(); }});
-  fetchJobs();
-});
+  let page=1, pageSize=10, q="";
+  const tbody = document.getElementById("tbody");
+  const bind = async ()=>{
+    tbody.innerHTML = spinnerRow();
+    let query = sb.from("jobs")
+      .select("id,title,location,created_at,companies(name)", { count:"exact" })
+      .eq("published", true)
+      .order("created_at", { ascending:false })
+      .range((page-1)*pageSize, page*pageSize-1);
+    if(q){
+      query = query.ilike("title", `%${q}%`).or(`location.ilike.%${q}%`);
+    }
+    const { data, error, count } = await query;
+    if(error){ tbody.innerHTML = `<tr><td colspan="99">Error: ${error.message}</td></tr>`; return; }
+    if(!data.length){ tbody.innerHTML = `<tr><td colspan="99" class="muted">No jobs found.</td></tr>`; }
+    else{
+      tbody.innerHTML = data.map(j=>`<tr>
+        <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${j.title}</a></td>
+        <td>${j.companies?.name || "-"}</td>
+        <td>${j.location || "-"}</td>
+        <td>${new Date(j.created_at).toLocaleDateString()}</td>
+      </tr>`).join("");
+    }
+    document.getElementById("page").textContent = `page ${page} of ${Math.max(1, Math.ceil((count||0)/pageSize))}`;
+  };
 
-async function fetchJobs(){
-  const q=document.getElementById("q").value.trim();
-  const type=document.getElementById("type").value;
-  const remoteOnly=document.getElementById("remoteOnly").checked;
+  document.getElementById("searchBtn").onclick = ()=>{ q = document.getElementById("q").value.trim(); page=1; bind(); };
+  document.getElementById("prev").onclick = ()=>{ if(page>1){page--; bind();}};
+  document.getElementById("next").onclick = ()=>{ page++; bind(); };
 
-  let query = sb.from("jobs").select("id,title,location,type,remote,min_salary,max_salary,currency,created_at,companies(name,website)", { count:"exact" })
-    .eq("published", true)
-    .order("created_at", { ascending:false })
-    .range((page-1)*PAGE, (page*PAGE)-1);
-
-  if(q){ query = query.or(`title.ilike.%${q}%,location.ilike.%${q}%`); }
-  if(type){ query = query.eq("type", type); }
-  if(remoteOnly){ query = query.eq("remote", true); }
-
-  const { data, count, error } = await query;
-  const grid=document.getElementById("grid"); const empty=document.getElementById("empty"); const pi=document.getElementById("pageInfo");
-
-  if(error){ grid.innerHTML=""; empty.textContent="Error: "+error.message; return; }
-  total=count||0; pi.textContent = total? `Page ${page} of ${Math.max(1, Math.ceil(total/PAGE))}`:"";
-  if(!data || data.length===0){ grid.innerHTML=""; empty.textContent="No jobs found."; return; }
-  empty.textContent="";
-  grid.innerHTML = data.map(j => `
-    <a class="card" href="/job.html?id=${j.id}">
-      <h3>${GI.escapeHtml(j.title)}</h3>
-      <div class="muted">${GI.escapeHtml(j.companies?.name || "")}</div>
-      <div class="row" style="gap:8px;margin-top:6px">
-        ${j.location?`<span class="badge">📍 ${GI.escapeHtml(j.location)}</span>`:""}
-        ${j.type?`<span class="badge">🧭 ${GI.escapeHtml(j.type)}</span>`:""}
-        ${j.remote?`<span class="badge">🌐 Remote</span>`:""}
-      </div>
-      <div class="muted" style="margin-top:8px">Posted ${GI.timeAgo(j.created_at)} ago</div>
-    </a>
-  `).join("");
-}
+  bind();
+})();
 </script>
 </body>
 </html>
