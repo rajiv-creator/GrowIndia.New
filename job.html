@@ -1,77 +1,102 @@
-
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Job — GrowIndia</title>
-  <link rel="stylesheet" href="/app.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=1"></script>
-  <script src="/components.js?v=1"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/config.js?v=6"></script>
+  <script src="/components.js?v=6"></script>
+  <style>
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
+    label{display:block;font-weight:600;margin:8px 0 4px}
+    input, textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    button{padding:10px 14px;border-radius:8px;border:none;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
+  </style>
 </head>
 <body>
-  <div class="container" id="wrap">
-    <div class="grid">
-      <div class="card">
-        <p class="kicker">Job</p>
-        <h1 class="h1" id="title">Loading...</h1>
-        <div class="muted" id="meta"></div>
-        <div id="desc" style="margin-top:12px"></div>
-      </div>
-      <div class="card">
-        <h2 class="h2">Apply for this job</h2>
-        <form id="applyForm" class="grid">
-          <input id="name" class="input" placeholder="Your name" required/>
-          <input id="email" class="input" type="email" placeholder="Your email" required/>
-          <textarea id="message" placeholder="Message (optional)"></textarea>
-          <button class="btn primary" type="submit">Submit application</button>
-          <div id="msg" class="muted"></div>
-        </form>
-      </div>
+  <main class="container" style="max-width:800px;margin:0 auto;padding:24px">
+    <div id="jobCard" class="card">
+      <h1 id="j_title">Loading…</h1>
+      <div id="j_meta" style="color:#64748b"></div>
+      <div id="j_salary" style="margin:8px 0;color:#64748b"></div>
+      <div id="j_desc" style="white-space:pre-wrap;margin-top:12px"></div>
     </div>
-  </div>
 
-<script>
-(async()=>{
-  const s = await getSession();
-  header(s?.user, await isAdmin());
+    <section class="card">
+      <h2>Apply</h2>
+      <form id="appForm">
+        <label for="a_name">Full name *</label>
+        <input id="a_name" name="candidate_name" required placeholder="Your name">
 
-  const params = new URLSearchParams(location.search);
-  const id = params.get("id");
+        <label for="a_email">Email *</label>
+        <input id="a_email" name="email" required type="email" placeholder="you@example.com">
 
-  const { data: job, error } = await sb.from("jobs")
-    .select("*, companies(name, website)")
-    .eq("id", id).maybeSingle();
+        <label for="a_msg">Message</label>
+        <textarea id="a_msg" name="message" rows="6" placeholder="Write a short note…"></textarea>
 
-  if(error || !job){
-    document.getElementById("wrap").innerHTML = `<div class="card">Job not found.</div>`;
-    return;
-  }
+        <div style="margin-top:12px">
+          <button id="btnApply" type="submit">Submit application</button>
+        </div>
+      </form>
+    </section>
+  </main>
 
-  document.getElementById("title").textContent = job.title;
-  document.getElementById("meta").textContent = `${job.companies?.name || ""} • ${job.location || ""} • ${new Date(job.created_at).toLocaleDateString()}`;
-  document.getElementById("desc").textContent = job.description || "";
+  <script>
+    (async function(){
+      const { ui, q, db, getQueryParam, escapeHTML } = window.app;
+      const id = getQueryParam('id');
+      if (!id) {
+        ui.error('Missing job id');
+        history.replaceState(null,'','/jobs.html');
+        location.href = '/jobs.html';
+        return;
+      }
 
-  const form = document.getElementById("applyForm");
-  const msg = document.getElementById("msg");
-  form.addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    msg.textContent = "";
-    const payload = {
-      job_id: id,
-      candidate_name: document.getElementById("name").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      message: document.getElementById("message").value.trim()
-    };
-    const { error } = await sb.from("applications").insert(payload);
-    msg.textContent = error ? ("Error: "+error.message) : "Application submitted!";
-    if(!error) form.reset();
-  });
-})();
-<!-- Supabase + app scripts (order matters) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js?v=5"></script>
-<script src="/components.js?v=5"></script>
+      async function loadJob() {
+        try {
+          const job = await db.getJobByIdPublic(id);
+          if (!job || (!job.published)) {
+            q('#j_title').textContent = 'Job not found';
+            q('#j_meta').textContent = '';
+            q('#j_desc').textContent = '';
+            return;
+          }
+          q('#j_title').textContent = job.title;
+          q('#j_meta').textContent = `${job.company?.name || ''} • ${job.location} • ${job.employment_type}`;
+          const salary =
+            (job.min_salary ? job.min_salary : '') +
+            (job.max_salary ? '–'+job.max_salary : '') +
+            (job.currency ? ' '+job.currency : '');
+          q('#j_salary').textContent = salary.trim();
+          q('#j_desc').textContent = job.description || '';
+        } catch (err) {
+          console.error(err);
+          ui.error('Failed to load job');
+        }
+      }
+
+      q('#appForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const btn = q('#btnApply');
+        window.app.ui.setLoading(btn, true);
+        try {
+          const f = window.app.serializeForm(e.target);
+          if (!f.candidate_name?.trim()) return ui.error('Name is required');
+          if (!f.email?.trim()) return ui.error('Email is required');
+          await db.applyToJob({ job_id: id, ...f });
+          ui.success('Application submitted');
+          e.target.reset();
+        } catch (err) {
+          console.error(err);
+          ui.error(err.message || 'Failed to submit application');
+        } finally {
+          window.app.ui.setLoading(btn, false);
+        }
+      });
+
+      loadJob();
+    })();
+  </script>
 </body>
 </html>
