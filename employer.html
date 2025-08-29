@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>GrowIndia Jobs — Employer</title>
   <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=6"></script>
   <script src="/components.js?v=6"></script>
   <style>
@@ -115,7 +116,6 @@
         user = await requireAuth();
       } catch(e) { return; }
 
-      // Load companies
       async function refreshCompanies(selectLastCreatedId=null) {
         const companies = await db.myCompanies(user.id);
         const sel = q('#companySelect');
@@ -140,7 +140,6 @@
 
       await refreshCompanies();
 
-      // Create company
       q('#createCompanyForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const btn = q('#btnCreateCompany');
@@ -160,7 +159,6 @@
         }
       });
 
-      // Post job
       q('#jobForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const btn = q('#btnPostJob');
@@ -170,7 +168,6 @@
           if (!company_id) { ui.error('Select or create a company first'); return; }
 
           const f = window.app.serializeForm(e.target);
-          // Inline validation
           if (!f.title?.trim()) return ui.error('Job title is required');
           if (!f.location?.trim()) return ui.error('Location is required');
           if (!f.employment_type) return ui.error('Employment type is required');
@@ -184,7 +181,7 @@
           await db.createJob({ ...f, company_id });
           ui.success(f.published ? 'Job posted & published' : 'Job posted (draft)');
           e.target.reset();
-          q('#j_curr').value = 'INR';
+          document.getElementById('j_curr').value = 'INR';
         } catch (err) {
           ui.error(err.message || 'Failed to post job');
           console.error(err);
