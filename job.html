@@ -6,8 +6,8 @@
   <title>Job — GrowIndia</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=10"></script>
-  <script src="/components.js?v=10"></script>
+  <script src="/config.js?v=11"></script>
+  <script src="/components.js?v=11"></script>
   <style>
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
     label{display:block;font-weight:600;margin:8px 0 4px}
@@ -54,25 +54,20 @@
       const id = getQueryParam('id');
       if (!id) { ui.error('Missing job id'); location.href = '/jobs.html'; return; }
 
-      let job;
-      async function loadJob() {
+      async function loadJob(){
         try {
-          job = await db.getJobByIdPublic(id);
-          if (!job || (!job.published)) {
-            q('#j_title').textContent = 'Job not found';
-            q('#j_meta').textContent = ''; q('#j_desc').textContent = ''; return;
-          }
+          const job = await db.getJobByIdPublic(id);
+          if (!job || !job.published) { q('#j_title').textContent='Job not found'; return; }
           q('#j_title').textContent = job.title;
           q('#j_meta').textContent = `${job.company?.name || ''} • ${job.location} • ${job.employment_type}`;
           const salary = (job.min_salary?job.min_salary:'') + (job.max_salary?'–'+job.max_salary:'') + (job.currency?' '+job.currency:'');
           q('#j_salary').textContent = salary.trim();
           q('#j_desc').textContent = job.description || '';
 
-          // JSON-LD
           const ld = {
             "@context":"https://schema.org/","@type":"JobPosting",
             "title": job.title,
-            "description": (job.description || '').replace(/<[^>]*>?/gm,''),
+            "description": (job.description||'').replace(/<[^>]*>?/gm,''),
             "datePosted": new Date(job.created_at).toISOString(),
             "employmentType": job.employment_type,
             "hiringOrganization": { "@type":"Organization", "name": job.company?.name || "Company", "sameAs": job.company?.website || undefined },
@@ -84,33 +79,29 @@
               "value":{"@type":"QuantitativeValue","minValue": job.min_salary || undefined,"maxValue": job.max_salary || undefined,"unitText":"YEAR"}
             } : undefined
           };
-          const s = document.createElement('script'); s.type='application/ld+json'; s.textContent = JSON.stringify(ld); document.head.appendChild(s);
+          const s = document.createElement('script'); s.type='application/ld+json'; s.textContent=JSON.stringify(ld); document.head.appendChild(s);
           document.title = `${job.title} – ${job.company?.name || 'GrowIndia Jobs'}`;
-        } catch (err) { console.error(err); ui.error('Failed to load job'); }
+        } catch(err){ console.error(err); ui.error('Failed to load job'); }
       }
 
-      q('#appForm').addEventListener('submit', async (e)=>{
+      document.getElementById('appForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
-        const btn = q('#btnApply'); window.app.ui.setLoading(btn, true);
+        const btn = document.getElementById('btnApply'); window.app.ui.setLoading(btn,true);
         try {
           const f = window.app.serializeForm(e.target);
-          if (f.website) { ui.success('Application submitted'); e.target.reset(); return; }
+          if (f.website) { ui.success('Application submitted'); e.target.reset(); return; } // honeypot
           if (!f.candidate_name?.trim()) return ui.error('Name is required');
           if (!f.email?.trim()) return ui.error('Email is required');
 
-          // Local cooldown (60s)
           const key = `apply:${id}:${f.email.toLowerCase()}`;
           const last = Number(localStorage.getItem(key)||0);
           if (Date.now()-last < 60000) return ui.warn('You just applied. Please wait a minute.');
 
-          await db.applyToJob({ job_id: id, ...f });
+          await db.applyToJob({ job_id:id, ...f });
           localStorage.setItem(key, String(Date.now()));
-          ui.success('Application submitted');
-          e.target.reset();
-        } catch (err) {
-          console.error(err);
-          ui.error(err.message || 'Failed to submit application');
-        } finally { window.app.ui.setLoading(btn, false); }
+          ui.success('Application submitted'); e.target.reset();
+        } catch(err){ console.error(err); ui.error(err.message||'Failed to submit application'); }
+        finally { window.app.ui.setLoading(btn,false); }
       });
 
       loadJob();
