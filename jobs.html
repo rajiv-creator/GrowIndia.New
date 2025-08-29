@@ -4,43 +4,59 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Jobs — GrowIndia</title>
+  <meta name="description" content="Browse open roles on GrowIndia Jobs. Search and filter by location and employment type.">
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=11"></script>
-  <script src="/components.js?v=11"></script>
+  <script src="/config.js?v=12"></script>
+  <script src="/components.js?v=12"></script>
   <style>
-    .filters{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    .top{display:flex;justify-content:space-between;align-items:center}
+    .sticky{position:sticky;top:0;background:#fff;z-index:10;padding:12px 0;border-bottom:1px solid #e5e7eb}
+    .filters{display:flex;gap:12px;flex-wrap:wrap}
     .filters input, .filters select{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
-    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .chip{padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
+    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px}
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px}
     .muted{color:#64748b;font-size:14px}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;font-size:12px}
+    a.joblink{color:#0ea5e9;text-decoration:none;font-weight:600}
     .pager{display:flex;gap:8px;justify-content:center;margin:24px 0}
     .pager button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
-    a.joblink{color:#0ea5e9;text-decoration:none;font-weight:600}
   </style>
 </head>
 <body>
-  <main class="container" style="max-width:1100px;margin:0 auto;padding:24px">
-    <h1>Open Roles</h1>
+  <main class="container">
+    <div class="top">
+      <h1>Open Roles</h1>
+      <a class="joblink" href="/home.html">← Home</a>
+    </div>
 
-    <div class="filters">
-      <input id="f_q" placeholder="Search by title, location, or description">
-      <label>Location <select id="f_location"></select></label>
-      <label>Employment Type <select id="f_type"></select></label>
-      <label>Sort
-        <select id="f_sort">
-          <option value="newest">Newest</option>
-          <option value="pay-max">Pay (Max → Min)</option>
-          <option value="pay-min">Pay (Min → Max)</option>
-        </select>
-      </label>
-      <button id="btnApply">Apply</button>
-      <button id="btnReset">Reset</button>
+    <div class="sticky">
+      <div class="filters">
+        <input id="f_q" placeholder="Search jobs…">
+        <label>Location <select id="f_location"></select></label>
+        <label>Type <select id="f_type"></select></label>
+        <label>Sort
+          <select id="f_sort">
+            <option value="newest">Newest</option>
+            <option value="pay-max">Pay (Max → Min)</option>
+            <option value="pay-min">Pay (Min → Max)</option>
+          </select>
+        </label>
+        <button id="btnReset">Reset</button>
+      </div>
+      <div class="chips">
+        <span id="count" class="chip">Loading…</span>
+        <span id="chip_location" class="chip" style="display:none"></span>
+        <span id="chip_type" class="chip" style="display:none"></span>
+        <span id="chip_sort" class="chip" style="display:none"></span>
+      </div>
     </div>
 
     <div id="jobList" class="list"></div>
-    <div id="empty" class="muted" style="display:none">No jobs found.</div>
+    <div id="empty" class="muted" style="display:none;margin-top:12px">No jobs found.</div>
 
     <div class="pager">
       <button id="prevBtn">Prev</button>
@@ -51,10 +67,10 @@
 
   <script>
     (async function(){
-      const { ui, q, db, escapeHTML, setQueryParams } = window.app;
-      const pageSize = 10;
+      const { ui, q, db, escapeHTML, setQueryParams, debounce } = window.app;
+      const pageSize = 12;
 
-      function stateFromURL(){
+      function readState(){
         const url = new URL(location.href);
         return {
           page: Math.max(1, Number(url.searchParams.get('page')||'1')),
@@ -68,18 +84,26 @@
       async function loadFilters(){
         try {
           const { locations, employment_types } = await db.distinctJobFilters();
-          const locSel = q('#f_location'), typeSel = q('#f_type');
-          locSel.innerHTML = ['all', ...locations].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
-          typeSel.innerHTML = ['all', ...employment_types].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
+          q('#f_location').innerHTML = ['all', ...locations].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
+          q('#f_type').innerHTML = ['all', ...employment_types].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
         } catch (err) { console.error(err); ui.error('Failed to load filters'); }
       }
 
+      function showChips(s, total){
+        q('#count').textContent = `${total} job${total===1?'':'s'}`;
+        const lc = q('#chip_location'), tc = q('#chip_type'), sc = q('#chip_sort');
+        lc.style.display = s.location!=='all' ? 'inline-block' : 'none';
+        lc.textContent = `Location: ${s.location}`;
+        tc.style.display = s.employment_type!=='all' ? 'inline-block' : 'none';
+        tc.textContent = `Type: ${s.employment_type}`;
+        sc.style.display = s.sort!=='newest' ? 'inline-block' : 'none';
+        sc.textContent = s.sort==='pay-max' ? 'Sort: Pay (Max)' : (s.sort==='pay-min' ? 'Sort: Pay (Min)' : '');
+      }
+
       async function render(){
-        const s = stateFromURL();
-        q('#f_location').value = s.location;
-        q('#f_type').value = s.employment_type;
-        q('#f_q').value = s.q;
-        q('#f_sort').value = s.sort;
+        const s = readState();
+        q('#f_q').value = s.q; q('#f_location').value = s.location;
+        q('#f_type').value = s.employment_type; q('#f_sort').value = s.sort;
 
         try {
           const { rows, total } = await db.listJobsPaged({
@@ -90,43 +114,40 @@
           });
 
           const list = q('#jobList'); list.innerHTML='';
-          if (rows.length===0) q('#empty').style.display='block';
-          else {
-            q('#empty').style.display='none';
-            rows.forEach(j=>{
-              const el = document.createElement('div');
-              el.className='card';
-              el.innerHTML = `
-                <a class="joblink" href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a>
-                <div class="muted" style="margin:6px 0">
-                  ${escapeHTML(j.company?.name || '—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
-                </div>
-                <div class="muted">
-                  ${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}
-                </div>`;
-              list.appendChild(el);
-            });
-          }
+          if (rows.length===0) q('#empty').style.display='block'; else q('#empty').style.display='none';
+          rows.forEach(j=>{
+            const el = document.createElement('div'); el.className='card';
+            el.innerHTML = `
+              <a class="joblink" href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a>
+              <div class="muted" style="margin:6px 0">
+                ${escapeHTML(j.company?.name || '—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
+              </div>
+              <div class="muted">${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}</div>
+            `;
+            list.appendChild(el);
+          });
 
           const totalPages = Math.max(1, Math.ceil(total / pageSize));
           q('#pageInfo').textContent = `Page ${s.page} of ${totalPages}`;
           q('#prevBtn').disabled = s.page<=1;
           q('#nextBtn').disabled = s.page>=totalPages;
-
+          showChips(s, total);
         } catch (err) { console.error(err); ui.error('Failed to load jobs'); }
       }
 
       await loadFilters();
 
-      q('#btnApply').addEventListener('click', ()=>{
-        setQueryParams({ page:1, location:q('#f_location').value, type:q('#f_type').value, q:q('#f_q').value.trim(), sort:q('#f_sort').value });
-        render();
-      });
-      q('#btnReset').addEventListener('click', ()=>{
-        setQueryParams({ page:1, location:null, type:null, q:null, sort:'newest' }); render();
-      });
-      q('#prevBtn').addEventListener('click', ()=>{ const s=stateFromURL(); setQueryParams({ page:s.page-1 }); render(); });
-      q('#nextBtn').addEventListener('click', ()=>{ const s=stateFromURL(); setQueryParams({ page:s.page+1 }); render(); });
+      // Instant search (debounced)
+      q('#f_q').addEventListener('input', debounce(()=>{
+        setQueryParams({ page:1, q:q('#f_q').value.trim() }); render();
+      }, 350));
+      q('#f_location').addEventListener('change', ()=>{ setQueryParams({ page:1, location:q('#f_location').value }); render(); });
+      q('#f_type').addEventListener('change', ()=>{ setQueryParams({ page:1, type:q('#f_type').value }); render(); });
+      q('#f_sort').addEventListener('change', ()=>{ setQueryParams({ page:1, sort:q('#f_sort').value }); render(); });
+      q('#btnReset').addEventListener('click', ()=>{ setQueryParams({ page:1, location:null, type:null, q:null, sort:'newest' }); render(); });
+
+      q('#prevBtn').addEventListener('click', ()=>{ const s=readState(); setQueryParams({ page:s.page-1 }); render(); });
+      q('#nextBtn').addEventListener('click', ()=>{ const s=readState(); setQueryParams({ page:s.page+1 }); render(); });
 
       render();
     })();
