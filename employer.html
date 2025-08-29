@@ -6,8 +6,8 @@
   <title>GrowIndia Jobs — Employer</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=8"></script>
-  <script src="/components.js?v=8"></script>
+  <script src="/config.js?v=9"></script>
+  <script src="/components.js?v=9"></script>
   <style>
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
     .row{display:flex;gap:12px;flex-wrap:wrap}
@@ -115,12 +115,35 @@
 
   <script>
     (async function(){
-      const { ui, q, db, requireAuth } = window.app;
+      const { ui, q, requireAuth } = window.app;
+      let db = window.app.db;                  // use shared db
       let user;
       try { user = await requireAuth(); } catch(e) { return; }
 
+      // ---- Fallback shim if db.createJob is missing (for any caching issue) ----
+      if (!db || typeof db.createJob !== 'function') {
+        console.warn('createJob missing on window.app.db — using fallback');
+        db = Object.assign({}, db);
+        db.createJob = async function(job){
+          const payload = {
+            title: job.title?.trim(),
+            location: job.location?.trim(),
+            employment_type: job.employment_type,
+            min_salary: job.min_salary ? Number(job.min_salary) : null,
+            max_salary: job.max_salary ? Number(job.max_salary) : null,
+            currency: (job.currency || 'INR').trim(),
+            description: job.description?.trim() || null,
+            company_id: job.company_id,
+            published: !!job.published
+          };
+          const { data, error } = await window.supabase.from('jobs').insert(payload).select('id').maybeSingle();
+          if (error) throw error;
+          return data;
+        };
+      }
+
       async function refreshCompanies(selectLastCreatedId=null) {
-        const companies = await db.myCompanies(user.id);
+        const companies = await window.app.db.myCompanies(user.id);
         const sel = q('#companySelect');
         sel.innerHTML = '';
         if (companies.length === 0) {
@@ -147,11 +170,11 @@
       q('#createCompanyForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const btn = q('#btnCreateCompany');
-        ui.setLoading(btn, true);
+        window.app.ui.setLoading(btn, true);
         try {
           const { name, website } = window.app.serializeForm(e.target);
           if (!name?.trim()) { ui.error('Company name is required'); return; }
-          const created = await db.createCompany({ name, website, owner_id: user.id });
+          const created = await window.app.db.createCompany({ name, website, owner_id: user.id });
           ui.success('Company created');
           (e.target).reset();
           await refreshCompanies(created.id);
@@ -159,7 +182,7 @@
           ui.error(err.message || 'Failed to create company');
           console.error(err);
         } finally {
-          ui.setLoading(btn, false);
+          window.app.ui.setLoading(btn, false);
         }
       });
 
@@ -167,7 +190,7 @@
       q('#jobForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const btn = q('#btnPostJob');
-        ui.setLoading(btn, true);
+        window.app.ui.setLoading(btn, true);
         try {
           const company_id = q('#companySelect').value;
           if (!company_id) { ui.error('Select or create a company first'); return; }
@@ -191,7 +214,7 @@
           ui.error(err.message || 'Failed to post job');
           console.error(err);
         } finally {
-          ui.setLoading(btn, false);
+          window.app.ui.setLoading(btn, false);
         }
       });
     })();
