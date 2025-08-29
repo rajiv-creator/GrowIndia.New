@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Recruiter Home — GrowIndia</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=12"></script>
+  <script src="/components.js?v=12"></script>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f6f8fc;color:#0f172a}
+    /* top bar with menus */
+    .top{position:sticky;top:0;background:#fff;border-bottom:1px solid #e5e7eb;z-index:50}
+    .topin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:24px}
+    .brand{font-weight:800}
+    .menu{display:flex;gap:18px;position:relative}
+    .menu > div{position:relative}
+    .menu a{color:#0f172a;text-decoration:none;font-weight:600}
+    .dd{display:none;position:absolute;top:28px;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 12px 28px rgba(2,6,23,.12);min-width:220px;overflow:hidden}
+    .dd a{display:block;padding:10px 12px;border-top:1px solid #f1f5f9}
+    .menu > div:hover .dd{display:block}
+    /* content */
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 28px rgba(2,6,23,.06)}
+    .card h3{margin:0}
+    .sec{padding:14px;border-top:1px solid #eef2f7}
+    .hero{background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;border-radius:14px;padding:18px}
+    .btn{display:inline-block;background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:10px 14px;text-decoration:none;font-weight:700}
+    .btn.alt{background:#fff;color:#0f172a;border:1px solid #e5e7eb}
+    .muted{color:#64748b}
+    .tile{padding:14px;border-top:1px solid #eef2f7}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="topin">
+      <div class="brand">GrowIndia Recruiter</div>
+      <nav class="menu">
+        <div><a href="#">Jobs & Responses ▾</a>
+          <div class="dd">
+            <a href="/employer.html">Post a Job</a>
+            <a href="/employer-edit.html">Manage Jobs & Responses</a>
+            <a href="/employer-apps.html">Applications Inbox</a>
+          </div>
+        </div>
+        <div><a href="#">Resdex ▾</a>
+          <div class="dd">
+            <a href="#">Search Resumes (coming soon)</a>
+            <a href="#">Send Nvite (coming soon)</a>
+            <a href="#">Manage Searches (coming soon)</a>
+          </div>
+        </div>
+        <div><a href="#">Analytics ▾</a>
+          <div class="dd">
+            <a href="#">Job Performance (coming soon)</a>
+            <a href="#">Applications Funnel (coming soon)</a>
+          </div>
+        </div>
+      </nav>
+      <div style="margin-left:auto"><a class="btn alt" href="/index.html">Home</a></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="hero">
+      <h2 style="margin:0 0 6px">Welcome, Recruiter</h2>
+      <div>Post roles, track responses and manage your hiring pipeline.</div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="/employer.html">Post a Hot Vacancy</a>
+        <a class="btn alt" href="/employer-edit.html">Manage Jobs & Responses</a>
+        <a class="btn alt" href="/employer-apps.html">Open Applications Inbox</a>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <section class="card">
+        <div style="padding:14px;border-bottom:1px solid #eef2f7"><h3>Quota usage</h3><div class="muted">Demo stats</div></div>
+        <div class="tile">CV Access — <strong>—</strong> left</div>
+        <div class="tile">Nvite Credits — <strong>—</strong> left</div>
+        <div class="tile">Active Jobs — <strong id="jobCount">0</strong></div>
+      </section>
+
+      <aside class="card">
+        <div style="padding:14px;border-bottom:1px solid #eef2f7"><h3>Contact us</h3></div>
+        <div class="sec">Support: <a href="mailto:support@example.com">support@example.com</a></div>
+        <div class="sec">Helpline: <strong>1800 000 000</strong></div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (async function(){
+      const { requireAuth, db } = window.app;
+      let user; try { user = await requireAuth(); } catch { window.location.replace('/login.html'); return; }
+      const companies = await db.myCompanies(user.id);
+      const ids = companies.map(c=>c.id);
+      const jobs = await db.myJobsByCompanyIds(ids);
+      document.getElementById('jobCount').textContent = (jobs||[]).length;
+    })();
+  </script>
+</body>
+</html>
