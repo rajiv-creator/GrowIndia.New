@@ -6,8 +6,8 @@
   <title>GrowIndia Jobs — Employer</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=7"></script>
-  <script src="/components.js?v=7"></script>
+  <script src="/config.js?v=8"></script>
+  <script src="/components.js?v=8"></script>
   <style>
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
     .row{display:flex;gap:12px;flex-wrap:wrap}
@@ -17,11 +17,16 @@
     button{padding:10px 14px;border-radius:8px;border:none;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
     button[disabled]{opacity:.7;cursor:not-allowed}
     .muted{color:#64748b;font-size:14px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center}
+    .toolbar a{color:#0ea5e9;text-decoration:none;font-weight:600}
   </style>
 </head>
 <body>
   <main class="container" style="max-width:960px;margin:0 auto;padding:24px">
-    <h1>Employer Dashboard</h1>
+    <div class="toolbar">
+      <h1>Employer Dashboard</h1>
+      <a href="/employer-apps.html">View applications inbox →</a>
+    </div>
 
     <section class="card" id="companySection">
       <h2>Your Company</h2>
