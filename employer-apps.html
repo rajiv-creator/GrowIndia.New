@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Applications — Employer Inbox</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=8"></script>
+  <script src="/components.js?v=8"></script>
+  <style>
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
+    .filters{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 16px}
+    .filters input, .filters select{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    .muted{color:#64748b}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
+    .pager{display:flex;gap:8px;justify-content:center;margin:16px 0}
+    .pager button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
+    .nowrap{white-space:nowrap}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Applications</h1>
+    <section class="card">
+      <div class="filters">
+        <label>Job
+          <select id="f_job"></select>
+        </label>
+        <input id="f_q" placeholder="Search name, email, message">
+        <button id="btnApply">Apply</button>
+        <button id="btnReset">Reset</button>
+        <div style="flex:1"></div>
+        <button id="btnExport">Export CSV</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>When</th><th>Job</th><th>Candidate</th><th>Email</th><th>Message</th><th class="nowrap">Actions</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+
+      <div class="pager">
+        <button id="prevBtn">Prev</button>
+        <div id="pageInfo" class="muted"></div>
+        <button id="nextBtn">Next</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (async function(){
+      const { ui, q, db, getSession, downloadCSV } = window.app;
+      let user;
+      try { user = await window.app.requireAuth(); } catch { return; }
+
+      // Resolve employer's jobs
+      const companies = await db.myCompanies(user.id);
+      const companyIds = companies.map(c => c.id);
+      let jobs = [];
+      if (companyIds.length) {
+        const { data, error } = await window.supabase.from('jobs')
+          .select('id,title,company_id,created_at')
+          .in('company_id', companyIds)
+          .order('created_at', { ascending: false });
+        if (error) { ui.error('Failed to load jobs'); throw error; }
+        jobs = data || [];
+      }
+
+      // Job dropdown
+      const sel = q('#f_job');
+      sel.innerHTML = `<option value="all">All jobs</option>` + jobs.map(j=>`<option value="${j.id}">${window.app.escapeHTML(j.title)}</option>`).join('');
+
+      const pageSize = 20;
+      let state = { page:1, jobId:'all', q:'' };
+
+      async function load() {
+        const jobIds = state.jobId==='all' ? jobs.map(j=>j.id) : [state.jobId];
+        const { rows, total } = await db.appsForJobIds(jobIds, { page: state.page, pageSize, q: state.q || null });
+
+        // Build job map
+        const jmap = new Map(jobs.map(j=>[j.id, j]));
+
+        const tbody = q('#rows'); tbody.innerHTML = '';
+        rows.forEach(r=>{
+          const j = jmap.get(r.job_id);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="muted nowrap">${new Date(r.created_at).toLocaleString()}</td>
+            <td>${window.app.escapeHTML(j?.title || '')}</td>
+            <td>${window.app.escapeHTML(r.candidate_name || '')}</td>
+            <td><a href="mailto:${window.app.escapeHTML(r.email)}">${window.app.escapeHTML(r.email)}</a></td>
+            <td>${window.app.escapeHTML((r.message || '').slice(0,180))}${(r.message||'').length>180?'…':''}</td>
+            <td><button class="copyBtn" data-email="${window.app.escapeHTML(r.email)}">Copy email</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        q('#pageInfo').textContent = `Page ${state.page} of ${totalPages}`;
+        q('#prevBtn').disabled = state.page<=1;
+        q('#nextBtn').disabled = state.page>=totalPages;
+      }
+
+      q('#btnApply').addEventListener('click', ()=>{
+        state.page = 1;
+        state.jobId = sel.value;
+        state.q = q('#f_q').value.trim();
+        load();
+      });
+      q('#btnReset').addEventListener('click', ()=>{
+        state = { page:1, jobId:'all', q:'' };
+        q('#f_q').value = '';
+        q('#f_job').value = 'all';
+        load();
+      });
+      q('#prevBtn').addEventListener('click', ()=>{ state.page = Math.max(1, state.page-1); load(); });
+      q('#nextBtn').addEventListener('click', ()=>{ state.page = state.page+1; load(); });
+
+      // Copy email action
+      document.body.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.copyBtn'); if (!btn) return;
+        window.app.ui.copy(btn.dataset.email);
+      });
+
+      // Export CSV (current filter, up to 1000)
+      q('#btnExport').addEventListener('click', async ()=>{
+        const jobIds = state.jobId==='all' ? jobs.map(j=>j.id) : [state.jobId];
+        const { rows } = await db.appsForJobIds(jobIds, { page:1, pageSize:1000, q: state.q || null });
+        const jmap = new Map(jobs.map(j=>[j.id, j]));
+        window.app.downloadCSV({
+          filename: 'applications.csv',
+          rows,
+          columns: [
+            { header:'When', map:(r)=>`"${new Date(r.created_at).toISOString()}"` },
+            { header:'Job Title', map:(r)=>`"${(jmap.get(r.job_id)?.title || '').replace(/"/g,'""')}"` },
+            { header:'Name', map:(r)=>`"${(r.candidate_name||'').replace(/"/g,'""')}"` },
+            { header:'Email', map:(r)=>`"${(r.email||'').replace(/"/g,'""')}"` },
+            { header:'Message', map:(r)=>`"${(r.message||'').replace(/"/g,'""')}"` }
+          ]
+        });
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>
