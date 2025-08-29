@@ -1,139 +1,320 @@
-
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Employer — GrowIndia</title>
-  <link rel="stylesheet" href="/app.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=1"></script>
-  <script src="/components.js?v=1"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employer — GrowIndia Jobs</title>
+  <link rel="stylesheet" href="/app.css" />
 </head>
 <body>
-  <div class="container">
-    <div class="row" style="align-items:center">
-      <h1 class="h1" style="flex:unset">Employer</h1>
-      <a class="btn" href="/jobs.html">Public site</a>
-      <button class="btn" id="logoutTop">Logout</button>
-    </div>
-
-    <div class="card">
-      <h2 class="h2">Your company</h2>
-      <div class="grid">
-        <select id="companySel" class="input"></select>
-        <input id="newCompany" class="input" placeholder="New company name"/>
-        <input id="website" class="input" placeholder="Website (https://…)"/>
-        <button id="createCompany" class="btn">Create company</button>
+  <!-- Simple top bar (your components.js will enhance if present) -->
+  <header class="header">
+    <nav class="nav">
+      <a class="brand" href="/jobs.html">GrowIndia Jobs</a>
+      <div class="right">
+        <a class="btn ghost" href="/jobs.html">Jobs</a>
+        <a class="btn ghost" href="/admin.html">Admin</a>
+        <button id="logoutBtn" class="btn">Logout</button>
       </div>
-    </div>
+    </nav>
+  </header>
 
-    <div class="card">
-      <h2 class="h2">Post a job</h2>
-      <div class="grid">
-        <input id="title" class="input" placeholder="Job title"/>
-        <input id="location" class="input" placeholder="Location"/>
-        <select id="type" class="input">
-          <option value="Full-time">Full-time</option>
-          <option value="Part-time">Part-time</option>
-          <option value="Contract">Contract</option>
-          <option value="Internship">Internship</option>
-        </select>
-        <div class="row">
-          <input id="minSalary" class="input" placeholder="Min salary"/>
-          <input id="maxSalary" class="input" placeholder="Max salary"/>
-          <input id="currency" class="input" placeholder="Currency (e.g., USD, INR)"/>
+  <main class="container">
+    <h1>Employer</h1>
+
+    <!-- Info / error messages -->
+    <div id="postMsg" class="kicker muted" style="min-height:1.25rem;"></div>
+
+    <!-- Your company -->
+    <section class="card">
+      <div class="row space">
+        <h2>Your company</h2>
+        <div>
+          <a href="/jobs.html" class="btn ghost">Public site</a>
+          <button id="logoutBtn2" class="btn ghost">Logout</button>
         </div>
-        <textarea id="description" placeholder="Description"></textarea>
-        <label><input type="checkbox" id="published" checked/> Published</label>
-        <button id="postJob" class="btn primary">Post job</button>
-        <div id="postMsg" class="muted"></div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2 class="h2">Your jobs</h2>
-      <table class="table">
-        <thead><tr><th>Title</th><th>Status</th><th>Created</th></tr></thead>
-        <tbody id="jobsBody"></tbody>
-      </table>
-    </div>
+      <!-- Company selector -->
+      <select id="companySelect" class="input" aria-label="Your companies">
+        <option value="">Select your company…</option>
+      </select>
 
-  </div>
+      <!-- Create company -->
+      <input id="newCompanyName" class="input" placeholder="New company name" />
+      <input id="newCompanyWebsite" class="input" placeholder="Website (https://…)" />
+      <button id="createCompanyBtn" class="btn">Create company</button>
+    </section>
 
-<script>
-(async()=>{
-  const s = await requireAuth();
-  header(s?.user, await isAdmin());
-  document.getElementById("logoutTop").onclick = async()=>{ await sbAuth.signOut(); location.href="/index.html"; };
+    <!-- Post a job -->
+    <section class="card">
+      <h2>Post a job</h2>
 
-  const sel = document.getElementById("companySel");
-  const jobsBody = document.getElementById("jobsBody");
-  jobsBody.innerHTML = spinnerRow();
+      <input id="jobTitle" class="input" placeholder="Job title" />
+      <input id="jobLocation" class="input" placeholder="Location" />
 
-  async function loadCompanies(){
-    sel.innerHTML = "";
-    const { data, error } = await sb.from("companies").select("id,name").eq("owner_id", s.user.id).order("created_at", {ascending:false});
-    if(error){ sel.innerHTML = `<option>Error loading companies</option>`; return; }
-    if(!data.length){ sel.innerHTML = `<option value="">(none)</option>`; }
-    else{
-      sel.innerHTML = data.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+      <div class="row">
+        <select id="jobType" class="input">
+          <option>Full-time</option>
+          <option>Part-time</option>
+          <option>Contract</option>
+          <option>Internship</option>
+        </select>
+        <input id="minSalary" class="input" type="number" placeholder="Min salary" />
+        <input id="maxSalary" class="input" type="number" placeholder="Max salary" />
+        <input id="jobCurrency" class="input" placeholder="Currency (e.g., INR)" />
+      </div>
+
+      <textarea id="jobDescription" class="input" rows="6" placeholder="Description"></textarea>
+
+      <label class="row" style="gap:.5rem;align-items:center;">
+        <input id="publishChk" type="checkbox" checked />
+        <span>Published</span>
+      </label>
+
+      <button id="postJobBtn" class="btn primary">Post job</button>
+    </section>
+
+    <!-- Your jobs -->
+    <section class="card">
+      <h2>Your jobs</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Company</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="jobsTbody">
+            <tr><td colspan="4" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Applications (optional) -->
+    <section class="card">
+      <h2>Applications</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Job</th>
+              <th>Candidate</th>
+              <th>Email</th>
+              <th>Message</th>
+              <th>Applied</th>
+            </tr>
+          </thead>
+          <tbody id="appsTbody">
+            <tr><td colspan="5" class="muted">No applications yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Supabase + app scripts (order matters) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=5"></script>
+  <script src="/components.js?v=5"></script>
+
+  <!-- Page logic -->
+  <script>
+  (async () => {
+    // Elements
+    const msg         = document.getElementById('postMsg');
+    const logoutBtn   = document.getElementById('logoutBtn');
+    const logoutBtn2  = document.getElementById('logoutBtn2');
+
+    const companySelect       = document.getElementById('companySelect');
+    const newCompanyName      = document.getElementById('newCompanyName');
+    const newCompanyWebsite   = document.getElementById('newCompanyWebsite');
+    const createCompanyBtn    = document.getElementById('createCompanyBtn');
+
+    const jobTitle       = document.getElementById('jobTitle');
+    const jobLocation    = document.getElementById('jobLocation');
+    const jobType        = document.getElementById('jobType');
+    const minSalary      = document.getElementById('minSalary');
+    const maxSalary      = document.getElementById('maxSalary');
+    const jobCurrency    = document.getElementById('jobCurrency');
+    const jobDescription = document.getElementById('jobDescription');
+    const publishChk     = document.getElementById('publishChk');
+    const postBtn        = document.getElementById('postJobBtn');
+
+    const jobsTbody = document.getElementById('jobsTbody');
+    const appsTbody = document.getElementById('appsTbody');
+
+    // Require login
+    const s = await sbAuth.getSession();
+    const session = s?.data?.session;
+    if (!session) {
+      location.href = '/index.html';
+      return;
     }
-  }
 
-  async function loadJobs(){
-    jobsBody.innerHTML = spinnerRow();
-    const { data, error } = await sb.from("jobs").select("id,title,status,created_at").eq("created_by", s.user.id).order("created_at", {ascending:false});
-    if(error){ jobsBody.innerHTML = `<tr><td colspan="99">Error: ${error.message}</td></tr>`; return; }
-    if(!data.length){ jobsBody.innerHTML = `<tr><td colspan="99" class="muted">No jobs yet.</td></tr>`; return; }
-    jobsBody.innerHTML = data.map(j=>`<tr>
-      <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${j.title}</a></td>
-      <td>${j.status || 'open'}</td>
-      <td>${new Date(j.created_at).toLocaleString()}</td>
-    </tr>`).join("");
-  }
+    // Logout
+    function wireLogout(btn) {
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        await sbAuth.signOut();
+        location.href = '/index.html';
+      });
+    }
+    wireLogout(logoutBtn);
+    wireLogout(logoutBtn2);
 
-  // create company
-  document.getElementById("createCompany").onclick = async ()=>{
-    const name = document.getElementById("newCompany").value.trim();
-    const website = document.getElementById("website").value.trim();
-    if(!name) return alert("Enter a company name");
-    const { error } = await sb.from("companies").insert({ name, website, owner_id: s.user.id });
-    if(error) return alert(error.message);
-    document.getElementById("newCompany").value="";
-    document.getElementById("website").value="";
-    await loadCompanies();
-  };
-
-  // post job
-  document.getElementById("postJob").onclick = async ()=>{
-    const postMsg = document.getElementById("postMsg");
-    postMsg.textContent = "";
-    const payload = {
-      title: document.getElementById("title").value.trim(),
-      location: document.getElementById("location").value.trim(),
-      type: document.getElementById("type").value,
-      min_salary: document.getElementById("minSalary").value.trim(),
-      max_salary: document.getElementById("maxSalary").value.trim(),
-      currency: document.getElementById("currency").value.trim(),
-      description: document.getElementById("description").value.trim(),
-      published: document.getElementById("published").checked,
-      company_id: sel.value || null,
-      created_by: s.user.id
+    // Utilities
+    const fmtDate = (iso) => {
+      try { return new Date(iso).toLocaleString(); } catch { return iso || ''; }
     };
-    if(!payload.title) return postMsg.textContent="Title required";
-    if(!payload.company_id) return postMsg.textContent="Select a company (create one first)";
-    const { error } = await sb.from("jobs").insert(payload);
-    postMsg.textContent = error ? ("Error: "+error.message) : "Job posted!";
-    if(!error){ await loadJobs(); }
-  };
 
-  await loadCompanies();
-  await loadJobs();
-})();
-<!-- Supabase + app scripts (order matters) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js?v=5"></script>
-<script src="/components.js?v=5"></script>
+    function setMsg(text, good=false) {
+      msg.textContent = text || '';
+      msg.classList.remove('error','ok');
+      if (good) msg.classList.add('ok'); else if (text) msg.classList.add('error');
+    }
+
+    // Load companies owned by this user
+    async function loadCompanies() {
+      setMsg('');
+      companySelect.disabled = true;
+      companySelect.innerHTML = '<option value="">Select your company…</option>';
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name, website, created_at, owner_id')
+        .order('created_at', { ascending: false });
+
+      if (error) { setMsg(error.message); companySelect.disabled = false; return; }
+
+      if (!data || !data.length) {
+        companySelect.innerHTML = '<option value="">(No companies yet)</option>';
+      } else {
+        for (const c of data) {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.name;
+          companySelect.appendChild(opt);
+        }
+      }
+      companySelect.disabled = false;
+      return data || [];
+    }
+
+    // Load jobs for the user (RLS restricts to owner automatically)
+    async function loadJobs(companies = []) {
+      jobsTbody.innerHTML = '<tr><td colspan="4" class="muted">Loading…</td></tr>';
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('id, title, company_id, published, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) { jobsTbody.innerHTML = `<tr><td colspan="4" class="muted">Load error: ${error.message}</td></tr>`; return; }
+
+      if (!data || !data.length) {
+        jobsTbody.innerHTML = '<tr><td colspan="4" class="muted">No jobs yet.</td></tr>';
+        return;
+      }
+
+      const nameById = Object.fromEntries(companies.map(c => [c.id, c.name]));
+      jobsTbody.innerHTML = '';
+      for (const j of data) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${j.title}</td>
+          <td>${nameById[j.company_id] || j.company_id}</td>
+          <td>${j.published ? 'Published' : 'Draft'}</td>
+          <td>${fmtDate(j.created_at)}</td>
+        `;
+        jobsTbody.appendChild(tr);
+      }
+    }
+
+    // (Optional) load applications later if you add policies
+    async function loadApplications() {
+      // Keep simple placeholder; add your own query when ready.
+      appsTbody.innerHTML = '<tr><td colspan="5" class="muted">No applications yet.</td></tr>';
+    }
+
+    // Create company
+    createCompanyBtn.addEventListener('click', async () => {
+      setMsg('');
+      const name = newCompanyName.value.trim();
+      const website = newCompanyWebsite.value.trim();
+      if (!name) { setMsg('Company name required'); return; }
+
+      const owner_id = session.user.id;
+      const { error } = await supabase
+        .from('companies')
+        .insert({ name, website, owner_id });
+
+      if (error) { setMsg(error.message); return; }
+      setMsg('Company created', true);
+      newCompanyName.value = '';
+      newCompanyWebsite.value = '';
+      const companies = await loadCompanies();
+      await loadJobs(companies);
+    });
+
+    // Post job
+    postBtn.addEventListener('click', async () => {
+      setMsg('');
+      const company_id = companySelect.value;
+      const title = jobTitle.value.trim();
+      const location = jobLocation.value.trim();
+      const employment_type = jobType.value;
+      const min_salary = parseInt(minSalary.value || '0', 10);
+      const max_salary = parseInt(maxSalary.value || '0', 10);
+      const currency = (jobCurrency.value || 'INR').toUpperCase();
+      const description = jobDescription.value.trim();
+      const published = !!publishChk.checked;
+
+      if (!company_id) { setMsg('Select a company'); return; }
+      if (!title) { setMsg('Job title required'); return; }
+
+      const { error } = await supabase.from('jobs').insert({
+        company_id,
+        title,
+        description,
+        location,
+        employment_type,
+        min_salary,
+        max_salary,
+        currency,
+        published
+      });
+
+      if (error) { setMsg(error.message); return; }
+      setMsg('Job posted!', true);
+      jobTitle.value = '';
+      jobLocation.value = '';
+      minSalary.value = '';
+      maxSalary.value = '';
+      jobCurrency.value = '';
+      jobDescription.value = '';
+      publishChk.checked = true;
+
+      const companies = await loadCompanies();
+      await loadJobs(companies);
+    });
+
+    // Initial loads
+    const companies = await loadCompanies();
+    await loadJobs(companies);
+    await loadApplications();
+
+    // If your components.js exposes header(), enhance the top bar
+    try {
+      if (window.header) {
+        const admin = false;
+        const hdr = window.header(session.user, admin);
+        document.querySelector('.header').replaceWith(hdr);
+      }
+    } catch {}
+  })();
+  </script>
 </body>
 </html>
