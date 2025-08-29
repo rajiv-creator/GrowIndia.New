@@ -4,98 +4,298 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>GrowIndia Jobs — Find your next role</title>
-  <meta name="description" content="Browse fresh jobs across India. Simple applications, zero friction. Employers can post in minutes.">
-  <link rel="stylesheet" href="/styles.css">
+  <meta name="description" content="Browse fresh jobs across India. Search fast, filter smart, and apply in one step. Employers can post in minutes.">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=12"></script>
   <script src="/components.js?v=12"></script>
   <style>
-    :root{--bg:#0ea5e9;--bg2:#2563eb}
-    .hero{background:linear-gradient(135deg,var(--bg),var(--bg2));color:#fff;padding:72px 24px}
-    .container{max-width:1100px;margin:0 auto}
-    .hero h1{font-size:48px;line-height:1.1;margin:0 0 12px}
-    .hero p{opacity:.95;font-size:18px;margin:0 0 24px}
-    .cta{display:flex;gap:12px;flex-wrap:wrap}
-    .cta a{display:inline-block;padding:12px 16px;border-radius:12px;background:#fff;color:#0f172a;text-decoration:none;font-weight:700}
-    .cta a.secondary{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35)}
-    .section{padding:32px 24px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-    .card{border:1px solid #e5e7eb;border-radius:14px;padding:16px;background:#fff}
-    .muted{color:#64748b}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
-    a.joblink{color:#0ea5e9;text-decoration:none;font-weight:600}
-    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-    .topbar a{color:#0ea5e9;text-decoration:none;font-weight:600}
+    :root{
+      --bg:#0ea5e9;
+      --bg2:#2563eb;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --card:#ffffff;
+      --line:#e5e7eb;
+      --chip:#eef2ff;
+      --pill:#f1f5f9;
+      --accent:#0ea5e9;
+      --accent2:#2563eb;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(2,6,23,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      color:var(--ink);
+      margin:0;
+      background:#fafafa;
+    }
+    a{color:var(--accent);text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+
+    /* NAV */
+    .nav{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter:saturate(1.3) blur(8px);
+      background:rgba(255,255,255,.8);
+      border-bottom:1px solid var(--line);
+    }
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{font-weight:800;font-size:20px;letter-spacing:.2px}
+    .nav-links{display:flex;gap:18px;align-items:center}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:10px 14px;border-radius:12px;border:1px solid var(--line);
+      background:#fff;color:var(--ink);font-weight:700;cursor:pointer
+    }
+    .btn.primary{background:linear-gradient(135deg,var(--bg),var(--bg2));color:#fff;border:none}
+    .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
+
+    /* HERO */
+    .hero{
+      background:
+        radial-gradient(1200px 400px at 80% -50%, rgba(14,165,233,.35), transparent 60%),
+        radial-gradient(900px 380px at 10% -40%, rgba(37,99,235,.35), transparent 60%),
+        linear-gradient(180deg, #f8fbff, #ffffff 38%, #f7fbff 100%);
+      border-bottom:1px solid var(--line);
+    }
+    .hero-inner{padding:56px 0 22px}
+    .hero h1{font-size:46px;line-height:1.08;margin:0 0 10px;letter-spacing:.2px}
+    .sub{color:var(--muted);font-size:18px;margin:0 0 24px}
+    .search-card{
+      background:var(--card); border:1px solid var(--line); border-radius:20px;
+      box-shadow:var(--shadow); padding:14px;
+      display:grid; grid-template-columns: 1fr 220px 220px 140px; gap:10px;
+    }
+    .search-input,.search-select{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px}
+    .search-input input{border:none;outline:none;width:100%;font-size:16px}
+    .search-select select{border:none;outline:none;width:100%;background:#fff;font-size:15px;color:var(--ink)}
+    .search-actions .btn{width:100%}
+    .trending{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .chip{background:var(--pill);border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer;color:#0b1220}
+    .chip:hover{border-color:#cbd5e1;background:#eef2ff}
+
+    /* SECTIONS */
+    .section{padding:28px 0}
+    .section h2{margin:0 0 14px}
+    .grid{display:grid;gap:16px}
+    .grid.jobs{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+    .card{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;
+    }
+    .job-title{font-weight:800;font-size:18px;margin:0 0 6px}
+    .muted{color:var(--muted);font-size:14px}
+    .pill{display:inline-block;background:var(--chip);padding:4px 8px;border-radius:999px;font-size:12px}
+    .job-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+    .salary{color:#0a3a5f;font-weight:700;font-size:14px}
+    .companies{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+    .co-card{display:flex;align-items:center;gap:10px}
+    .co-logo{
+      width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#e2e8f0,#f8fafc);border:1px solid var(--line);
+      display:flex;align-items:center;justify-content:center;font-weight:800;color:#334155
+    }
+
+    /* INFO STRIP */
+    .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px}
+    .info{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:center}
+    .info strong{display:block;font-size:18px}
+    .info span{color:var(--muted);font-size:13px}
+
+    /* EMPLOYER CTA */
+    .cta{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      background:linear-gradient(135deg,var(--bg),var(--bg2));color:#fff;border-radius:18px;padding:18px 20px
+    }
+    .cta p{margin:0;color:#eaf6ff}
+    footer{border-top:1px solid var(--line);padding:22px 0 48px;color:var(--muted);text-align:center}
+    @media (max-width:980px){
+      .search-card{grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:10px}
+      .search-actions{grid-column:1 / -1}
+    }
   </style>
 </head>
 <body>
-  <header class="hero">
-    <div class="container">
-      <div class="topbar">
-        <div style="font-weight:800;font-size:20px">GrowIndia Jobs</div>
-        <nav style="display:flex;gap:16px">
-          <a href="/jobs.html">Jobs</a>
-          <a href="/employer.html">Post a job</a>
-          <a href="/index.html">Sign in</a>
-        </nav>
-      </div>
-      <h1>Find your next role. Fast.</h1>
-      <p>Curated, lightweight job board for India. No logins to browse. One-click apply.</p>
-      <div class="cta">
-        <a href="/jobs.html">Browse jobs</a>
-        <a class="secondary" href="/employer.html">Post a job</a>
-      </div>
+  <!-- NAV -->
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="brand">GrowIndia Jobs</div>
+      <nav class="nav-links">
+        <a href="/jobs.html">Jobs</a>
+        <a href="/employer.html">Post a Job</a>
+        <a class="btn small" href="/index.html">Sign in</a>
+      </nav>
     </div>
   </header>
 
-  <main class="container">
-    <section class="section">
-      <h2 style="margin:0 0 12px">Latest openings</h2>
-      <div id="latest" class="grid"></div>
-      <div style="margin-top:16px"><a href="/jobs.html" class="joblink">See all jobs →</a></div>
-    </section>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <h1>Find your next job in minutes.</h1>
+      <p class="sub">Search thousands of roles across India. No login to browse. One-step applications.</p>
 
-    <section class="section" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:16px">
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-items:center">
-        <div>
-          <h3>For employers</h3>
-          <ul>
-            <li>Post a role in minutes</li>
-            <li>Instant magic-link sign-in</li>
-            <li>Simple applications inbox + CSV export</li>
-          </ul>
-          <a class="joblink" href="/employer.html">Open employer dashboard →</a>
+      <form id="searchForm" class="search-card" autocomplete="off">
+        <div class="search-input">
+          <!-- simple search icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#475569" stroke-width="2"/><path d="M20 20l-3.2-3.2" stroke="#475569" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="q" placeholder="Job title, skills or company" />
         </div>
+        <div class="search-select">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C7 2 3 6 3 11c0 6 9 11 9 11s9-5 9-11c0-5-4-9-9-9Z" stroke="#475569" stroke-width="2"/><circle cx="12" cy="11" r="3" stroke="#475569" stroke-width="2"/></svg>
+          <select id="loc"><option value="all">All locations</option></select>
+        </div>
+        <div class="search-select">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2" stroke="#475569" stroke-width="2"/><rect x="3" y="14" width="18" height="6" rx="2" stroke="#475569" stroke-width="2"/></svg>
+          <select id="type"><option value="all">All types</option></select>
+        </div>
+        <div class="search-actions">
+          <button class="btn primary" type="submit">Search Jobs</button>
+        </div>
+      </form>
+
+      <div class="trending" id="trending">
+        <!-- dynamic popular chips -->
+      </div>
+
+      <div class="strip">
+        <div class="info"><strong>1-step apply</strong><span>No accounts for job seekers</span></div>
+        <div class="info"><strong>Zero fees</strong><span>Always free to browse</span></div>
+        <div class="info"><strong>For employers</strong><span>Post a job in minutes</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LATEST / FEATURED JOBS -->
+  <section class="section">
+    <div class="container">
+      <h2>Featured jobs</h2>
+      <div id="jobs" class="grid jobs"></div>
+      <div style="margin-top:10px">
+        <a href="/jobs.html">See all jobs →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOP COMPANIES -->
+  <section class="section" style="background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="container">
+      <h2>Top companies hiring</h2>
+      <div id="companies" class="grid companies"></div>
+    </div>
+  </section>
+
+  <!-- EMPLOYER CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="cta">
         <div>
-          <h3>For candidates</h3>
-          <ul>
-            <li>Zero-login browsing</li>
-            <li>Clean, mobile friendly UI</li>
-            <li>Apply with name, email &amp; note</li>
-          </ul>
-          <a class="joblink" href="/jobs.html">Start browsing jobs →</a>
+          <h3 style="margin:0 0 6px">Hiring? Post a job today.</h3>
+          <p>Magic-link sign in, simple dashboard, and a clean applications inbox.</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <a class="btn" href="/employer-apps.html">View inbox</a>
+          <a class="btn primary" href="/employer.html">Post a job</a>
         </div>
       </div>
-    </section>
-  </main>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      © <span id="year"></span> GrowIndia Jobs • <a href="/index.html">Sign in</a> • <a href="/jobs.html">Browse jobs</a>
+    </div>
+  </footer>
 
   <script>
     (async function(){
-      const list = document.getElementById('latest');
+      const { db, escapeHTML, ui } = window.app;
+
+      // Populate filters
       try {
-        const { rows } = await window.app.db.listJobsPaged({ page:1, pageSize:6, sort:'newest' });
-        list.innerHTML = rows.map(j => `
-          <div class="card">
-            <a class="joblink" href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a>
-            <div class="muted" style="margin:6px 0">
-              ${window.app.escapeHTML(j.company?.name || '—')} • ${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span>
-            </div>
-            <div class="muted">${j.min_salary?j.min_salary:''}${j.max_salary?'–'+j.max_salary:''} ${window.app.escapeHTML(j.currency||'')}</div>
-          </div>
-        `).join('');
-      } catch (e) {
-        console.error(e); window.app.ui.error('Failed to load latest jobs');
+        const { locations, employment_types } = await db.distinctJobFilters();
+        const locSel = document.getElementById('loc');
+        const typeSel = document.getElementById('type');
+        locSel.insertAdjacentHTML('beforeend',
+          locations.map(v=>`<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`).join('')
+        );
+        typeSel.insertAdjacentHTML('beforeend',
+          employment_types.map(v=>`<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`).join('')
+        );
+      } catch (err) {
+        console.warn(err);
       }
+
+      // Trending chips (static + recent titles keywords from jobs)
+      const trending = document.getElementById('trending');
+      const base = ['Software Engineer','Product Manager','Sales','Marketing','Data Analyst','HR'];
+      try {
+        const { rows } = await db.listJobsPaged({ page:1, pageSize:12, sort:'newest' });
+        const extra = Array.from(new Set(
+          rows.map(j => (j.title||'').split(/\s+/)[0]).filter(Boolean)
+        )).slice(0,6);
+        const chips = [...base.slice(0,4), ...extra].slice(0,8);
+        trending.innerHTML = chips.map(c=>`<span class="chip" data-q="${escapeHTML(c)}">${escapeHTML(c)}</span>`).join('');
+        trending.addEventListener('click', (e)=>{
+          const chip = e.target.closest('.chip'); if (!chip) return;
+          const q = chip.dataset.q || '';
+          location.href = `/jobs.html?q=${encodeURIComponent(q)}&page=1`;
+        });
+      } catch {}
+
+      // Featured jobs
+      async function loadJobs(){
+        try {
+          const { rows } = await db.listJobsPaged({ page:1, pageSize:8, sort:'newest' });
+          const el = document.getElementById('jobs');
+          if (!rows.length) {
+            el.innerHTML = '<div class="muted">No jobs yet. Check back soon.</div>';
+            return;
+          }
+          el.innerHTML = rows.map(j => `
+            <div class="card">
+              <div class="job-title"><a href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a></div>
+              <div class="muted" style="margin:6px 0">
+                ${escapeHTML(j.company?.name || '—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
+              </div>
+              <div class="job-actions">
+                <div class="salary">${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}</div>
+                <a class="btn small" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
+              </div>
+            </div>
+          `).join('');
+          // Build top companies from featured rows
+          const co = Array.from(new Set(rows.map(r=>r.company?.name).filter(Boolean))).slice(0,8);
+          const companies = document.getElementById('companies');
+          companies.innerHTML = co.map(name => `
+            <div class="card co-card">
+              <div class="co-logo">${escapeHTML((name||'')[0] || 'C')}</div>
+              <div>
+                <div style="font-weight:700">${escapeHTML(name)}</div>
+                <a href="/jobs.html?q=${encodeURIComponent(name)}">View roles →</a>
+              </div>
+            </div>
+          `).join('');
+        } catch (err) {
+          console.error(err); ui.error('Failed to load featured jobs');
+        }
+      }
+      loadJobs();
+
+      // Search submit → /jobs.html
+      document.getElementById('searchForm').addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const q = document.getElementById('q').value.trim();
+        const location = document.getElementById('loc').value;
+        const type = document.getElementById('type').value;
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        if (location && location !== 'all') params.set('location', location);
+        if (type && type !== 'all') params.set('type', type);
+        params.set('page','1');
+        location.href = '/jobs.html' + (params.toString() ? '?' + params.toString() : '');
+      });
+
+      document.getElementById('year').textContent = new Date().getFullYear();
     })();
   </script>
 </body>
