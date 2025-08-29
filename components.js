@@ -52,7 +52,6 @@
 
   // ---------- Auth ----------
   async function getSession() {
-    // Prefer your wrapper if present
     if (window.sbAuth?.getSession) {
       try {
         const s = await window.sbAuth.getSession();
@@ -92,7 +91,6 @@
     const fd = new FormData(form);
     const obj = {};
     for (const [k,v] of fd.entries()) obj[k] = v;
-    // coerce checkbox values
     qa('input[type="checkbox"]', form).forEach(cb => obj[cb.name] = cb.checked);
     return obj;
   }
@@ -173,7 +171,6 @@
     },
 
     async distinctJobFilters() {
-      // pragmatic approach: get a capped set and derive uniques
       const { data, error } = await sb.from('jobs')
         .select('location,employment_type').eq('published', true).limit(1000);
       if (error) throw error;
@@ -204,6 +201,5 @@
     }
   };
 
-  // expose
   window.app = { ui, q, qa, escapeHTML, serializeForm, getQueryParam, getSession, requireAuth, isAdmin, db };
 })();
