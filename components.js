@@ -1,5 +1,5 @@
-/* components.js (v8) — helpers + Supabase wrappers
-   Relies on window.supabase (from /config.js) and optional window.sbAuth */
+/* components.js (v9) — helpers + Supabase wrappers
+   Requires: window.supabase (from /config.js) */
 
 (() => {
   const sb = window.supabase;
@@ -48,19 +48,11 @@
       btn.style.opacity = isLoading ? '0.7' : '1';
       btn.textContent = isLoading ? 'Please wait…' : (labelWhenDone ?? btn.dataset.origText);
     },
-    copy(text) {
-      navigator.clipboard.writeText(text).then(()=>ui.success('Copied'));
-    }
+    copy(text) { navigator.clipboard.writeText(text).then(()=>ui.success('Copied')); }
   };
 
   // ---------- Auth ----------
   async function getSession() {
-    if (window.sbAuth?.getSession) {
-      try {
-        const s = await window.sbAuth.getSession();
-        if (s?.user) return { session: s, user: s.user };
-      } catch (_) {}
-    }
     const { data, error } = await sb.auth.getSession();
     if (error) throw error;
     return { session: data.session, user: data.session?.user ?? null };
@@ -103,40 +95,40 @@
     });
     history.replaceState(null, '', url.toString());
   }
-  function downloadCSV({ filename = 'export.csv', rows = [], columns = [] }) {
-    // columns: [{key:'email', header:'Email'}] or {header:'Custom', map:(row)=>'...'}
-    const header = columns.map(c => c.header).join(',');
-    const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
-    const body = rows.map(r => columns.map(c => c.map ? c.map(r) : esc(r[c.key])).join(',')).join('\n');
-    const csv = header + '\n' + body;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-  }
 
   // ---------- DB API ----------
   const db = {
     // COMPANIES
     async myCompanies(userId) {
       const { data, error } = await sb
-        .from('companies')
-        .select('id,name,website,created_at')
-        .eq('owner_id', userId)
-        .order('created_at', { ascending: false });
+        .from('companies').select('id,name,website,created_at')
+        .eq('owner_id', userId).order('created_at', { ascending: false });
       if (error) throw error;
       return data || [];
     },
     async createCompany({ name, website, owner_id }) {
       const payload = { name: name?.trim(), website: website?.trim() || null, ...(owner_id ? { owner_id } : {}) };
       const { data, error } = await sb.from('companies').insert(payload).select('id,name,website').maybeSingle();
+      if (error) throw error; return data;
+    },
+
+    // JOBS (create + listing/search helpers)
+    async createJob(job) {
+      const payload = {
+        title: job.title?.trim(),
+        location: job.location?.trim(),
+        employment_type: job.employment_type,
+        min_salary: numberOrNull(job.min_salary),
+        max_salary: numberOrNull(job.max_salary),
+        currency: (job.currency || 'INR').trim(),
+        description: job.description?.trim() || null,
+        company_id: job.company_id,
+        published: !!job.published
+      };
+      const { data, error } = await sb.from('jobs').insert(payload).select('id').maybeSingle();
       if (error) throw error;
       return data;
     },
-
-    // JOBS list/search/sort (public)
     _applyJobFilters(query, { location, employment_type } = {}) {
       query = query.eq('published', true);
       if (location && location !== 'all') query = query.ilike('location', location);
@@ -147,75 +139,53 @@
       const from = (page-1) * pageSize;
       const to = from + pageSize - 1;
 
-      // COUNT
       let qc = sb.from('jobs').select('id', { count: 'exact', head: true });
       qc = db._applyJobFilters(qc, { location, employment_type });
       if (q) qc = qc.textSearch('search_tsv', q, { type: 'websearch', config: 'english' });
-      const { count, error: countErr } = await qc; if (countErr) throw countErr;
+      const { count, error: ce } = await qc; if (ce) throw ce;
 
-      // DATA
       let qd = sb.from('jobs')
         .select('id,title,location,employment_type,min_salary,max_salary,currency,created_at,company:companies(name,website)');
       qd = db._applyJobFilters(qd, { location, employment_type });
       if (q) qd = qd.textSearch('search_tsv', q, { type: 'websearch', config: 'english' });
-
       if (sort === 'pay-max')      qd = qd.order('max_salary', { ascending: false, nullsLast: true }).order('created_at', { ascending: false });
       else if (sort === 'pay-min') qd = qd.order('min_salary', { ascending: false, nullsLast: true }).order('created_at', { ascending: false });
       else                         qd = qd.order('created_at', { ascending: false });
-
       qd = qd.range(from, to);
-      const { data, error } = await qd; if (error) throw error;
 
+      const { data, error: de } = await qd; if (de) throw de;
       return { rows: data || [], total: count ?? 0 };
     },
     async getJobByIdPublic(id) {
       const { data, error } = await sb.from('jobs')
         .select('id,title,location,employment_type,min_salary,max_salary,currency,description,published,created_at,company_id,company:companies(name,website)')
         .eq('id', id).maybeSingle();
-      if (error) throw error;
-      return data;
+      if (error) throw error; return data;
     },
-
-    // APPLICATIONS
     async applyToJob({ job_id, candidate_name, email, message }) {
-      const payload = {
-        job_id,
-        candidate_name: candidate_name?.trim(),
-        email: email?.trim(),
-        message: message?.trim() || null
-      };
+      const payload = { job_id, candidate_name: candidate_name?.trim(), email: email?.trim(), message: message?.trim() || null };
       const { error } = await sb.from('applications').insert(payload);
-      if (error) throw error;
-      return true;
+      if (error) throw error; return true;
     },
-
-    // Fetch apps for a set of jobIds (owner/admin pages)
     async appsForJobIds(jobIds = [], { page=1, pageSize=20, q=null }) {
       if (!jobIds.length) return { rows: [], total: 0 };
-      const from = (page-1) * pageSize;
-      const to = from + pageSize - 1;
+      const from = (page-1) * pageSize, to = from + pageSize - 1;
       const orFilter = q ? `candidate_name.ilike.%${q}%,email.ilike.%${q}%,message.ilike.%${q}%` : null;
-
-      // COUNT
       let qc = sb.from('applications').select('id', { count: 'exact', head: true }).in('job_id', jobIds);
       if (orFilter) qc = qc.or(orFilter);
       const { count, error: ce } = await qc; if (ce) throw ce;
-
-      // DATA
       let qd = sb.from('applications')
         .select('id,job_id,candidate_name,email,message,created_at')
-        .in('job_id', jobIds)
-        .order('created_at', { ascending: false })
-        .range(from, to);
+        .in('job_id', jobIds).order('created_at', { ascending: false }).range(from, to);
       if (orFilter) qd = qd.or(orFilter);
-
       const { data, error: de } = await qd; if (de) throw de;
       return { rows: data || [], total: count ?? 0 };
     }
   };
 
+  // Expose globals
   window.app = {
     ui, q, qa, escapeHTML, serializeForm, getQueryParam, setQueryParams,
-    getSession, requireAuth, isAdmin, db, downloadCSV
+    getSession, requireAuth, isAdmin, db
   };
 })();
