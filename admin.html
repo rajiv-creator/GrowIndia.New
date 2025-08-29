@@ -6,8 +6,8 @@
   <title>Admin — GrowIndia Jobs</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=7"></script>
-  <script src="/components.js?v=7"></script>
+  <script src="/config.js?v=8"></script>
+  <script src="/components.js?v=8"></script>
   <style>
     .wrap{max-width:1100px;margin:0 auto;padding:24px}
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
@@ -17,12 +17,15 @@
     button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
     button.primary{background:#0ea5e9;border:none;color:#fff}
     .muted{color:#64748b}
+    .filters{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 16px}
+    .filters input, .filters select{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    .pager{display:flex;gap:8px;justify-content:center;margin:16px 0}
   </style>
 </head>
 <body>
   <main class="wrap">
     <h1>Admin</h1>
-    <p class="muted">Admins can view all companies and jobs, and toggle job publication.</p>
+    <p class="muted">Admins can view all companies, jobs, and applications; toggle job publication; and delete obvious spam.</p>
 
     <section id="gate" class="card" style="display:none">
       <strong>Admins only.</strong>
@@ -32,22 +35,36 @@
     <section id="content" style="display:none">
       <section class="card">
         <h2>Companies</h2>
-        <table id="companiesTbl">
-          <thead><tr>
-            <th>Name</th><th>Website</th><th>Owner ID</th><th>Created</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+        <table id="companiesTbl"><thead><tr>
+          <th>Name</th><th>Website</th><th>Owner ID</th><th>Created</th>
+        </tr></thead><tbody></tbody></table>
       </section>
 
       <section class="card">
         <h2>Jobs</h2>
-        <table id="jobsTbl">
-          <thead><tr>
-            <th>Title</th><th>Company</th><th>Meta</th><th>Published</th><th>Actions</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+        <table id="jobsTbl"><thead><tr>
+          <th>Title</th><th>Company</th><th>Meta</th><th>Published</th><th>Actions</th>
+        </tr></thead><tbody></tbody></table>
+      </section>
+
+      <section class="card">
+        <h2>Applications</h2>
+        <div class="filters">
+          <label>Job
+            <select id="a_job"></select>
+          </label>
+          <input id="a_q" placeholder="Search name/email/message">
+          <button id="a_apply">Apply</button>
+          <button id="a_reset">Reset</button>
+        </div>
+        <table id="appsTbl"><thead>
+          <tr><th>When</th><th>Job</th><th>Name</th><th>Email</th><th>Message</th><th>Actions</th></tr>
+        </thead><tbody></tbody></table>
+        <div class="pager">
+          <button id="a_prev">Prev</button>
+          <div id="a_info" class="muted"></div>
+          <button id="a_next">Next</button>
+        </div>
       </section>
     </section>
   </main>
@@ -66,11 +83,8 @@
       q('#content').style.display = 'block';
 
       async function loadCompanies() {
-        const { data, error } = await sb.from('companies')
-          .select('id,name,website,owner_id,created_at')
-          .order('created_at', { ascending: false });
+        const { data, error } = await sb.from('companies').select('id,name,website,owner_id,created_at').order('created_at', { ascending: false });
         if (error) { ui.error('Failed to load companies'); throw error; }
-
         const tbody = q('#companiesTbl tbody'); tbody.innerHTML = '';
         (data||[]).forEach(c=>{
           const tr = document.createElement('tr');
@@ -78,32 +92,34 @@
             <td>${window.app.escapeHTML(c.name)}</td>
             <td>${c.website ? `<a href="${window.app.escapeHTML(c.website)}" target="_blank">Website</a>` : '—'}</td>
             <td class="muted">${c.owner_id}</td>
-            <td class="muted">${new Date(c.created_at).toLocaleString()}</td>
-          `;
+            <td class="muted">${new Date(c.created_at).toLocaleString()}</td>`;
           tbody.appendChild(tr);
         });
       }
 
+      let jobs = [];
       async function loadJobs() {
         const { data, error } = await sb.from('jobs')
           .select('id,title,location,employment_type,published,created_at,company:companies(name)')
-          .order('created_at', { ascending: false }).limit(500);
+          .order('created_at', { ascending: false }).limit(1000);
         if (error) { ui.error('Failed to load jobs'); throw error; }
-
+        jobs = data || [];
         const tbody = q('#jobsTbl tbody'); tbody.innerHTML = '';
-        (data||[]).forEach(j=>{
+        jobs.forEach(j=>{
           const tr = document.createElement('tr');
-          tr.dataset.id = j.id;
-          tr.dataset.published = String(!!j.published);
+          tr.dataset.id = j.id; tr.dataset.published = String(!!j.published);
           tr.innerHTML = `
             <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
             <td>${window.app.escapeHTML(j.company?.name || '—')}</td>
             <td class="muted">${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span></td>
             <td>${j.published ? '✅ Yes' : '⛔ No'}</td>
-            <td><button class="toggleBtn">${j.published ? 'Unpublish' : 'Publish'}</button></td>
-          `;
+            <td><button class="toggleBtn">${j.published ? 'Unpublish' : 'Publish'}</button></td>`;
           tbody.appendChild(tr);
         });
+
+        // Fill apps job dropdown
+        const sel = q('#a_job');
+        sel.innerHTML = `<option value="all">All jobs</option>` + jobs.map(j=>`<option value="${j.id}">${window.app.escapeHTML(j.title)}</option>`).join('');
       }
 
       async function togglePublished(jobId, current) {
@@ -113,19 +129,59 @@
         ui.success(next ? 'Published' : 'Unpublished');
       }
 
+      // Toggle pub
       q('#jobsTbl').addEventListener('click', async (e)=>{
         const btn = e.target.closest('.toggleBtn'); if (!btn) return;
-        const tr = e.target.closest('tr');
-        const id = tr.dataset.id;
-        const current = tr.dataset.published === 'true';
+        const tr = e.target.closest('tr'); const id = tr.dataset.id; const current = tr.dataset.published === 'true';
+        btn.disabled = true; try { await togglePublished(id, current); await loadJobs(); } catch(_) {} finally { btn.disabled = false; }
+      });
+
+      // ---- Applications (admin) ----
+      const pageSize = 20; let st = { page:1, jobId:'all', q:'' };
+
+      async function loadApps() {
+        const jobIds = st.jobId==='all' ? jobs.map(j=>j.id) : [st.jobId];
+        const { rows, total } = await window.app.db.appsForJobIds(jobIds, { page: st.page, pageSize, q: st.q || null });
+        const jmap = new Map(jobs.map(j=>[j.id, j]));
+        const tbody = q('#appsTbl tbody'); tbody.innerHTML = '';
+        rows.forEach(r=>{
+          const j = jmap.get(r.job_id);
+          const tr = document.createElement('tr'); tr.dataset.id = r.id;
+          tr.innerHTML = `
+            <td class="muted">${new Date(r.created_at).toLocaleString()}</td>
+            <td>${window.app.escapeHTML(j?.title || '')}</td>
+            <td>${window.app.escapeHTML(r.candidate_name || '')}</td>
+            <td><a href="mailto:${window.app.escapeHTML(r.email)}">${window.app.escapeHTML(r.email)}</a></td>
+            <td>${window.app.escapeHTML((r.message || '').slice(0,180))}${(r.message||'').length>180?'…':''}</td>
+            <td><button class="delBtn">Delete</button></td>`;
+          tbody.appendChild(tr);
+        });
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        q('#a_info').textContent = `Page ${st.page} of ${totalPages}`;
+        q('#a_prev').disabled = st.page<=1; q('#a_next').disabled = st.page>=totalPages;
+      }
+
+      // Delete application (spam)
+      q('#appsTbl').addEventListener('click', async (e)=>{
+        const btn = e.target.closest('.delBtn'); if (!btn) return;
+        const tr = e.target.closest('tr'); const id = tr.dataset.id;
         btn.disabled = true;
-        try { await togglePublished(id, current); await loadJobs(); }
-        catch(_) {}
+        try {
+          const { error } = await sb.from('applications').delete().eq('id', id);
+          if (error) throw error;
+          ui.success('Deleted'); await loadApps();
+        } catch (err) { ui.error(err.message || 'Delete failed'); }
         finally { btn.disabled = false; }
       });
 
+      q('#a_apply').addEventListener('click', ()=>{ st.page=1; st.jobId=q('#a_job').value; st.q=q('#a_q').value.trim(); loadApps(); });
+      q('#a_reset').addEventListener('click', ()=>{ st={page:1,jobId:'all',q:''}; q('#a_q').value=''; q('#a_job').value='all'; loadApps(); });
+      q('#a_prev').addEventListener('click', ()=>{ st.page=Math.max(1,st.page-1); loadApps(); });
+      q('#a_next').addEventListener('click', ()=>{ st.page=st.page+1; loadApps(); });
+
       await loadCompanies();
       await loadJobs();
+      await loadApps();
     })();
   </script>
 </body>
