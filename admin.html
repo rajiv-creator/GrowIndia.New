@@ -6,8 +6,8 @@
   <title>Admin — GrowIndia Jobs</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=8"></script>
-  <script src="/components.js?v=8"></script>
+  <script src="/config.js?v=11"></script>
+  <script src="/components.js?v=11"></script>
   <style>
     .wrap{max-width:1100px;margin:0 auto;padding:24px}
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
@@ -50,9 +50,7 @@
       <section class="card">
         <h2>Applications</h2>
         <div class="filters">
-          <label>Job
-            <select id="a_job"></select>
-          </label>
+          <label>Job <select id="a_job"></select></label>
           <input id="a_q" placeholder="Search name/email/message">
           <button id="a_apply">Apply</button>
           <button id="a_reset">Reset</button>
@@ -74,18 +72,16 @@
       const { q, ui, isAdmin } = window.app;
       const sb = window.supabase;
 
-      let user;
-      try { user = await window.app.requireAuth(); }
-      catch { return; }
+      let user; try { user = await window.app.requireAuth(); } catch { return; }
 
       const admin = await isAdmin(user.id);
-      if (!admin) { q('#gate').style.display = 'block'; return; }
-      q('#content').style.display = 'block';
+      if (!admin) { q('#gate').style.display='block'; return; }
+      q('#content').style.display='block';
 
-      async function loadCompanies() {
-        const { data, error } = await sb.from('companies').select('id,name,website,owner_id,created_at').order('created_at', { ascending: false });
+      async function loadCompanies(){
+        const { data, error } = await sb.from('companies').select('id,name,website,owner_id,created_at').order('created_at',{ ascending:false });
         if (error) { ui.error('Failed to load companies'); throw error; }
-        const tbody = q('#companiesTbl tbody'); tbody.innerHTML = '';
+        const tbody = q('#companiesTbl tbody'); tbody.innerHTML='';
         (data||[]).forEach(c=>{
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -98,16 +94,16 @@
       }
 
       let jobs = [];
-      async function loadJobs() {
+      async function loadJobs(){
         const { data, error } = await sb.from('jobs')
           .select('id,title,location,employment_type,published,created_at,company:companies(name)')
-          .order('created_at', { ascending: false }).limit(1000);
+          .order('created_at',{ ascending:false }).limit(1000);
         if (error) { ui.error('Failed to load jobs'); throw error; }
-        jobs = data || [];
-        const tbody = q('#jobsTbl tbody'); tbody.innerHTML = '';
+        jobs = data||[];
+        const tbody = q('#jobsTbl tbody'); tbody.innerHTML='';
         jobs.forEach(j=>{
           const tr = document.createElement('tr');
-          tr.dataset.id = j.id; tr.dataset.published = String(!!j.published);
+          tr.dataset.id=j.id; tr.dataset.published=String(!!j.published);
           tr.innerHTML = `
             <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
             <td>${window.app.escapeHTML(j.company?.name || '—')}</td>
@@ -117,61 +113,54 @@
           tbody.appendChild(tr);
         });
 
-        // Fill apps job dropdown
         const sel = q('#a_job');
         sel.innerHTML = `<option value="all">All jobs</option>` + jobs.map(j=>`<option value="${j.id}">${window.app.escapeHTML(j.title)}</option>`).join('');
       }
 
-      async function togglePublished(jobId, current) {
+      async function togglePublished(jobId, current){
         const next = !current;
         const { error } = await sb.from('jobs').update({ published: next }).eq('id', jobId);
-        if (error) { ui.error(error.message || 'Update failed'); throw error; }
-        ui.success(next ? 'Published' : 'Unpublished');
+        if (error) { ui.error(error.message||'Update failed'); throw error; }
+        ui.success(next?'Published':'Unpublished');
       }
 
-      // Toggle pub
       q('#jobsTbl').addEventListener('click', async (e)=>{
         const btn = e.target.closest('.toggleBtn'); if (!btn) return;
-        const tr = e.target.closest('tr'); const id = tr.dataset.id; const current = tr.dataset.published === 'true';
-        btn.disabled = true; try { await togglePublished(id, current); await loadJobs(); } catch(_) {} finally { btn.disabled = false; }
+        const tr = e.target.closest('tr'); const id = tr.dataset.id; const current = tr.dataset.published==='true';
+        btn.disabled = true; try { await togglePublished(id,current); await loadJobs(); } catch(_){} finally{ btn.disabled=false; }
       });
 
-      // ---- Applications (admin) ----
-      const pageSize = 20; let st = { page:1, jobId:'all', q:'' };
+      const pageSize=20; let st={ page:1, jobId:'all', q:'' };
 
-      async function loadApps() {
+      async function loadApps(){
         const jobIds = st.jobId==='all' ? jobs.map(j=>j.id) : [st.jobId];
-        const { rows, total } = await window.app.db.appsForJobIds(jobIds, { page: st.page, pageSize, q: st.q || null });
-        const jmap = new Map(jobs.map(j=>[j.id, j]));
-        const tbody = q('#appsTbl tbody'); tbody.innerHTML = '';
+        const { rows, total } = await window.app.db.appsForJobIds(jobIds,{ page:st.page, pageSize, q:st.q||null });
+        const jmap = new Map(jobs.map(j=>[j.id,j]));
+        const tbody = q('#appsTbl tbody'); tbody.innerHTML='';
         rows.forEach(r=>{
           const j = jmap.get(r.job_id);
-          const tr = document.createElement('tr'); tr.dataset.id = r.id;
+          const tr = document.createElement('tr'); tr.dataset.id=r.id;
           tr.innerHTML = `
             <td class="muted">${new Date(r.created_at).toLocaleString()}</td>
             <td>${window.app.escapeHTML(j?.title || '')}</td>
             <td>${window.app.escapeHTML(r.candidate_name || '')}</td>
             <td><a href="mailto:${window.app.escapeHTML(r.email)}">${window.app.escapeHTML(r.email)}</a></td>
-            <td>${window.app.escapeHTML((r.message || '').slice(0,180))}${(r.message||'').length>180?'…':''}</td>
+            <td>${window.app.escapeHTML((r.message||'').slice(0,180))}${(r.message||'').length>180?'…':''}</td>
             <td><button class="delBtn">Delete</button></td>`;
           tbody.appendChild(tr);
         });
-        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        const totalPages = Math.max(1, Math.ceil(total/pageSize));
         q('#a_info').textContent = `Page ${st.page} of ${totalPages}`;
         q('#a_prev').disabled = st.page<=1; q('#a_next').disabled = st.page>=totalPages;
       }
 
-      // Delete application (spam)
       q('#appsTbl').addEventListener('click', async (e)=>{
         const btn = e.target.closest('.delBtn'); if (!btn) return;
         const tr = e.target.closest('tr'); const id = tr.dataset.id;
-        btn.disabled = true;
-        try {
-          const { error } = await sb.from('applications').delete().eq('id', id);
-          if (error) throw error;
-          ui.success('Deleted'); await loadApps();
-        } catch (err) { ui.error(err.message || 'Delete failed'); }
-        finally { btn.disabled = false; }
+        btn.disabled=true;
+        try { const { error } = await sb.from('applications').delete().eq('id', id); if (error) throw error; ui.success('Deleted'); await loadApps(); }
+        catch(err){ ui.error(err.message||'Delete failed'); }
+        finally{ btn.disabled=false; }
       });
 
       q('#a_apply').addEventListener('click', ()=>{ st.page=1; st.jobId=q('#a_job').value; st.q=q('#a_q').value.trim(); loadApps(); });
@@ -179,9 +168,7 @@
       q('#a_prev').addEventListener('click', ()=>{ st.page=Math.max(1,st.page-1); loadApps(); });
       q('#a_next').addEventListener('click', ()=>{ st.page=st.page+1; loadApps(); });
 
-      await loadCompanies();
-      await loadJobs();
-      await loadApps();
+      await loadCompanies(); await loadJobs(); await loadApps();
     })();
   </script>
 </body>
