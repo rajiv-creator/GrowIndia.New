@@ -1,31 +1,59 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GrowIndia Jobs — Sign-in complete</title>
-  <link rel="stylesheet" href="/app.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Signing you in…</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=6"></script>
+  <script src="/components.js?v=6"></script>
+  <style>
+    .wrap{max-width:600px;margin:20vh auto 0;padding:24px;text-align:center}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:24px}
+    .muted{color:#64748b}
+  </style>
 </head>
 <body>
-  <main class="container" style="max-width:900px;margin:48px auto;">
-    <h1>You're signed in.</h1>
-    <p>Go to <a href="/employer.html">Employer</a> or <a href="/jobs.html">browse jobs</a>.</p>
-    <p class="muted">If you see this page after clicking the email link, your session was created successfully.</p>
+  <main class="wrap">
+    <div class="card">
+      <h1>Signing you in…</h1>
+      <p id="status" class="muted">Please wait.</p>
+    </div>
   </main>
 
-  <!-- JS (order matters!) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=5"></script>
-  <script src="/components.js?v=5"></script>
-
   <script>
-    // nothing else needed — arriving here with the link is enough to set the session
-    (async () => {
-      // quick sanity check
-      const status = await fetch(`${window.SUPABASE_URL}/auth/v1/settings`, {
-        headers: { apikey: window.SUPABASE_ANON_KEY }
-      }).then(r => r.status);
-      console.log("auth settings status", status); // should be 200
+    (async function(){
+      const sb = window.supabase;
+      const { ui } = window.app;
+
+      const url = new URL(location.href);
+      const next = url.searchParams.get('next') || url.searchParams.get('redirect') || '/employer.html';
+
+      if (url.searchParams.get('code')) {
+        try {
+          document.getElementById('status').textContent = 'Finalizing sign-in…';
+          const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
+          if (error) throw error;
+          ui.success('Signed in');
+          const clean = location.origin + location.pathname + (next ? `?next=${encodeURIComponent(next)}` : '');
+          history.replaceState({}, '', clean);
+          location.href = next;
+          return;
+        } catch (err) {
+          console.error(err);
+          ui.error(err.message || 'Sign-in failed');
+          document.getElementById('status').textContent = 'Sign-in failed. Try the link again.';
+          return;
+        }
+      }
+
+      try {
+        const { data } = await sb.auth.getSession();
+        if (data?.session?.user) { ui.success('Signed in'); location.href = next; return; }
+      } catch {}
+
+      document.getElementById('status').textContent = 'No sign-in code found. Please use your email link again.';
     })();
   </script>
 </body>
