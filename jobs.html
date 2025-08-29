@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Jobs — GrowIndia</title>
   <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=6"></script>
   <script src="/components.js?v=6"></script>
   <style>
@@ -46,7 +47,7 @@
 
   <script>
     (async function(){
-      const { ui, q, db, getQueryParam, escapeHTML } = window.app;
+      const { ui, q, db, escapeHTML } = window.app;
 
       const pageSize = 10;
       function stateFromURL() {
@@ -116,48 +117,4 @@
 
           const totalPages = Math.max(1, Math.ceil(total / pageSize));
           q('#pageInfo').textContent = `Page ${state.page} of ${totalPages}`;
-          q('#prevBtn').disabled = state.page <= 1;
-          q('#nextBtn').disabled = state.page >= totalPages;
-
-        } catch (err) {
-          console.error(err);
-          ui.error('Failed to load jobs');
-        }
-      }
-
-      await loadFilters();
-
-      // Apply/reset
-      q('#btnApply').addEventListener('click', ()=>{
-        const next = {
-          ...stateFromURL(),
-          page: 1,
-          location: q('#f_location').value,
-          employment_type: q('#f_type').value
-        };
-        setURLState(next);
-        render();
-      });
-      q('#btnReset').addEventListener('click', ()=>{
-        setURLState({ page:1, location:'all', employment_type:'all' });
-        render();
-      });
-
-      // Pager
-      q('#prevBtn').addEventListener('click', ()=>{
-        const s = stateFromURL();
-        s.page = Math.max(1, s.page-1);
-        setURLState(s); render();
-      });
-      q('#nextBtn').addEventListener('click', ()=>{
-        const s = stateFromURL();
-        s.page = s.page+1;
-        setURLState(s); render();
-      });
-
-      // Initial page
-      render();
-    })();
-  </script>
-</body>
-</html>
+          q('
