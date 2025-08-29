@@ -6,8 +6,8 @@
   <title>Job — GrowIndia</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=8"></script>
-  <script src="/components.js?v=8"></script>
+  <script src="/config.js?v=10"></script>
+  <script src="/components.js?v=10"></script>
   <style>
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
     label{display:block;font-weight:600;margin:8px 0 4px}
@@ -37,7 +37,7 @@
         <label for="a_msg">Message</label>
         <textarea id="a_msg" name="message" rows="6" placeholder="Write a short note…"></textarea>
 
-        <!-- Honeypot (humans won't fill this) -->
+        <!-- Honeypot -->
         <label class="sr-only" for="hp_url">Your website</label>
         <input id="hp_url" name="website" class="sr-only" tabindex="-1" autocomplete="off">
 
@@ -68,54 +68,41 @@
           q('#j_salary').textContent = salary.trim();
           q('#j_desc').textContent = job.description || '';
 
-          // Inject JSON-LD (Google Jobs)
+          // JSON-LD
           const ld = {
-            "@context": "https://schema.org/",
-            "@type": "JobPosting",
+            "@context":"https://schema.org/","@type":"JobPosting",
             "title": job.title,
             "description": (job.description || '').replace(/<[^>]*>?/gm,''),
             "datePosted": new Date(job.created_at).toISOString(),
             "employmentType": job.employment_type,
-            "hiringOrganization": { "@type": "Organization", "name": job.company?.name || "Company", "sameAs": job.company?.website || undefined },
+            "hiringOrganization": { "@type":"Organization", "name": job.company?.name || "Company", "sameAs": job.company?.website || undefined },
             "jobLocationType": /remote/i.test(job.location)? "TELECOMMUTE" : "ON_SITE",
-            "applicantLocationRequirements": { "@type": "Country", "name": "India" },
             "directApply": true,
-            "jobLocation": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": job.location } },
+            "jobLocation": { "@type":"Place", "address": { "@type":"PostalAddress", "addressLocality": job.location } },
             "baseSalary": (job.min_salary || job.max_salary) ? {
-              "@type":"MonetaryAmount",
-              "currency": job.currency || "INR",
-              "value": {
-                "@type":"QuantitativeValue",
-                "minValue": job.min_salary || undefined,
-                "maxValue": job.max_salary || undefined,
-                "unitText": "YEAR"
-              }
+              "@type":"MonetaryAmount","currency": job.currency || "INR",
+              "value":{"@type":"QuantitativeValue","minValue": job.min_salary || undefined,"maxValue": job.max_salary || undefined,"unitText":"YEAR"}
             } : undefined
           };
-          const s = document.createElement('script');
-          s.type = 'application/ld+json';
-          s.textContent = JSON.stringify(ld);
-          document.head.appendChild(s);
-
-          // Also set nicer meta title
+          const s = document.createElement('script'); s.type='application/ld+json'; s.textContent = JSON.stringify(ld); document.head.appendChild(s);
           document.title = `${job.title} – ${job.company?.name || 'GrowIndia Jobs'}`;
         } catch (err) { console.error(err); ui.error('Failed to load job'); }
       }
 
       q('#appForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
-        const btn = q('#btnApply');
-        window.app.ui.setLoading(btn, true);
+        const btn = q('#btnApply'); window.app.ui.setLoading(btn, true);
         try {
           const f = window.app.serializeForm(e.target);
-          if (f.website) { ui.success('Application submitted'); e.target.reset(); return; } // honeypot
+          if (f.website) { ui.success('Application submitted'); e.target.reset(); return; }
           if (!f.candidate_name?.trim()) return ui.error('Name is required');
           if (!f.email?.trim()) return ui.error('Email is required');
 
-          // simple local cooldown (60s per job/email)
+          // Local cooldown (60s)
           const key = `apply:${id}:${f.email.toLowerCase()}`;
           const last = Number(localStorage.getItem(key)||0);
           if (Date.now()-last < 60000) return ui.warn('You just applied. Please wait a minute.');
+
           await db.applyToJob({ job_id: id, ...f });
           localStorage.setItem(key, String(Date.now()));
           ui.success('Application submitted');
@@ -123,9 +110,7 @@
         } catch (err) {
           console.error(err);
           ui.error(err.message || 'Failed to submit application');
-        } finally {
-          window.app.ui.setLoading(btn, false);
-        }
+        } finally { window.app.ui.setLoading(btn, false); }
       });
 
       loadJob();
