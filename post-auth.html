@@ -4,56 +4,36 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Signing you in…</title>
-  <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=7"></script>
-  <script src="/components.js?v=7"></script>
+  <script src="/config.js?v=11"></script>
+  <script src="/components.js?v=11"></script>
   <style>
-    .wrap{max-width:600px;margin:20vh auto 0;padding:24px;text-align:center}
-    .card{border:1px solid #e5e7eb;border-radius:12px;padding:24px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:40px;text-align:center}
     .muted{color:#64748b}
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="card">
-      <h1>Signing you in…</h1>
-      <p id="status" class="muted">Please wait.</p>
-    </div>
-  </main>
+  <h1>Signing you in…</h1>
+  <p class="muted">Please wait.</p>
 
   <script>
     (async function(){
-      const sb = window.supabase;
-      const { ui } = window.app;
-
+      const sb = window.supabase; const { ui } = window.app;
       const url = new URL(location.href);
-      const next = url.searchParams.get('next') || url.searchParams.get('redirect') || '/employer.html';
-
-      if (url.searchParams.get('code')) {
-        try {
-          document.getElementById('status').textContent = 'Finalizing sign-in…';
-          const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
-          if (error) throw error;
-          ui.success('Signed in');
-          const clean = location.origin + location.pathname + (next ? `?next=${encodeURIComponent(next)}` : '');
-          history.replaceState({}, '', clean);
-          location.href = next;
-          return;
-        } catch (err) {
-          console.error(err);
-          ui.error(err.message || 'Sign-in failed');
-          document.getElementById('status').textContent = 'Sign-in failed. Try the link again.';
-          return;
-        }
-      }
+      const code = url.searchParams.get('code');
+      const next = url.searchParams.get('next') || '/employer.html';
 
       try {
-        const { data } = await sb.auth.getSession();
-        if (data?.session?.user) { ui.success('Signed in'); location.href = next; return; }
-      } catch {}
-
-      document.getElementById('status').textContent = 'No sign-in code found. Please use your email link again.';
+        if (code) {
+          const { error } = await sb.auth.exchangeCodeForSession({ code });
+          if (error) throw error;
+        }
+        ui.success('Signed in');
+        setTimeout(()=>location.replace(next), 400);
+      } catch(err) {
+        console.error(err);
+        ui.error(err.message || 'Sign-in failed');
+      }
     })();
   </script>
 </body>
