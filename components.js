@@ -119,7 +119,7 @@
       const payload = {
         name: name?.trim(),
         website: website?.trim() || null,
-        ...(owner_id ? { owner_id } : {})     // <-- send owner_id explicitly when provided
+        ...(owner_id ? { owner_id } : {})  // send owner explicitly (UI passes user.id)
       };
       const { data, error } = await sb.from('companies').insert(payload).select('id,name,website').maybeSingle();
       if (error) throw error;
@@ -148,7 +148,7 @@
     _applyJobFilters(query, { location, employment_type } = {}) {
       query = query.eq('published', true);
       if (location && location !== 'all') query = query.ilike('location', location);
-      if (employment_type && employment_type !== 'all') query = query.eq('employment_type', employment_type);
+      if (employment_type && employment_type !== 'all') query = query.ilike('employment_type', employment_type); // case-insensitive
       return query;
     },
 
@@ -156,11 +156,13 @@
       const from = (page-1) * pageSize;
       const to = from + pageSize - 1;
 
+      // count
       let qCount = sb.from('jobs').select('id', { count: 'exact', head: true });
       qCount = db._applyJobFilters(qCount, { location, employment_type });
       const { count, error: countErr } = await qCount;
       if (countErr) throw countErr;
 
+      // data
       let q = sb.from('jobs')
         .select('id,title,location,employment_type,min_salary,max_salary,currency,created_at,company:companies(name,website)')
         .order('created_at', { ascending: false });
@@ -203,5 +205,6 @@
     }
   };
 
+  // expose
   window.app = { ui, q, qa, escapeHTML, serializeForm, getQueryParam, getSession, requireAuth, isAdmin, db };
 })();
