@@ -6,8 +6,8 @@
   <title>Jobs — GrowIndia</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=8"></script>
-  <script src="/components.js?v=8"></script>
+  <script src="/config.js?v=11"></script>
+  <script src="/components.js?v=11"></script>
   <style>
     .filters{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
     .filters input, .filters select{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
@@ -26,12 +26,8 @@
 
     <div class="filters">
       <input id="f_q" placeholder="Search by title, location, or description">
-      <label>Location
-        <select id="f_location"></select>
-      </label>
-      <label>Employment Type
-        <select id="f_type"></select>
-      </label>
+      <label>Location <select id="f_location"></select></label>
+      <label>Employment Type <select id="f_type"></select></label>
       <label>Sort
         <select id="f_sort">
           <option value="newest">Newest</option>
@@ -55,13 +51,13 @@
 
   <script>
     (async function(){
-      const { ui, q, db, escapeHTML, getQueryParam, setQueryParams } = window.app;
+      const { ui, q, db, escapeHTML, setQueryParams } = window.app;
       const pageSize = 10;
 
-      function stateFromURL() {
+      function stateFromURL(){
         const url = new URL(location.href);
         return {
-          page: Math.max(1, Number(url.searchParams.get('page') || '1')),
+          page: Math.max(1, Number(url.searchParams.get('page')||'1')),
           location: url.searchParams.get('location') || 'all',
           employment_type: url.searchParams.get('type') || 'all',
           q: url.searchParams.get('q') || '',
@@ -69,17 +65,16 @@
         };
       }
 
-      async function loadFilters() {
+      async function loadFilters(){
         try {
           const { locations, employment_types } = await db.distinctJobFilters();
-          const locSel = q('#f_location');
-          const typeSel = q('#f_type');
-          locSel.innerHTML = ['all', ...locations].map(v => `<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
-          typeSel.innerHTML = ['all', ...employment_types].map(v => `<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
+          const locSel = q('#f_location'), typeSel = q('#f_type');
+          locSel.innerHTML = ['all', ...locations].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
+          typeSel.innerHTML = ['all', ...employment_types].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
         } catch (err) { console.error(err); ui.error('Failed to load filters'); }
       }
 
-      async function render() {
+      async function render(){
         const s = stateFromURL();
         q('#f_location').value = s.location;
         q('#f_type').value = s.employment_type;
@@ -89,36 +84,34 @@
         try {
           const { rows, total } = await db.listJobsPaged({
             page: s.page, pageSize,
-            location: s.location === 'all' ? null : s.location,
-            employment_type: s.employment_type === 'all' ? null : s.employment_type,
-            q: s.q || null,
-            sort: s.sort
+            location: s.location==='all'?null:s.location,
+            employment_type: s.employment_type==='all'?null:s.employment_type,
+            q: s.q || null, sort: s.sort
           });
 
-          const list = q('#jobList'); list.innerHTML = '';
-          if (rows.length === 0) q('#empty').style.display = 'block';
+          const list = q('#jobList'); list.innerHTML='';
+          if (rows.length===0) q('#empty').style.display='block';
           else {
-            q('#empty').style.display = 'none';
-            rows.forEach(j => {
+            q('#empty').style.display='none';
+            rows.forEach(j=>{
               const el = document.createElement('div');
-              el.className = 'card';
+              el.className='card';
               el.innerHTML = `
                 <a class="joblink" href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a>
                 <div class="muted" style="margin:6px 0">
                   ${escapeHTML(j.company?.name || '—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
                 </div>
                 <div class="muted">
-                  ${j.min_salary ? escapeHTML(j.min_salary) : ''}${j.max_salary ? '–'+escapeHTML(j.max_salary) : ''} ${escapeHTML(j.currency || '')}
-                </div>
-              `;
+                  ${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}
+                </div>`;
               list.appendChild(el);
             });
           }
 
           const totalPages = Math.max(1, Math.ceil(total / pageSize));
           q('#pageInfo').textContent = `Page ${s.page} of ${totalPages}`;
-          q('#prevBtn').disabled = s.page <= 1;
-          q('#nextBtn').disabled = s.page >= totalPages;
+          q('#prevBtn').disabled = s.page<=1;
+          q('#nextBtn').disabled = s.page>=totalPages;
 
         } catch (err) { console.error(err); ui.error('Failed to load jobs'); }
       }
@@ -126,22 +119,14 @@
       await loadFilters();
 
       q('#btnApply').addEventListener('click', ()=>{
-        const next = {
-          page: 1,
-          location: q('#f_location').value,
-          type: q('#f_type').value,
-          q: q('#f_q').value.trim(),
-          sort: q('#f_sort').value
-        };
-        setQueryParams(next);
+        setQueryParams({ page:1, location:q('#f_location').value, type:q('#f_type').value, q:q('#f_q').value.trim(), sort:q('#f_sort').value });
         render();
       });
       q('#btnReset').addEventListener('click', ()=>{
-        setQueryParams({ page:1, location:null, type:null, q:null, sort:'newest' });
-        render();
+        setQueryParams({ page:1, location:null, type:null, q:null, sort:'newest' }); render();
       });
-      q('#prevBtn').addEventListener('click', ()=>{ const s = stateFromURL(); setQueryParams({ page: s.page-1 }); render(); });
-      q('#nextBtn').addEventListener('click', ()=>{ const s = stateFromURL(); setQueryParams({ page: s.page+1 }); render(); });
+      q('#prevBtn').addEventListener('click', ()=>{ const s=stateFromURL(); setQueryParams({ page:s.page-1 }); render(); });
+      q('#nextBtn').addEventListener('click', ()=>{ const s=stateFromURL(); setQueryParams({ page:s.page+1 }); render(); });
 
       render();
     })();
