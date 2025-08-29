@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Job — GrowIndia</title>
   <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js?v=6"></script>
   <script src="/components.js?v=6"></script>
   <style>
@@ -44,11 +45,10 @@
 
   <script>
     (async function(){
-      const { ui, q, db, getQueryParam, escapeHTML } = window.app;
+      const { ui, q, db, getQueryParam } = window.app;
       const id = getQueryParam('id');
       if (!id) {
         ui.error('Missing job id');
-        history.replaceState(null,'','/jobs.html');
         location.href = '/jobs.html';
         return;
       }
