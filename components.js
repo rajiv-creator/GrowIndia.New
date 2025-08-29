@@ -1,4 +1,4 @@
-/* components.js (v6) — plain JS helpers + Supabase wrappers
+/* components.js (v7) — plain JS helpers + Supabase wrappers
    Relies on window.supabase (from /config.js) and optional window.sbAuth */
 
 (() => {
@@ -115,8 +115,12 @@
       if (error) throw error;
       return data || [];
     },
-    async createCompany({ name, website }) {
-      const payload = { name: name?.trim(), website: website?.trim() || null };
+    async createCompany({ name, website, owner_id }) {
+      const payload = {
+        name: name?.trim(),
+        website: website?.trim() || null,
+        ...(owner_id ? { owner_id } : {})     // <-- send owner_id explicitly when provided
+      };
       const { data, error } = await sb.from('companies').insert(payload).select('id,name,website').maybeSingle();
       if (error) throw error;
       return data;
@@ -152,13 +156,11 @@
       const from = (page-1) * pageSize;
       const to = from + pageSize - 1;
 
-      // count
       let qCount = sb.from('jobs').select('id', { count: 'exact', head: true });
       qCount = db._applyJobFilters(qCount, { location, employment_type });
       const { count, error: countErr } = await qCount;
       if (countErr) throw countErr;
 
-      // data
       let q = sb.from('jobs')
         .select('id,title,location,employment_type,min_salary,max_salary,currency,created_at,company:companies(name,website)')
         .order('created_at', { ascending: false });
