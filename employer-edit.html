@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Manage Jobs — GrowIndia</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=12"></script>
+  <script src="/components.js?v=12"></script>
+  <style>
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
+    button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
+    button.primary{background:#0ea5e9;border:none;color:#fff}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row > .col{flex:1 1 240px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    label{display:block;font-weight:600;margin:8px 0 4px}
+    .muted{color:#64748b}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h1>Manage Jobs</h1>
+      <div><a class="joblink" href="/employer.html">← Back to dashboard</a></div>
+    </div>
+
+    <section class="card">
+      <h2>Your jobs</h2>
+      <table id="jobsTbl"><thead>
+        <tr><th>Title</th><th>Company</th><th>Meta</th><th>Published</th><th>Actions</th></tr>
+      </thead><tbody></tbody></table>
+    </section>
+
+    <section id="editCard" class="card" style="display:none">
+      <h2>Edit job</h2>
+      <form id="editForm">
+        <input type="hidden" id="e_id">
+        <div class="row">
+          <div class="col">
+            <label>Title *</label>
+            <input id="e_title" required>
+          </div>
+          <div class="col">
+            <label>Location *</label>
+            <input id="e_location" required>
+          </div>
+          <div class="col">
+            <label>Employment Type *</label>
+            <select id="e_type" required>
+              <option value="full-time">full-time</option>
+              <option value="part-time">part-time</option>
+              <option value="contract">contract</option>
+              <option value="internship">internship</option>
+              <option value="temporary">temporary</option>
+              <option value="freelance">freelance</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label>Min Salary</label>
+            <input id="e_min" type="number" min="0" step="1">
+          </div>
+          <div class="col">
+            <label>Max Salary</label>
+            <input id="e_max" type="number" min="0" step="1">
+          </div>
+          <div class="col">
+            <label>Currency</label>
+            <input id="e_cur" value="INR">
+          </div>
+        </div>
+        <div>
+          <label>Description</label>
+          <textarea id="e_desc" rows="6"></textarea>
+        </div>
+        <div class="row" style="margin-top:10px;align-items:center">
+          <div class="col"><label><input type="checkbox" id="e_pub"> Published</label></div>
+          <div class="col" style="display:flex;gap:10px;justify-content:flex-end">
+            <a id="previewLink" class="joblink" target="_blank">Preview</a>
+            <button id="btnSave" class="primary" type="submit">Save changes</button>
+            <button id="btnDelete" type="button">Delete</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    (async function(){
+      const { requireAuth, ui, db, q, escapeHTML } = window.app;
+      let user; try { user = await requireAuth(); } catch { return; }
+
+      const companies = await db.myCompanies(user.id);
+      const companyIds = companies.map(c=>c.id);
+      const jobs = await db.myJobsByCompanyIds(companyIds);
+
+      const tbody = q('#jobsTbl tbody');
+      tbody.innerHTML = jobs.map(j=>`<tr data-id="${j.id}">
+        <td>${escapeHTML(j.title)}</td>
+        <td>${escapeHTML(j.company?.name || '—')}</td>
+        <td class="muted">${escapeHTML(j.location)} • ${escapeHTML(j.employment_type)}</td>
+        <td>${j.published ? '✅ Yes' : '⛔ No'}</td>
+        <td>
+          <button class="editBtn">Edit</button>
+          <a class="primary" href="/job.html?id=${encodeURIComponent(j.id)}" target="_blank">View</a>
+          <button class="pubBtn">${j.published ? 'Unpublish' : 'Publish'}</button>
+        </td>
+      </tr>`).join('');
+
+      function fillEditor(j){
+        q('#editCard').style.display='block';
+        q('#e_id').value = j.id;
+        q('#e_title').value = j.title || '';
+        q('#e_location').value = j.location || '';
+        q('#e_type').value = j.employment_type || 'full-time';
+        q('#e_min').value = j.min_salary ?? '';
+        q('#e_max').value = j.max_salary ?? '';
+        q('#e_cur').value = j.currency || 'INR';
+        q('#e_desc').value = j.description || '';
+        q('#e_pub').checked = !!j.published;
+        q('#previewLink').href = `/job.html?id=${encodeURIComponent(j.id)}`;
+      }
+
+      tbody.addEventListener('click', async (e)=>{
+        const row = e.target.closest('tr'); if (!row) return;
+        const id = row.dataset.id;
+        const j = jobs.find(x=>x.id===id); if (!j) return;
+
+        if (e.target.closest('.editBtn')) { fillEditor(j); }
+        else if (e.target.closest('.pubBtn')) {
+          const next = !j.published;
+          try { await db.toggleJobPublished(j.id, next); ui.success(next?'Published':'Unpublished'); location.reload(); }
+          catch(err){ ui.error(err.message||'Update failed'); }
+        }
+      });
+
+      q('#editForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const id = q('#e_id').value;
+        const patch = {
+          title: q('#e_title').value,
+          location: q('#e_location').value,
+          employment_type: q('#e_type').value,
+          min_salary: q('#e_min').value,
+          max_salary: q('#e_max').value,
+          currency: q('#e_cur').value,
+          description: q('#e_desc').value,
+          published: q('#e_pub').checked
+        };
+        try { await db.updateJob(id, patch); ui.success('Saved'); location.reload(); }
+        catch(err){ console.error(err); ui.error(err.message || 'Save failed'); }
+      });
+
+      q('#btnDelete').addEventListener('click', async ()=>{
+        const id = q('#e_id').value; if (!id) return;
+        if (!(await window.app.ui.confirm('Delete this job permanently?'))) return;
+        try { await db.deleteJob(id); ui.success('Deleted'); location.reload(); }
+        catch(err){ ui.error(err.message || 'Delete failed'); }
+      });
+    })();
+  </script>
+</body>
+</html>
