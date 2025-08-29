@@ -1,4 +1,4 @@
-/* components.js (v7) — plain JS helpers + Supabase wrappers
+/* components.js (v8) — helpers + Supabase wrappers
    Relies on window.supabase (from /config.js) and optional window.sbAuth */
 
 (() => {
@@ -22,12 +22,12 @@
     }
     return host;
   }
-  function toast(msg, type = 'info', timeout = 4000) {
+  function toast(msg, type = 'info', timeout = 3800) {
     const host = ensureToastHost();
     const el = document.createElement('div');
     el.textContent = msg;
     el.style.padding = '10px 12px';
-    el.style.borderRadius = '8px';
+    el.style.borderRadius = '10px';
     el.style.fontSize = '14px';
     el.style.boxShadow = '0 4px 10px rgba(0,0,0,0.15)';
     el.style.background = (
@@ -48,6 +48,9 @@
       btn.style.opacity = isLoading ? '0.7' : '1';
       btn.textContent = isLoading ? 'Please wait…' : (labelWhenDone ?? btn.dataset.origText);
     },
+    copy(text) {
+      navigator.clipboard.writeText(text).then(()=>ui.success('Copied'));
+    }
   };
 
   // ---------- Auth ----------
@@ -62,22 +65,14 @@
     if (error) throw error;
     return { session: data.session, user: data.session?.user ?? null };
   }
-
   async function requireAuth() {
     const { user } = await getSession();
-    if (!user) {
-      ui.warn('Please sign in to continue.');
-      throw new Error('AUTH_REQUIRED');
-    }
+    if (!user) { ui.warn('Please sign in to continue.'); throw new Error('AUTH_REQUIRED'); }
     return user;
   }
-
   async function isAdmin(userId) {
     const { data, error } = await sb.from('admins').select('user_id').eq('user_id', userId).maybeSingle();
-    if (error) {
-      console.warn('admin check failed', error);
-      return false;
-    }
+    if (error) { console.warn('admin check failed', error); return false; }
     return !!data?.user_id;
   }
 
@@ -99,8 +94,27 @@
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   }
-  function getQueryParam(name) {
-    return new URL(location.href).searchParams.get(name);
+  function getQueryParam(name) { return new URL(location.href).searchParams.get(name); }
+  function setQueryParams(obj) {
+    const url = new URL(location.href);
+    Object.entries(obj).forEach(([k,v])=>{
+      if (v === null || v === undefined || v === '' || v === 'all') url.searchParams.delete(k);
+      else url.searchParams.set(k, v);
+    });
+    history.replaceState(null, '', url.toString());
+  }
+  function downloadCSV({ filename = 'export.csv', rows = [], columns = [] }) {
+    // columns: [{key:'email', header:'Email'}] or {header:'Custom', map:(row)=>'...'}
+    const header = columns.map(c => c.header).join(',');
+    const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+    const body = rows.map(r => columns.map(c => c.map ? c.map(r) : esc(r[c.key])).join(',')).join('\n');
+    const csv = header + '\n' + body;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
 
   // ---------- DB API ----------
@@ -116,73 +130,44 @@
       return data || [];
     },
     async createCompany({ name, website, owner_id }) {
-      const payload = {
-        name: name?.trim(),
-        website: website?.trim() || null,
-        ...(owner_id ? { owner_id } : {})  // send owner explicitly (UI passes user.id)
-      };
+      const payload = { name: name?.trim(), website: website?.trim() || null, ...(owner_id ? { owner_id } : {}) };
       const { data, error } = await sb.from('companies').insert(payload).select('id,name,website').maybeSingle();
       if (error) throw error;
       return data;
     },
 
-    // JOBS (owner)
-    async createJob(job) {
-      const payload = {
-        title: job.title?.trim(),
-        location: job.location?.trim(),
-        employment_type: job.employment_type,
-        min_salary: numberOrNull(job.min_salary),
-        max_salary: numberOrNull(job.max_salary),
-        currency: (job.currency || 'INR').trim(),
-        description: job.description?.trim() || null,
-        company_id: job.company_id,
-        published: !!job.published
-      };
-      const { data, error } = await sb.from('jobs').insert(payload).select('id').maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-
-    // JOBS (public listing)
+    // JOBS list/search/sort (public)
     _applyJobFilters(query, { location, employment_type } = {}) {
       query = query.eq('published', true);
       if (location && location !== 'all') query = query.ilike('location', location);
-      if (employment_type && employment_type !== 'all') query = query.ilike('employment_type', employment_type); // case-insensitive
+      if (employment_type && employment_type !== 'all') query = query.ilike('employment_type', employment_type);
       return query;
     },
-
-    async listJobsPaged({ page=1, pageSize=10, location, employment_type } = {}) {
+    async listJobsPaged({ page=1, pageSize=10, location, employment_type, q=null, sort='newest' } = {}) {
       const from = (page-1) * pageSize;
       const to = from + pageSize - 1;
 
-      // count
-      let qCount = sb.from('jobs').select('id', { count: 'exact', head: true });
-      qCount = db._applyJobFilters(qCount, { location, employment_type });
-      const { count, error: countErr } = await qCount;
-      if (countErr) throw countErr;
+      // COUNT
+      let qc = sb.from('jobs').select('id', { count: 'exact', head: true });
+      qc = db._applyJobFilters(qc, { location, employment_type });
+      if (q) qc = qc.textSearch('search_tsv', q, { type: 'websearch', config: 'english' });
+      const { count, error: countErr } = await qc; if (countErr) throw countErr;
 
-      // data
-      let q = sb.from('jobs')
-        .select('id,title,location,employment_type,min_salary,max_salary,currency,created_at,company:companies(name,website)')
-        .order('created_at', { ascending: false });
-      q = db._applyJobFilters(q, { location, employment_type }).range(from, to);
+      // DATA
+      let qd = sb.from('jobs')
+        .select('id,title,location,employment_type,min_salary,max_salary,currency,created_at,company:companies(name,website)');
+      qd = db._applyJobFilters(qd, { location, employment_type });
+      if (q) qd = qd.textSearch('search_tsv', q, { type: 'websearch', config: 'english' });
 
-      const { data, error } = await q;
-      if (error) throw error;
+      if (sort === 'pay-max')      qd = qd.order('max_salary', { ascending: false, nullsLast: true }).order('created_at', { ascending: false });
+      else if (sort === 'pay-min') qd = qd.order('min_salary', { ascending: false, nullsLast: true }).order('created_at', { ascending: false });
+      else                         qd = qd.order('created_at', { ascending: false });
+
+      qd = qd.range(from, to);
+      const { data, error } = await qd; if (error) throw error;
 
       return { rows: data || [], total: count ?? 0 };
     },
-
-    async distinctJobFilters() {
-      const { data, error } = await sb.from('jobs')
-        .select('location,employment_type').eq('published', true).limit(1000);
-      if (error) throw error;
-      const locs = new Set(), types = new Set();
-      (data || []).forEach(r => { if (r.location) locs.add(r.location); if (r.employment_type) types.add(r.employment_type); });
-      return { locations: [...locs].sort(), employment_types: [...types].sort() };
-    },
-
     async getJobByIdPublic(id) {
       const { data, error } = await sb.from('jobs')
         .select('id,title,location,employment_type,min_salary,max_salary,currency,description,published,created_at,company_id,company:companies(name,website)')
@@ -202,9 +187,35 @@
       const { error } = await sb.from('applications').insert(payload);
       if (error) throw error;
       return true;
+    },
+
+    // Fetch apps for a set of jobIds (owner/admin pages)
+    async appsForJobIds(jobIds = [], { page=1, pageSize=20, q=null }) {
+      if (!jobIds.length) return { rows: [], total: 0 };
+      const from = (page-1) * pageSize;
+      const to = from + pageSize - 1;
+      const orFilter = q ? `candidate_name.ilike.%${q}%,email.ilike.%${q}%,message.ilike.%${q}%` : null;
+
+      // COUNT
+      let qc = sb.from('applications').select('id', { count: 'exact', head: true }).in('job_id', jobIds);
+      if (orFilter) qc = qc.or(orFilter);
+      const { count, error: ce } = await qc; if (ce) throw ce;
+
+      // DATA
+      let qd = sb.from('applications')
+        .select('id,job_id,candidate_name,email,message,created_at')
+        .in('job_id', jobIds)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (orFilter) qd = qd.or(orFilter);
+
+      const { data, error: de } = await qd; if (de) throw de;
+      return { rows: data || [], total: count ?? 0 };
     }
   };
 
-  // expose
-  window.app = { ui, q, qa, escapeHTML, serializeForm, getQueryParam, getSession, requireAuth, isAdmin, db };
+  window.app = {
+    ui, q, qa, escapeHTML, serializeForm, getQueryParam, setQueryParams,
+    getSession, requireAuth, isAdmin, db, downloadCSV
+  };
 })();
