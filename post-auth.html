@@ -1,40 +1,27 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html><head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Signing you in…</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=11"></script>
-  <script src="/components.js?v=11"></script>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:40px;text-align:center}
-    .muted{color:#64748b}
-  </style>
-</head>
-<body>
-  <h1>Signing you in…</h1>
-  <p class="muted">Please wait.</p>
+  <script src="/config.js?v=12"></script>
+  <script src="/components.js?v=12"></script>
+</head><body>
+<script>
+(async function(){
+  try{
+    const { user } = await window.app.requireAuth();
+    // Admin?
+    const admin = await window.app.isAdmin(user.id);
+    if (admin) { window.location.replace('/employer-home.html'); return; }
 
-  <script>
-    (async function(){
-      const sb = window.supabase; const { ui } = window.app;
-      const url = new URL(location.href);
-      const code = url.searchParams.get('code');
-      const next = url.searchParams.get('next') || '/employer.html';
+    // Company owner?
+    const companies = await window.app.db.myCompanies(user.id);
+    if ((companies||[]).length > 0) { window.location.replace('/employer-home.html'); return; }
 
-      try {
-        if (code) {
-          const { error } = await sb.auth.exchangeCodeForSession({ code });
-          if (error) throw error;
-        }
-        ui.success('Signed in');
-        setTimeout(()=>location.replace(next), 400);
-      } catch(err) {
-        console.error(err);
-        ui.error(err.message || 'Sign-in failed');
-      }
-    })();
-  </script>
-</body>
-</html>
+    // Otherwise candidate dashboard
+    window.location.replace('/dashboard.html');
+  } catch(e){
+    window.location.replace('/login.html');
+  }
+})();
+</script>
+</body></html>
