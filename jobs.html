@@ -1,75 +1,163 @@
-
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>GrowIndia Jobs — Browse</title>
-  <link rel="stylesheet" href="/app.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=1"></script>
-  <script src="/components.js?v=1"></script>
+  <title>Jobs — GrowIndia</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/config.js?v=6"></script>
+  <script src="/components.js?v=6"></script>
+  <style>
+    .filters{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+    select{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px}
+    .muted{color:#64748b;font-size:14px}
+    .pager{display:flex;gap:8px;justify-content:center;margin:24px 0}
+    .pager button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
+    a.joblink{color:#0ea5e9;text-decoration:none;font-weight:600}
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="row">
-      <div><h1 class="h1">Open positions</h1></div>
+  <main class="container" style="max-width:1100px;margin:0 auto;padding:24px">
+    <h1>Open Roles</h1>
+
+    <div class="filters">
+      <label>Location
+        <select id="f_location"></select>
+      </label>
+      <label>Employment Type
+        <select id="f_type"></select>
+      </label>
+      <button id="btnApply">Apply filters</button>
+      <button id="btnReset">Reset</button>
     </div>
-    <div class="search">
-      <input id="q" class="input" placeholder="Search title or location"/>
-      <button id="searchBtn" class="btn">Search</button>
+
+    <div id="jobList" class="list"></div>
+    <div id="empty" class="muted" style="display:none">No jobs found.</div>
+
+    <div class="pager">
+      <button id="prevBtn">Prev</button>
+      <div id="pageInfo" class="muted"></div>
+      <button id="nextBtn">Next</button>
     </div>
-    <table class="table" id="tbl">
-      <thead><tr><th>Title</th><th>Company</th><th>Location</th><th>Created</th></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-    <div class="pagination">
-      <button class="btn" id="prev">Prev</button>
-      <span id="page" class="small muted"></span>
-      <button class="btn" id="next">Next</button>
-    </div>
-  </div>
+  </main>
 
-<script>
-(async()=>{
-  const s = await getSession();
-  header(s?.user, await isAdmin());
+  <script>
+    (async function(){
+      const { ui, q, db, getQueryParam, escapeHTML } = window.app;
 
-  let page=1, pageSize=10, q="";
-  const tbody = document.getElementById("tbody");
-  const bind = async ()=>{
-    tbody.innerHTML = spinnerRow();
-    let query = sb.from("jobs")
-      .select("id,title,location,created_at,companies(name)", { count:"exact" })
-      .eq("published", true)
-      .order("created_at", { ascending:false })
-      .range((page-1)*pageSize, page*pageSize-1);
-    if(q){
-      query = query.ilike("title", `%${q}%`).or(`location.ilike.%${q}%`);
-    }
-    const { data, error, count } = await query;
-    if(error){ tbody.innerHTML = `<tr><td colspan="99">Error: ${error.message}</td></tr>`; return; }
-    if(!data.length){ tbody.innerHTML = `<tr><td colspan="99" class="muted">No jobs found.</td></tr>`; }
-    else{
-      tbody.innerHTML = data.map(j=>`<tr>
-        <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${j.title}</a></td>
-        <td>${j.companies?.name || "-"}</td>
-        <td>${j.location || "-"}</td>
-        <td>${new Date(j.created_at).toLocaleDateString()}</td>
-      </tr>`).join("");
-    }
-    document.getElementById("page").textContent = `page ${page} of ${Math.max(1, Math.ceil((count||0)/pageSize))}`;
-  };
+      const pageSize = 10;
+      function stateFromURL() {
+        const url = new URL(location.href);
+        return {
+          page: Math.max(1, Number(url.searchParams.get('page') || '1')),
+          location: url.searchParams.get('location') || 'all',
+          employment_type: url.searchParams.get('type') || 'all'
+        };
+      }
+      function setURLState(state) {
+        const url = new URL(location.href);
+        url.searchParams.set('page', String(state.page));
+        if (state.location && state.location !== 'all') url.searchParams.set('location', state.location); else url.searchParams.delete('location');
+        if (state.employment_type && state.employment_type !== 'all') url.searchParams.set('type', state.employment_type); else url.searchParams.delete('type');
+        history.replaceState(null, '', url.toString());
+      }
 
-  document.getElementById("searchBtn").onclick = ()=>{ q = document.getElementById("q").value.trim(); page=1; bind(); };
-  document.getElementById("prev").onclick = ()=>{ if(page>1){page--; bind();}};
-  document.getElementById("next").onclick = ()=>{ page++; bind(); };
+      async function loadFilters() {
+        try {
+          const { locations, employment_types } = await db.distinctJobFilters();
+          const locSel = q('#f_location');
+          const typeSel = q('#f_type');
 
-  bind();
-})();
-<!-- Supabase + app scripts (order matters) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js?v=5"></script>
-<script src="/components.js?v=5"></script>
+          const locOptions = ['all', ...locations];
+          locSel.innerHTML = locOptions.map(v => `<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
+
+          const typeOptions = ['all', ...employment_types];
+          typeSel.innerHTML = typeOptions.map(v => `<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
+        } catch (err) {
+          console.error(err);
+          ui.error('Failed to load filters');
+        }
+      }
+
+      async function render() {
+        const state = stateFromURL();
+        q('#f_location').value = state.location;
+        q('#f_type').value = state.employment_type;
+
+        try {
+          const { rows, total } = await db.listJobsPaged({
+            page: state.page, pageSize,
+            location: state.location === 'all' ? null : state.location,
+            employment_type: state.employment_type === 'all' ? null : state.employment_type
+          });
+
+          const list = q('#jobList');
+          list.innerHTML = '';
+          if (rows.length === 0) {
+            q('#empty').style.display = 'block';
+          } else {
+            q('#empty').style.display = 'none';
+            rows.forEach(j => {
+              const el = document.createElement('div');
+              el.className = 'card';
+              el.innerHTML = `
+                <a class="joblink" href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a>
+                <div class="muted" style="margin:6px 0">${escapeHTML(j.company?.name || '—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span></div>
+                <div class="muted">
+                  ${j.min_salary ? escapeHTML(j.min_salary) : ''}${j.max_salary ? '–'+escapeHTML(j.max_salary) : ''} ${escapeHTML(j.currency || '')}
+                </div>
+              `;
+              list.appendChild(el);
+            });
+          }
+
+          const totalPages = Math.max(1, Math.ceil(total / pageSize));
+          q('#pageInfo').textContent = `Page ${state.page} of ${totalPages}`;
+          q('#prevBtn').disabled = state.page <= 1;
+          q('#nextBtn').disabled = state.page >= totalPages;
+
+        } catch (err) {
+          console.error(err);
+          ui.error('Failed to load jobs');
+        }
+      }
+
+      await loadFilters();
+
+      // Apply/reset
+      q('#btnApply').addEventListener('click', ()=>{
+        const next = {
+          ...stateFromURL(),
+          page: 1,
+          location: q('#f_location').value,
+          employment_type: q('#f_type').value
+        };
+        setURLState(next);
+        render();
+      });
+      q('#btnReset').addEventListener('click', ()=>{
+        setURLState({ page:1, location:'all', employment_type:'all' });
+        render();
+      });
+
+      // Pager
+      q('#prevBtn').addEventListener('click', ()=>{
+        const s = stateFromURL();
+        s.page = Math.max(1, s.page-1);
+        setURLState(s); render();
+      });
+      q('#nextBtn').addEventListener('click', ()=>{
+        const s = stateFromURL();
+        s.page = s.page+1;
+        setURLState(s); render();
+      });
+
+      // Initial page
+      render();
+    })();
+  </script>
 </body>
 </html>
