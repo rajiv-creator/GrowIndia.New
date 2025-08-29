@@ -1,4 +1,4 @@
-/* components.js (v11) — helpers + Supabase wrappers
+/* components.js (v12) — helpers + Supabase wrappers
    Requires: window.supabase from /config.js  */
 
 (() => {
@@ -47,7 +47,8 @@
       btn.style.opacity = isLoading ? '0.7' : '1';
       btn.textContent = isLoading ? 'Please wait…' : (labelWhenDone ?? btn.dataset.origText);
     },
-    copy(text){ navigator.clipboard.writeText(text).then(()=>ui.success('Copied')); }
+    copy(text){ navigator.clipboard.writeText(text).then(()=>ui.success('Copied')); },
+    confirm(msg='Are you sure?'){ return new Promise(res=>res(window.confirm(msg))); },
   };
 
   // ---------- Auth ----------
@@ -86,6 +87,9 @@
       else url.searchParams.set(k, v);
     });
     history.replaceState(null,'',url.toString());
+  }
+  function debounce(fn, ms=300){
+    let t=null; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
   }
   function downloadCSV({ filename='export.csv', rows=[], columns=[] }){
     const header = columns.map(c=>c.header).join(',');
@@ -130,6 +134,37 @@
       const { data, error } = await sb.from('jobs').insert(payload).select('id').maybeSingle();
       if (error) throw error; return data;
     },
+    async updateJob(id, patch){
+      const payload = {
+        ...(patch.title!==undefined ? { title: patch.title?.trim() } : {}),
+        ...(patch.location!==undefined ? { location: patch.location?.trim() } : {}),
+        ...(patch.employment_type!==undefined ? { employment_type: patch.employment_type } : {}),
+        ...(patch.min_salary!==undefined ? { min_salary: numberOrNull(patch.min_salary) } : {}),
+        ...(patch.max_salary!==undefined ? { max_salary: numberOrNull(patch.max_salary) } : {}),
+        ...(patch.currency!==undefined ? { currency: (patch.currency||'INR').trim() } : {}),
+        ...(patch.description!==undefined ? { description: patch.description?.trim() || null } : {}),
+        ...(patch.published!==undefined ? { published: !!patch.published } : {})
+      };
+      const { data, error } = await sb.from('jobs').update(payload).eq('id', id).select('id').maybeSingle();
+      if (error) throw error; return data;
+    },
+    async deleteJob(id){
+      const { error } = await sb.from('jobs').delete().eq('id', id);
+      if (error) throw error; return true;
+    },
+    async toggleJobPublished(id, next){
+      const { error } = await sb.from('jobs').update({ published: next }).eq('id', id);
+      if (error) throw error; return true;
+    },
+    async myJobsByCompanyIds(companyIds=[]){
+      if (!companyIds.length) return [];
+      const { data, error } = await sb.from('jobs')
+        .select('id,title,location,employment_type,published,created_at,company_id,company:companies(name)')
+        .in('company_id', companyIds)
+        .order('created_at',{ ascending:false });
+      if (error) throw error; return data||[];
+    },
+
     _applyJobFilters(query,{location,employment_type}={}){
       query = query.eq('published', true);
       if (location && location!=='all') query = query.ilike('location', location);
@@ -157,7 +192,7 @@
       return { rows:data||[], total:count??0 };
     },
     async distinctJobFilters(){
-      const { data, error } = await sb.from('jobs').select('location,employment_type').eq('published', true).limit(1000);
+      const { data, error } = await sb.from('jobs').select('location,employment_type').eq('published', true).limit(2000);
       if (error) throw error;
       const uniq = a => Array.from(new Set((a||[]).filter(Boolean))).sort((a,b)=>String(a).localeCompare(String(b)));
       return {
@@ -177,7 +212,7 @@
       const payload = {
         job_id,
         candidate_name: candidate_name?.trim(),
-        email: email?.trim(),                // canonical column
+        email: email?.trim(),
         message: message?.trim() || null
       };
       const { error } = await sb.from('applications').insert(payload);
@@ -204,6 +239,6 @@
 
   window.app = {
     ui, q, qa, escapeHTML, serializeForm, getQueryParam, setQueryParams,
-    getSession, requireAuth, isAdmin, db, downloadCSV
+    getSession, requireAuth, isAdmin, db, downloadCSV, debounce
   };
 })();
