@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GrowIndia Jobs — Find your next role</title>
+  <meta name="description" content="Browse fresh jobs across India. Simple applications, zero friction. Employers can post in minutes.">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=12"></script>
+  <script src="/components.js?v=12"></script>
+  <style>
+    :root{--bg:#0ea5e9;--bg2:#2563eb}
+    .hero{background:linear-gradient(135deg,var(--bg),var(--bg2));color:#fff;padding:72px 24px}
+    .container{max-width:1100px;margin:0 auto}
+    .hero h1{font-size:48px;line-height:1.1;margin:0 0 12px}
+    .hero p{opacity:.95;font-size:18px;margin:0 0 24px}
+    .cta{display:flex;gap:12px;flex-wrap:wrap}
+    .cta a{display:inline-block;padding:12px 16px;border-radius:12px;background:#fff;color:#0f172a;text-decoration:none;font-weight:700}
+    .cta a.secondary{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35)}
+    .section{padding:32px 24px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+    .card{border:1px solid #e5e7eb;border-radius:14px;padding:16px;background:#fff}
+    .muted{color:#64748b}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
+    a.joblink{color:#0ea5e9;text-decoration:none;font-weight:600}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .topbar a{color:#0ea5e9;text-decoration:none;font-weight:600}
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="topbar">
+        <div style="font-weight:800;font-size:20px">GrowIndia Jobs</div>
+        <nav style="display:flex;gap:16px">
+          <a href="/jobs.html">Jobs</a>
+          <a href="/employer.html">Post a job</a>
+          <a href="/index.html">Sign in</a>
+        </nav>
+      </div>
+      <h1>Find your next role. Fast.</h1>
+      <p>Curated, lightweight job board for India. No logins to browse. One-click apply.</p>
+      <div class="cta">
+        <a href="/jobs.html">Browse jobs</a>
+        <a class="secondary" href="/employer.html">Post a job</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section">
+      <h2 style="margin:0 0 12px">Latest openings</h2>
+      <div id="latest" class="grid"></div>
+      <div style="margin-top:16px"><a href="/jobs.html" class="joblink">See all jobs →</a></div>
+    </section>
+
+    <section class="section" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:16px">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-items:center">
+        <div>
+          <h3>For employers</h3>
+          <ul>
+            <li>Post a role in minutes</li>
+            <li>Instant magic-link sign-in</li>
+            <li>Simple applications inbox + CSV export</li>
+          </ul>
+          <a class="joblink" href="/employer.html">Open employer dashboard →</a>
+        </div>
+        <div>
+          <h3>For candidates</h3>
+          <ul>
+            <li>Zero-login browsing</li>
+            <li>Clean, mobile friendly UI</li>
+            <li>Apply with name, email &amp; note</li>
+          </ul>
+          <a class="joblink" href="/jobs.html">Start browsing jobs →</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (async function(){
+      const list = document.getElementById('latest');
+      try {
+        const { rows } = await window.app.db.listJobsPaged({ page:1, pageSize:6, sort:'newest' });
+        list.innerHTML = rows.map(j => `
+          <div class="card">
+            <a class="joblink" href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a>
+            <div class="muted" style="margin:6px 0">
+              ${window.app.escapeHTML(j.company?.name || '—')} • ${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span>
+            </div>
+            <div class="muted">${j.min_salary?j.min_salary:''}${j.max_salary?'–'+j.max_salary:''} ${window.app.escapeHTML(j.currency||'')}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error(e); window.app.ui.error('Failed to load latest jobs');
+      }
+    })();
+  </script>
+</body>
+</html>
