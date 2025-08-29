@@ -1,300 +1,198 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Employer — GrowIndia Jobs</title>
-  <link rel="stylesheet" href="/app.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GrowIndia Jobs — Employer</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/config.js?v=6"></script>
+  <script src="/components.js?v=6"></script>
+  <style>
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row > .col{flex:1 1 240px}
+    label{display:block;font-weight:600;margin:8px 0 4px}
+    input, select, textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+    button{padding:10px 14px;border-radius:8px;border:none;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
+    button[disabled]{opacity:.7;cursor:not-allowed}
+    .muted{color:#64748b;font-size:14px}
+  </style>
 </head>
 <body>
-  <header class="header">
-    <nav class="nav">
-      <a class="brand" href="/jobs.html">GrowIndia Jobs</a>
-      <div class="right">
-        <a class="btn ghost" href="/jobs.html">Jobs</a>
-        <a class="btn ghost" href="/admin.html">Admin</a>
-        <button id="logoutBtn" class="btn" type="button">Logout</button>
-      </div>
-    </nav>
-  </header>
+  <main class="container" style="max-width:960px;margin:0 auto;padding:24px">
+    <h1>Employer Dashboard</h1>
 
-  <main class="container">
-    <h1>Employer</h1>
-
-    <div id="postMsg" class="kicker muted" style="min-height:1.25rem;"></div>
-
-    <!-- Your company -->
-    <section class="card">
-      <div class="row space">
-        <h2>Your company</h2>
-        <div>
-          <a href="/jobs.html" class="btn ghost" type="button">Public site</a>
-          <button id="logoutBtn2" class="btn ghost" type="button">Logout</button>
+    <section class="card" id="companySection">
+      <h2>Your Company</h2>
+      <div class="row">
+        <div class="col">
+          <label for="companySelect">Select company</label>
+          <select id="companySelect"></select>
+          <p class="muted">Don’t see your company? Create one ↓</p>
         </div>
       </div>
 
-      <label class="muted" for="companySelect">Select your company</label>
-      <select id="companySelect" class="input" aria-label="Your companies">
-        <option value="">Select your company…</option>
-      </select>
-
-      <div class="row" style="gap:12px;margin-top:12px">
-        <input id="newCompanyName" class="input" placeholder="New company name" />
-        <input id="newCompanyWebsite" class="input" placeholder="Website (https://…)" />
-        <button id="createCompanyBtn" class="btn" type="button">Create company</button>
-      </div>
+      <form id="createCompanyForm" class="row" style="margin-top:8px">
+        <div class="col">
+          <label for="c_name">Company name</label>
+          <input id="c_name" name="name" required placeholder="Acme Pvt Ltd">
+        </div>
+        <div class="col">
+          <label for="c_site">Website (optional)</label>
+          <input id="c_site" name="website" placeholder="https://…">
+        </div>
+        <div class="col" style="align-self:flex-end">
+          <button id="btnCreateCompany" type="submit">Create company</button>
+        </div>
+      </form>
     </section>
 
-    <!-- Post a job -->
-    <section class="card">
-      <h2>Post a job</h2>
+    <section class="card" id="jobSection" style="display:none">
+      <h2>Post a Job</h2>
+      <form id="jobForm">
+        <div class="row">
+          <div class="col">
+            <label for="j_title">Title *</label>
+            <input id="j_title" name="title" required placeholder="Software Engineer">
+          </div>
+          <div class="col">
+            <label for="j_location">Location *</label>
+            <input id="j_location" name="location" required placeholder="Remote / Mumbai">
+          </div>
+          <div class="col">
+            <label for="j_type">Employment Type *</label>
+            <select id="j_type" name="employment_type" required>
+              <option value="">Select…</option>
+              <option>full-time</option>
+              <option>part-time</option>
+              <option>contract</option>
+              <option>internship</option>
+              <option>temporary</option>
+              <option>freelance</option>
+            </select>
+          </div>
+        </div>
 
-      <input id="jobTitle" class="input" placeholder="Job title" />
-      <input id="jobLocation" class="input" placeholder="Location" />
+        <div class="row">
+          <div class="col">
+            <label for="j_min">Min Salary</label>
+            <input id="j_min" name="min_salary" type="number" min="0" step="1" placeholder="e.g., 600000">
+          </div>
+          <div class="col">
+            <label for="j_max">Max Salary</label>
+            <input id="j_max" name="max_salary" type="number" min="0" step="1" placeholder="e.g., 1200000">
+          </div>
+          <div class="col">
+            <label for="j_curr">Currency</label>
+            <input id="j_curr" name="currency" value="INR">
+          </div>
+        </div>
 
-      <div class="row">
-        <select id="jobType" class="input">
-          <option>Full-time</option>
-          <option>Part-time</option>
-          <option>Contract</option>
-          <option>Internship</option>
-        </select>
-        <input id="minSalary" class="input" type="number" placeholder="Min salary" />
-        <input id="maxSalary" class="input" type="number" placeholder="Max salary" />
-        <input id="jobCurrency" class="input" placeholder="Currency (e.g., INR)" />
-      </div>
+        <div class="row">
+          <div class="col" style="flex:1 1 100%">
+            <label for="j_desc">Description</label>
+            <textarea id="j_desc" name="description" rows="6" placeholder="Role, responsibilities, requirements…"></textarea>
+          </div>
+        </div>
 
-      <textarea id="jobDescription" class="input" rows="6" placeholder="Description"></textarea>
-
-      <label class="row" style="gap:.5rem;align-items:center;">
-        <input id="publishChk" type="checkbox" checked />
-        <span>Published</span>
-      </label>
-
-      <div class="row" style="gap:12px;align-items:center">
-        <button id="postJobBtn" class="btn primary" type="button">Post job</button>
-        <span id="inlineMsg" class="kicker muted" style="min-height:1.25rem;"></span>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Your jobs</h2>
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Company</th>
-              <th>Status</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody id="jobsTbody">
-            <tr><td colspan="4" class="muted">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Applications</h2>
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Job</th>
-              <th>Candidate</th>
-              <th>Email</th>
-              <th>Message</th>
-              <th>Applied</th>
-            </tr>
-          </thead>
-          <tbody id="appsTbody">
-            <tr><td colspan="5" class="muted">No applications yet.</td></tr>
-          </tbody>
-        </table>
-      </div>
+        <div class="row" style="align-items:center">
+          <div class="col">
+            <label><input type="checkbox" id="j_pub" name="published"> Publish immediately</label>
+          </div>
+          <div class="col" style="align-self:flex-end">
+            <button id="btnPostJob" type="submit">Post job</button>
+          </div>
+        </div>
+      </form>
     </section>
   </main>
 
-  <!-- Supabase + app scripts (order matters) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=5"></script>
-  <script src="/components.js?v=5"></script>
-
   <script>
-  (async () => {
-    const msg = document.getElementById('postMsg');
-    const iMsg = document.getElementById('inlineMsg');
-    const logoutBtn  = document.getElementById('logoutBtn');
-    const logoutBtn2 = document.getElementById('logoutBtn2');
+    (async function(){
+      const { ui, q, db, requireAuth } = window.app;
+      let user;
+      try {
+        user = await requireAuth();
+      } catch(e) { return; }
 
-    const companySelect     = document.getElementById('companySelect');
-    const newCompanyName    = document.getElementById('newCompanyName');
-    const newCompanyWebsite = document.getElementById('newCompanyWebsite');
-    const createCompanyBtn  = document.getElementById('createCompanyBtn');
-
-    const jobTitle       = document.getElementById('jobTitle');
-    const jobLocation    = document.getElementById('jobLocation');
-    const jobType        = document.getElementById('jobType');
-    const minSalary      = document.getElementById('minSalary');
-    const maxSalary      = document.getElementById('maxSalary');
-    const jobCurrency    = document.getElementById('jobCurrency');
-    const jobDescription = document.getElementById('jobDescription');
-    const publishChk     = document.getElementById('publishChk');
-    const postBtn        = document.getElementById('postJobBtn');
-
-    const jobsTbody = document.getElementById('jobsTbody');
-    const appsTbody = document.getElementById('appsTbody');
-
-    const show = (t, ok=false) => {
-      msg.textContent = t || '';
-      iMsg.textContent = t || '';
-      const cls = ok ? 'ok' : 'error';
-      msg.classList.remove('ok','error'); iMsg.classList.remove('ok','error');
-      if (t) { msg.classList.add(cls); iMsg.classList.add(cls); }
-    };
-
-    const fmt = (iso) => { try { return new Date(iso).toLocaleString(); } catch { return iso || ''; } };
-
-    // Require login
-    const s = await sbAuth.getSession();
-    const session = s?.data?.session;
-    if (!session) { location.href = '/index.html'; return; }
-
-    // Nice header if available
-    try { if (window.header) document.querySelector('.header').replaceWith(window.header(session.user, false)); } catch {}
-
-    // Logout
-    for (const b of [logoutBtn, logoutBtn2]) b?.addEventListener('click', async () => { await sbAuth.signOut(); location.href='/index.html'; });
-
-    async function loadCompanies(selectIdToKeep=null) {
-      companySelect.disabled = true;
-      companySelect.innerHTML = '<option value="">Select your company…</option>';
-
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name, website, owner_id, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) { show(error.message); companySelect.disabled = false; return []; }
-
-      if (!data?.length) {
-        companySelect.innerHTML = '<option value="">(No companies yet)</option>';
-      } else {
-        for (const c of data) {
+      // Load companies
+      async function refreshCompanies(selectLastCreatedId=null) {
+        const companies = await db.myCompanies(user.id);
+        const sel = q('#companySelect');
+        sel.innerHTML = '';
+        if (companies.length === 0) {
           const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = c.name;
-          companySelect.appendChild(opt);
+          opt.value = '';
+          opt.textContent = '— No companies yet —';
+          sel.appendChild(opt);
+          q('#jobSection').style.display = 'none';
+        } else {
+          companies.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            sel.appendChild(opt);
+          });
+          if (selectLastCreatedId) sel.value = selectLastCreatedId;
+          q('#jobSection').style.display = 'block';
         }
-        // Auto-select when exactly one company exists
-        if (!selectIdToKeep && data.length === 1) {
-          companySelect.value = data[0].id;
+      }
+
+      await refreshCompanies();
+
+      // Create company
+      q('#createCompanyForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const btn = q('#btnCreateCompany');
+        ui.setLoading(btn, true);
+        try {
+          const { name, website } = window.app.serializeForm(e.target);
+          if (!name?.trim()) { ui.error('Company name is required'); return; }
+          const created = await db.createCompany({ name, website });
+          ui.success('Company created');
+          (e.target).reset();
+          await refreshCompanies(created.id);
+        } catch (err) {
+          ui.error(err.message || 'Failed to create company');
+          console.error(err);
+        } finally {
+          ui.setLoading(btn, false);
         }
-      }
+      });
 
-      if (selectIdToKeep && [...companySelect.options].some(o => o.value===selectIdToKeep)) {
-        companySelect.value = selectIdToKeep;
-      }
+      // Post job
+      q('#jobForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const btn = q('#btnPostJob');
+        ui.setLoading(btn, true);
+        try {
+          const company_id = q('#companySelect').value;
+          if (!company_id) { ui.error('Select or create a company first'); return; }
 
-      companySelect.disabled = false;
-      return data || [];
-    }
+          const f = window.app.serializeForm(e.target);
+          // Inline validation
+          if (!f.title?.trim()) return ui.error('Job title is required');
+          if (!f.location?.trim()) return ui.error('Location is required');
+          if (!f.employment_type) return ui.error('Employment type is required');
 
-    async function loadJobs(companies=[]) {
-      const nameById = Object.fromEntries(companies.map(c => [c.id, c.name]));
-      jobsTbody.innerHTML = '<tr><td colspan="4" class="muted">Loading…</td></tr>';
+          const min = f.min_salary ? Number(f.min_salary) : null;
+          const max = f.max_salary ? Number(f.max_salary) : null;
+          if (min !== null && (!Number.isFinite(min) || min < 0)) return ui.error('Min salary must be a non-negative number');
+          if (max !== null && (!Number.isFinite(max) || max < 0)) return ui.error('Max salary must be a non-negative number');
+          if (min !== null && max !== null && min > max) return ui.error('Min salary cannot exceed max salary');
 
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('id, title, company_id, published, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) { jobsTbody.innerHTML = `<tr><td colspan="4" class="muted">Load error: ${error.message}</td></tr>`; return; }
-      if (!data?.length) { jobsTbody.innerHTML = '<tr><td colspan="4" class="muted">No jobs yet.</td></tr>'; return; }
-
-      jobsTbody.innerHTML = '';
-      for (const j of data) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${j.title}</td>
-          <td>${nameById[j.company_id] || j.company_id}</td>
-          <td>${j.published ? 'Published' : 'Draft'}</td>
-          <td>${fmt(j.created_at)}</td>
-        `;
-        jobsTbody.appendChild(tr);
-      }
-    }
-
-    async function loadApplications() {
-      appsTbody.innerHTML = '<tr><td colspan="5" class="muted">No applications yet.</td></tr>';
-    }
-
-    createCompanyBtn.addEventListener('click', async () => {
-      show('');
-      const name = newCompanyName.value.trim();
-      const website = newCompanyWebsite.value.trim();
-      if (!name) { show('Company name required'); return; }
-
-      const { data, error } = await supabase
-        .from('companies')
-        .insert({ name, website, owner_id: session.user.id })
-        .select()
-        .single();
-
-      if (error) { show(error.message); return; }
-
-      show(`Company “${data.name}” created`, true);
-      newCompanyName.value = '';
-      newCompanyWebsite.value = '';
-
-      const companies = await loadCompanies(data.id);
-      await loadJobs(companies);
-    });
-
-    postBtn.addEventListener('click', async () => {
-      console.log('Post job clicked'); // small sanity log
-      show('');
-
-      const company_id = companySelect.value;
-      const title = jobTitle.value.trim();
-      const location = jobLocation.value.trim();
-      const employment_type = jobType.value;
-      const min_salary = minSalary.value ? parseInt(minSalary.value, 10) : null;
-      const max_salary = maxSalary.value ? parseInt(maxSalary.value, 10) : null;
-      const currency = (jobCurrency.value || 'INR').toUpperCase();
-      const description = jobDescription.value.trim();
-      const published = !!publishChk.checked;
-
-      if (!company_id) { show('Select a company'); return; }
-      if (!title)      { show('Job title required'); return; }
-
-      const { data, error } = await supabase
-        .from('jobs')
-        .insert({ company_id, title, description, location, employment_type, min_salary, max_salary, currency, published })
-        .select()
-        .single();
-
-      if (error) { show(error.message); return; }
-
-      show('Job posted!', true);
-      jobTitle.value = '';
-      jobLocation.value = '';
-      minSalary.value = '';
-      maxSalary.value = '';
-      jobCurrency.value = '';
-      jobDescription.value = '';
-      publishChk.checked = true;
-
-      const companies = await loadCompanies(company_id);
-      await loadJobs(companies);
-    });
-
-    const companies = await loadCompanies();
-    await loadJobs(companies);
-    await loadApplications();
-  })();
+          await db.createJob({ ...f, company_id });
+          ui.success(f.published ? 'Job posted & published' : 'Job posted (draft)');
+          e.target.reset();
+          q('#j_curr').value = 'INR';
+        } catch (err) {
+          ui.error(err.message || 'Failed to post job');
+          console.error(err);
+        } finally {
+          ui.setLoading(btn, false);
+        }
+      });
+    })();
   </script>
 </body>
 </html>
