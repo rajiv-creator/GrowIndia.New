@@ -1,108 +1,131 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GrowIndia Jobs — Admin</title>
-  <link rel="stylesheet" href="/app.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin — GrowIndia Jobs</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=6"></script>
+  <script src="/components.js?v=6"></script>
+  <style>
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
+    button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
+    button.primary{background:#0ea5e9;border:none;color:#fff}
+    .muted{color:#64748b}
+  </style>
 </head>
 <body>
-  <main class="container" style="max-width:1100px;margin:32px auto;">
-    <div id="adminBanner" class="note warn" style="display:none;margin-bottom:16px;">
-      You are not an admin.
-    </div>
+  <main class="wrap">
+    <h1>Admin</h1>
+    <p class="muted">Admins can view all companies and jobs, and toggle job publication.</p>
 
-    <section class="card">
-      <h2>Companies</h2>
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr><th>Name</th><th>Owner</th><th>Website</th><th>Created</th></tr>
-          </thead>
-          <tbody id="companiesBody"><tr><td colspan="4">Loading…</td></tr></tbody>
-        </table>
-      </div>
+    <section id="gate" class="card" style="display:none">
+      <strong>Admins only.</strong>
+      <p class="muted">Your account is not in <code>public.admins</code>.</p>
     </section>
 
-    <section class="card" style="margin-top:24px;">
-      <h2>Jobs</h2>
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr><th>Title</th><th>Company</th><th>Published</th><th>Created</th></tr>
-          </thead>
-          <tbody id="jobsBody"><tr><td colspan="4">Loading…</td></tr></tbody>
+    <section id="content" style="display:none">
+      <section class="card">
+        <h2>Companies</h2>
+        <table id="companiesTbl">
+          <thead><tr>
+            <th>Name</th><th>Website</th><th>Owner ID</th><th>Created</th>
+          </tr></thead>
+          <tbody></tbody>
         </table>
-      </div>
+      </section>
+
+      <section class="card">
+        <h2>Jobs</h2>
+        <table id="jobsTbl">
+          <thead><tr>
+            <th>Title</th><th>Company</th><th>Meta</th><th>Published</th><th>Actions</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
     </section>
   </main>
 
-  <!-- JS (order matters!) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=5"></script>
-  <script src="/components.js?v=5"></script>
-
   <script>
-    (async () => {
-      const session = await GI.requireAuth();
-      if (!session) return;
+    (async function(){
+      const { q, ui, isAdmin } = window.app;
+      const sb = window.supabase;
 
-      const admin = await GI.isAdmin();
-      if (!admin) {
-        document.getElementById("adminBanner").style.display = "block";
-        // You can still show the user's own data if you want. We'll just stop here.
-        return;
+      let user;
+      try { user = await window.app.requireAuth(); }
+      catch { return; }
+
+      const admin = await isAdmin(user.id);
+      if (!admin) { q('#gate').style.display = 'block'; return; }
+      q('#content').style.display = 'block';
+
+      async function loadCompanies() {
+        const { data, error } = await sb.from('companies')
+          .select('id,name,website,owner_id,created_at')
+          .order('created_at', { ascending: false });
+        if (error) { ui.error('Failed to load companies'); throw error; }
+
+        const tbody = q('#companiesTbl tbody'); tbody.innerHTML = '';
+        (data||[]).forEach(c=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${window.app.escapeHTML(c.name)}</td>
+            <td>${c.website ? `<a href="${window.app.escapeHTML(c.website)}" target="_blank">Website</a>` : '—'}</td>
+            <td class="muted">${c.owner_id}</td>
+            <td class="muted">${new Date(c.created_at).toLocaleString()}</td>
+          `;
+          tbody.appendChild(tr);
+        });
       }
 
-      // ---- Companies (admins can read all if your RLS policies from the SQL are in place)
-      {
-        const { data, error } = await sb
-          .from("companies")
-          .select("id,name,website,owner_id,created_at")
-          .order("created_at", { ascending: false });
+      async function loadJobs() {
+        const { data, error } = await sb.from('jobs')
+          .select('id,title,location,employment_type,published,created_at,company:companies(name)')
+          .order('created_at', { ascending: false }).limit(500);
+        if (error) { ui.error('Failed to load jobs'); throw error; }
 
-        const tbody = document.getElementById("companiesBody");
-        if (error) {
-          tbody.innerHTML = `<tr><td colspan="4">Load error: ${error.message}</td></tr>`;
-        } else if (!data || !data.length) {
-          tbody.innerHTML = `<tr><td colspan="4">No companies yet.</td></tr>`;
-        } else {
-          tbody.innerHTML = data.map(r => `
-            <tr>
-              <td>${r.name ?? ""}</td>
-              <td style="font-family:ui-monospace,monospace">${r.owner_id ?? ""}</td>
-              <td>${r.website ?? ""}</td>
-              <td>${new Date(r.created_at).toLocaleString()}</td>
-            </tr>
-          `).join("");
-        }
+        const tbody = q('#jobsTbl tbody'); tbody.innerHTML = '';
+        (data||[]).forEach(j=>{
+          const tr = document.createElement('tr');
+          tr.dataset.id = j.id;
+          tr.dataset.published = String(!!j.published);
+          tr.innerHTML = `
+            <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
+            <td>${window.app.escapeHTML(j.company?.name || '—')}</td>
+            <td class="muted">${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span></td>
+            <td>${j.published ? '✅ Yes' : '⛔ No'}</td>
+            <td><button class="toggleBtn">${j.published ? 'Unpublish' : 'Publish'}</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
       }
 
-      // ---- Jobs
-      {
-        // If you defined a FK relationship in Supabase, you can use: select("title,published,created_at,companies(name)")
-        // Otherwise we just show company_id.
-        const { data, error } = await sb
-          .from("jobs")
-          .select("id,title,published,company_id,created_at")
-          .order("created_at", { ascending: false });
-
-        const tbody = document.getElementById("jobsBody");
-        if (error) {
-          tbody.innerHTML = `<tr><td colspan="4">Load error: ${error.message}</td></tr>`;
-        } else if (!data || !data.length) {
-          tbody.innerHTML = `<tr><td colspan="4">No jobs yet.</td></tr>`;
-        } else {
-          tbody.innerHTML = data.map(r => `
-            <tr>
-              <td>${r.title ?? ""}</td>
-              <td style="font-family:ui-monospace,monospace">${r.company_id ?? ""}</td>
-              <td>${r.published ? "Yes" : "No"}</td>
-              <td>${new Date(r.created_at).toLocaleString()}</td>
-            </tr>
-          `).join("");
-        }
+      async function togglePublished(jobId, current) {
+        const next = !current;
+        const { error } = await sb.from('jobs').update({ published: next }).eq('id', jobId);
+        if (error) { ui.error(error.message || 'Update failed'); throw error; }
+        ui.success(next ? 'Published' : 'Unpublished');
       }
+
+      q('#jobsTbl').addEventListener('click', async (e)=>{
+        const btn = e.target.closest('.toggleBtn'); if (!btn) return;
+        const tr = e.target.closest('tr');
+        const id = tr.dataset.id;
+        const current = tr.dataset.published === 'true';
+        btn.disabled = true;
+        try { await togglePublished(id, current); await loadJobs(); }
+        catch(_) {}
+        finally { btn.disabled = false; }
+      });
+
+      await loadCompanies();
+      await loadJobs();
     })();
   </script>
 </body>
