@@ -1,4 +1,4 @@
-/* components.js (v9) — helpers + Supabase wrappers
+/* components.js (v10) — helpers + Supabase wrappers
    Requires: window.supabase (from /config.js) */
 
 (() => {
@@ -103,8 +103,7 @@
       const { data, error } = await sb
         .from('companies').select('id,name,website,created_at')
         .eq('owner_id', userId).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      if (error) throw error; return data || [];
     },
     async createCompany({ name, website, owner_id }) {
       const payload = { name: name?.trim(), website: website?.trim() || null, ...(owner_id ? { owner_id } : {}) };
@@ -112,7 +111,7 @@
       if (error) throw error; return data;
     },
 
-    // JOBS (create + listing/search helpers)
+    // JOBS
     async createJob(job) {
       const payload = {
         title: job.title?.trim(),
@@ -129,6 +128,7 @@
       if (error) throw error;
       return data;
     },
+
     _applyJobFilters(query, { location, employment_type } = {}) {
       query = query.eq('published', true);
       if (location && location !== 'all') query = query.ilike('location', location);
@@ -136,8 +136,7 @@
       return query;
     },
     async listJobsPaged({ page=1, pageSize=10, location, employment_type, q=null, sort='newest' } = {}) {
-      const from = (page-1) * pageSize;
-      const to = from + pageSize - 1;
+      const from = (page-1) * pageSize, to = from + pageSize - 1;
 
       let qc = sb.from('jobs').select('id', { count: 'exact', head: true });
       qc = db._applyJobFilters(qc, { location, employment_type });
@@ -156,34 +155,48 @@
       const { data, error: de } = await qd; if (de) throw de;
       return { rows: data || [], total: count ?? 0 };
     },
+
     async getJobByIdPublic(id) {
       const { data, error } = await sb.from('jobs')
         .select('id,title,location,employment_type,min_salary,max_salary,currency,description,published,created_at,company_id,company:companies(name,website)')
         .eq('id', id).maybeSingle();
       if (error) throw error; return data;
     },
+
+    // APPLICATIONS
     async applyToJob({ job_id, candidate_name, email, message }) {
-      const payload = { job_id, candidate_name: candidate_name?.trim(), email: email?.trim(), message: message?.trim() || null };
+      const cleanEmail = email?.trim();
+      const payload = {
+        job_id,
+        candidate_name: candidate_name?.trim(),
+        email: cleanEmail,                 // new canonical column
+        candidate_email: cleanEmail,       // backward-compat, ignored if column removed
+        message: message?.trim() || null
+      };
       const { error } = await sb.from('applications').insert(payload);
       if (error) throw error; return true;
     },
+
     async appsForJobIds(jobIds = [], { page=1, pageSize=20, q=null }) {
       if (!jobIds.length) return { rows: [], total: 0 };
       const from = (page-1) * pageSize, to = from + pageSize - 1;
       const orFilter = q ? `candidate_name.ilike.%${q}%,email.ilike.%${q}%,message.ilike.%${q}%` : null;
+
       let qc = sb.from('applications').select('id', { count: 'exact', head: true }).in('job_id', jobIds);
       if (orFilter) qc = qc.or(orFilter);
       const { count, error: ce } = await qc; if (ce) throw ce;
+
       let qd = sb.from('applications')
         .select('id,job_id,candidate_name,email,message,created_at')
         .in('job_id', jobIds).order('created_at', { ascending: false }).range(from, to);
       if (orFilter) qd = qd.or(orFilter);
+
       const { data, error: de } = await qd; if (de) throw de;
       return { rows: data || [], total: count ?? 0 };
     }
   };
 
-  // Expose globals
+  // Expose
   window.app = {
     ui, q, qa, escapeHTML, serializeForm, getQueryParam, setQueryParams,
     getSession, requireAuth, isAdmin, db
