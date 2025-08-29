@@ -6,8 +6,8 @@
   <title>Sign in — GrowIndia Jobs</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=8"></script>
-  <script src="/components.js?v=8"></script>
+  <script src="/config.js?v=11"></script>
+  <script src="/components.js?v=11"></script>
   <style>
     .wrap{max-width:760px;margin:12vh auto 0;padding:24px}
     .card{border:1px solid #e5e7eb;border-radius:16px;padding:24px;background:#f8fafc}
@@ -23,7 +23,6 @@
   <main class="wrap">
     <h1>Welcome back</h1>
     <p class="muted">Sign in to post jobs and manage your company.</p>
-
     <div class="card" style="margin-top:16px">
       <form id="loginForm" autocomplete="off">
         <label for="email">Email</label>
@@ -39,37 +38,24 @@
       const { ui } = window.app;
       const sb = window.supabase;
 
-      const form = document.getElementById('loginForm');
-      const emailInput = document.getElementById('email');
-      const sendBtn = document.getElementById('sendBtn');
-
-      // Optional: if already signed in, go straight to employer
       try {
         const { data } = await sb.auth.getSession();
-        if (data?.session?.user) {
-          location.href = '/employer.html';
-          return;
-        }
+        if (data?.session?.user) return location.replace('/employer.html');
       } catch {}
 
-      form.addEventListener('submit', async (e)=>{
+      document.getElementById('loginForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
-        const email = emailInput.value.trim();
+        const email = document.getElementById('email').value.trim();
         if (!email) return ui.error('Enter your email');
-
-        // Where to land after the magic link is clicked:
         const url = new URL(location.href);
         const next = url.searchParams.get('next') || '/employer.html';
         const redirectTo = `${location.origin}/post-auth.html?next=${encodeURIComponent(next)}`;
 
-        ui.setLoading(sendBtn, true);
+        ui.setLoading(document.getElementById('sendBtn'), true);
         try {
           const { error } = await sb.auth.signInWithOtp({
             email,
-            options: {
-              emailRedirectTo: redirectTo,
-              shouldCreateUser: true
-            }
+            options:{ emailRedirectTo: redirectTo, shouldCreateUser:true }
           });
           if (error) throw error;
           ui.success('Magic link sent! Check your inbox (and spam).');
@@ -77,7 +63,7 @@
           console.error(err);
           ui.error(err.message || 'Could not send magic link');
         } finally {
-          ui.setLoading(sendBtn, false);
+          ui.setLoading(document.getElementById('sendBtn'), false);
         }
       });
     })();
