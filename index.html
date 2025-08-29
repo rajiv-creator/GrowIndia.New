@@ -1,48 +1,84 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GrowIndia Jobs — Login</title>
-  <link rel="stylesheet" href="/app.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sign in — GrowIndia Jobs</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?v=8"></script>
+  <script src="/components.js?v=8"></script>
+  <style>
+    .wrap{max-width:760px;margin:12vh auto 0;padding:24px}
+    .card{border:1px solid #e5e7eb;border-radius:16px;padding:24px;background:#f8fafc}
+    h1{font-size:40px;margin-bottom:8px}
+    .muted{color:#64748b}
+    label{display:block;font-weight:600;margin:12px 0 6px}
+    input{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:10px}
+    button{margin-top:14px;padding:12px 16px;border:none;border-radius:10px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
+    button[disabled]{opacity:.7;cursor:not-allowed}
+  </style>
 </head>
 <body>
-  <main class="container" style="max-width:760px;margin:48px auto;">
+  <main class="wrap">
     <h1>Welcome back</h1>
-    <p>Sign in to post jobs and manage your company.</p>
+    <p class="muted">Sign in to post jobs and manage your company.</p>
 
-    <form id="loginform" class="card" style="padding:16px;">
-      <label for="email" class="label">Email</label>
-      <input id="email" type="email" class="input" placeholder="you@example.com" required />
-      <button id="sendbtn" class="btn primary" type="submit" style="margin-top:12px;">Send magic link</button>
-      <p id="msg" class="muted" style="margin-top:12px;"></p>
-    </form>
+    <div class="card" style="margin-top:16px">
+      <form id="loginForm" autocomplete="off">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required placeholder="you@example.com">
+        <button id="sendBtn" type="submit">Send magic link</button>
+      </form>
+      <p class="muted" style="margin-top:10px">We’ll email you a sign-in link.</p>
+    </div>
   </main>
 
-  <!-- JS (order matters!) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=5"></script>
-  <script src="/components.js?v=5"></script>
-
   <script>
-    (async () => {
-      // If already signed in, bounce to post-auth
-      const s = await GI.getSession();
-      if (s) location.href = "/post-auth.html";
+    (async function(){
+      const { ui } = window.app;
+      const sb = window.supabase;
 
-      const form = document.getElementById("loginform");
-      const email = document.getElementById("email");
-      const msg = document.getElementById("msg");
-      form.addEventListener("submit", async (e) => {
+      const form = document.getElementById('loginForm');
+      const emailInput = document.getElementById('email');
+      const sendBtn = document.getElementById('sendBtn');
+
+      // Optional: if already signed in, go straight to employer
+      try {
+        const { data } = await sb.auth.getSession();
+        if (data?.session?.user) {
+          location.href = '/employer.html';
+          return;
+        }
+      } catch {}
+
+      form.addEventListener('submit', async (e)=>{
         e.preventDefault();
-        msg.textContent = "Sending magic link…";
-        const { error } = await sbAuth.signInWithOtp({
-          email: email.value,
-          options: {
-            emailRedirectTo: `${location.origin}/post-auth.html`,
-          }
-        });
-        msg.textContent = error ? `Error: ${error.message}` : "Check your email for the sign-in link.";
+        const email = emailInput.value.trim();
+        if (!email) return ui.error('Enter your email');
+
+        // Where to land after the magic link is clicked:
+        const url = new URL(location.href);
+        const next = url.searchParams.get('next') || '/employer.html';
+        const redirectTo = `${location.origin}/post-auth.html?next=${encodeURIComponent(next)}`;
+
+        ui.setLoading(sendBtn, true);
+        try {
+          const { error } = await sb.auth.signInWithOtp({
+            email,
+            options: {
+              emailRedirectTo: redirectTo,
+              shouldCreateUser: true
+            }
+          });
+          if (error) throw error;
+          ui.success('Magic link sent! Check your inbox (and spam).');
+        } catch (err) {
+          console.error(err);
+          ui.error(err.message || 'Could not send magic link');
+        } finally {
+          ui.setLoading(sendBtn, false);
+        }
       });
     })();
   </script>
