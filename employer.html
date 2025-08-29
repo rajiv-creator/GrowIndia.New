@@ -6,8 +6,8 @@
   <title>GrowIndia Jobs — Employer</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=9"></script>
-  <script src="/components.js?v=9"></script>
+  <script src="/config.js?v=11"></script>
+  <script src="/components.js?v=11"></script>
   <style>
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
     .row{display:flex;gap:12px;flex-wrap:wrap}
@@ -116,84 +116,41 @@
   <script>
     (async function(){
       const { ui, q, requireAuth } = window.app;
-      let db = window.app.db;                  // use shared db
-      let user;
-      try { user = await requireAuth(); } catch(e) { return; }
+      let user; try { user = await requireAuth(); } catch { return; }
 
-      // ---- Fallback shim if db.createJob is missing (for any caching issue) ----
-      if (!db || typeof db.createJob !== 'function') {
-        console.warn('createJob missing on window.app.db — using fallback');
-        db = Object.assign({}, db);
-        db.createJob = async function(job){
-          const payload = {
-            title: job.title?.trim(),
-            location: job.location?.trim(),
-            employment_type: job.employment_type,
-            min_salary: job.min_salary ? Number(job.min_salary) : null,
-            max_salary: job.max_salary ? Number(job.max_salary) : null,
-            currency: (job.currency || 'INR').trim(),
-            description: job.description?.trim() || null,
-            company_id: job.company_id,
-            published: !!job.published
-          };
-          const { data, error } = await window.supabase.from('jobs').insert(payload).select('id').maybeSingle();
-          if (error) throw error;
-          return data;
-        };
-      }
-
-      async function refreshCompanies(selectLastCreatedId=null) {
+      async function refreshCompanies(selectId=null){
         const companies = await window.app.db.myCompanies(user.id);
-        const sel = q('#companySelect');
-        sel.innerHTML = '';
+        const sel = q('#companySelect'); sel.innerHTML='';
         if (companies.length === 0) {
-          const opt = document.createElement('option');
-          opt.value = '';
-          opt.textContent = '— No companies yet —';
-          sel.appendChild(opt);
-          q('#jobSection').style.display = 'none';
+          sel.innerHTML = '<option value="">— No companies yet —</option>';
+          q('#jobSection').style.display='none';
         } else {
-          companies.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            sel.appendChild(opt);
-          });
-          if (selectLastCreatedId) sel.value = selectLastCreatedId;
-          q('#jobSection').style.display = 'block';
+          sel.innerHTML = companies.map(c=>`<option value="${c.id}">${window.app.escapeHTML(c.name)}</option>`).join('');
+          if (selectId) sel.value = selectId;
+          q('#jobSection').style.display='block';
         }
       }
-
       await refreshCompanies();
 
-      // Create company (owner_id sent explicitly)
       q('#createCompanyForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
-        const btn = q('#btnCreateCompany');
-        window.app.ui.setLoading(btn, true);
+        const btn = q('#btnCreateCompany'); window.app.ui.setLoading(btn,true);
         try {
           const { name, website } = window.app.serializeForm(e.target);
-          if (!name?.trim()) { ui.error('Company name is required'); return; }
+          if (!name?.trim()) return ui.error('Company name is required');
           const created = await window.app.db.createCompany({ name, website, owner_id: user.id });
-          ui.success('Company created');
-          (e.target).reset();
+          ui.success('Company created'); e.target.reset();
           await refreshCompanies(created.id);
-        } catch (err) {
-          ui.error(err.message || 'Failed to create company');
-          console.error(err);
-        } finally {
-          window.app.ui.setLoading(btn, false);
-        }
+        } catch(err){ ui.error(err.message||'Failed to create company'); console.error(err); }
+        finally { window.app.ui.setLoading(btn,false); }
       });
 
-      // Post job
       q('#jobForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
-        const btn = q('#btnPostJob');
-        window.app.ui.setLoading(btn, true);
+        const btn = q('#btnPostJob'); window.app.ui.setLoading(btn,true);
         try {
           const company_id = q('#companySelect').value;
-          if (!company_id) { ui.error('Select or create a company first'); return; }
+          if (!company_id) return ui.error('Select or create a company first');
 
           const f = window.app.serializeForm(e.target);
           if (!f.title?.trim()) return ui.error('Job title is required');
@@ -202,20 +159,15 @@
 
           const min = f.min_salary ? Number(f.min_salary) : null;
           const max = f.max_salary ? Number(f.max_salary) : null;
-          if (min !== null && (!Number.isFinite(min) || min < 0)) return ui.error('Min salary must be a non-negative number');
-          if (max !== null && (!Number.isFinite(max) || max < 0)) return ui.error('Max salary must be a non-negative number');
-          if (min !== null && max !== null && min > max) return ui.error('Min salary cannot exceed max salary');
+          if (min!==null && (!Number.isFinite(min)||min<0)) return ui.error('Min salary must be a non-negative number');
+          if (max!==null && (!Number.isFinite(max)||max<0)) return ui.error('Max salary must be a non-negative number');
+          if (min!==null && max!==null && min>max) return ui.error('Min salary cannot exceed max salary');
 
-          await db.createJob({ ...f, company_id });
+          await window.app.db.createJob({ ...f, company_id });
           ui.success(f.published ? 'Job posted & published' : 'Job posted (draft)');
-          e.target.reset();
-          document.getElementById('j_curr').value = 'INR';
-        } catch (err) {
-          ui.error(err.message || 'Failed to post job');
-          console.error(err);
-        } finally {
-          window.app.ui.setLoading(btn, false);
-        }
+          e.target.reset(); document.getElementById('j_curr').value='INR';
+        } catch(err){ ui.error(err.message||'Failed to post job'); console.error(err); }
+        finally { window.app.ui.setLoading(btn,false); }
       });
     })();
   </script>
