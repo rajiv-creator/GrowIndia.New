@@ -1,4 +1,4 @@
-/* components.js (v10) — helpers + Supabase wrappers
+/* components.js (v11) — helpers + Supabase wrappers
    Requires: window.supabase (from /config.js) */
 
 (() => {
@@ -165,12 +165,10 @@
 
     // APPLICATIONS
     async applyToJob({ job_id, candidate_name, email, message }) {
-      const cleanEmail = email?.trim();
       const payload = {
         job_id,
         candidate_name: candidate_name?.trim(),
-        email: cleanEmail,                 // new canonical column
-        candidate_email: cleanEmail,       // backward-compat, ignored if column removed
+        email: email?.trim(),        // << only 'email' now
         message: message?.trim() || null
       };
       const { error } = await sb.from('applications').insert(payload);
@@ -196,7 +194,6 @@
     }
   };
 
-  // Expose
   window.app = {
     ui, q, qa, escapeHTML, serializeForm, getQueryParam, setQueryParams,
     getSession, requireAuth, isAdmin, db
