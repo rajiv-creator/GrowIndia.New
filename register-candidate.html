@@ -85,10 +85,13 @@
           <span class="muted" id="helper">Already have an account? Click “Sign in”.</span>
         </div>
       </form>
+      <div class="muted" style="margin-top:10px">
+        After creating your account, you’ll land on your dashboard. You can complete your profile anytime.
+        <a href="/register-candidate-step2.html">Complete profile now →</a>
+      </div>
     </section>
   </div>
 
-  <!-- Load order MUST be: UMD library -> config.js -> components.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="/config.js"></script>
   <script src="/components.js?v=18"></script>
@@ -110,36 +113,36 @@
           if(mode==='signup'){
             const full_name = v('full_name'), email = v('email'), password = v('password'), confirm = v('confirm'), phone = v('phone');
             if(password !== confirm){ ui.toast('Passwords do not match','error'); return; }
+
             const { data, error } = await window.supabase.auth.signUp({ email, password });
             if(error) throw error;
 
-            // If confirmation email is enabled, session may be null until verified.
+            // If email confirmation is ON, there may be no session yet.
             const u = await app.getSessionUser().catch(()=>null);
-            if(!u){ ui.toast('Check your email to verify, then sign in.','success'); return; }
 
-            // Upload CV if provided
+            // Upload CV only if we already have a session
             let cv_url = null;
-            const file = document.getElementById('cv').files[0];
-            if(file){
-              const key = `user-${u.id}/${Date.now()}-${file.name}`.replace(/\s+/g,'-');
-              const up = await window.supabase.storage.from('cvs').upload(key, file, { upsert: true });
-              if(up.error) throw up.error;
-              const { data: pub } = window.supabase.storage.from('cvs').getPublicUrl(key);
-              cv_url = pub.publicUrl;
+            if(u){
+              const file = document.getElementById('cv').files[0];
+              if(file){
+                const key = `user-${u.id}/${Date.now()}-${file.name}`.replace(/\s+/g,'-');
+                const up = await window.supabase.storage.from('cvs').upload(key, file, { upsert: true });
+                if(up.error) throw up.error;
+                const { data: pub } = window.supabase.storage.from('cvs').getPublicUrl(key);
+                cv_url = pub.publicUrl;
+              }
+              await app.upsertProfile({ user_id: u.id, role: 'candidate', full_name, phone, cv_url });
             }
 
-            // Upsert profile
-            const { error: pErr } = await app.upsertProfile({ user_id: u.id, role: 'candidate', full_name, phone, cv_url });
-            if(pErr) throw pErr;
-
-            app.go('/register-candidate-step2.html');
+            ui.toast('Check your email to verify your account, then sign in.','success');
+            app.go('/dashboard.html'); // Go straight to dashboard (Step-2 optional)
           }else{
             const email = v('email_in'), password = v('password_in');
             const { error } = await window.supabase.auth.signInWithPassword({ email, password });
             if(error) throw error;
             const u = await app.getSessionUser();
             await app.upsertProfile({ user_id: u.id, role: 'candidate' });
-            app.go('/register-candidate-step2.html');
+            app.go('/dashboard.html'); // Step-2 optional
           }
         }catch(err){
           ui.toast(err.message || 'Something went wrong','error');
