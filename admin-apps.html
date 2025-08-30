@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Applications Inbox — GrowIndia Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js?v=13"></script>
+<script src="/components.js?v=13"></script>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0b1220;color:#e5e7eb}
+  .layout{display:flex;min-height:100vh}
+  .side{width:240px;background:#0f172a;border-right:1px solid #1f2b3a}
+  .brand{padding:14px 16px;font-weight:800;border-bottom:1px solid #1f2b3a}
+  .nav{padding:12px 8px}
+  .nav a{display:block;padding:10px 12px;border-radius:10px;color:#dbe1ea}
+  .nav a:hover,.nav a.active{background:#111c2e}
+  .content{flex:1}
+  .top{position:sticky;top:0;background:#0b1220;border-bottom:1px solid #1f2b3a;z-index:40}
+  .topin{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  .card{background:#0f172a;border:1px solid #1f2b3a;border-radius:14px}
+  .head{padding:14px;border-bottom:1px solid #1f2b3a}
+  .sec{padding:14px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  input,select{padding:10px;border:1px solid #22314a;border-radius:10px;background:#0f172a;color:#e5e7eb}
+  .btn{padding:10px 12px;border-radius:10px;border:1px solid #2b3b52;background:#122036;color:#e5e7eb;cursor:pointer}
+  .btn.pri{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-top:1px solid #1f2b3a;text-align:left;vertical-align:top}
+  .muted{color:#93a4b8}
+  .pager{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+  .pill{background:#122036;border:1px solid #22314a;border-radius:999px;padding:3px 8px;font-size:12px;color:#cbd5e1}
+  .msg{max-width:520px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="brand">GrowIndia Admin</div>
+    <nav class="nav">
+      <a href="/admin.html">Dashboard</a>
+      <a href="/admin-jobs.html">Jobs</a>
+      <a href="/admin-reports.html">Reports</a>
+      <a class="active" href="/admin-apps.html">Applications</a>
+    </nav>
+  </aside>
+
+  <div class="content">
+    <header class="top"><div class="topin">
+      <div>Applications Inbox</div>
+      <div>
+        <a class="btn" href="/">View site</a>
+        <a class="btn" id="btnSignOut">Sign out</a>
+      </div>
+    </div></header>
+
+    <main class="wrap">
+      <div class="card">
+        <div class="head">
+          <div class="controls">
+            <input id="q" placeholder="Search name or email…">
+            <select id="jobSel"><option value="">All jobs</option></select>
+            <select id="days">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+            <button id="btnSearch" class="btn pri">Search</button>
+          </div>
+        </div>
+        <div class="sec" id="list"><div class="muted">Loading…</div></div>
+        <div class="sec">
+          <div class="pager">
+            <button class="btn" id="prev">Prev</button>
+            <span id="pageInfo" class="pill">Page 1</span>
+            <button class="btn" id="next">Next</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const { requireAuth, isAdmin, ui, escapeHTML } = window.app;
+  let user; try { user = await requireAuth(); } catch { return location.replace('/login.html'); }
+  if(!(await isAdmin(user.id))) { ui.error('Admins only'); return location.replace('/'); }
+
+  document.getElementById('btnSignOut').onclick = async()=>{ await window.supabase.auth.signOut(); location.replace('/'); };
+
+  const pageSize = 20;
+
+  function st(){
+    const u = new URL(location.href);
+    return {
+      q: u.searchParams.get('q') || '',
+      job: u.searchParams.get('job') || '',
+      days: u.searchParams.get('days') || '30',
+      page: Math.max(1, parseInt(u.searchParams.get('page')||'1',10))
+    };
+  }
+  function set(params){
+    const u = new URL(location.href);
+    for (const [k,v] of Object.entries(params)){
+      if (v===undefined || v==='') u.searchParams.delete(k);
+      else u.searchParams.set(k, String(v));
+    }
+    history.replaceState(null,'',u.toString());
+  }
+
+  // Load jobs into filter
+  const jr = await window.supabase.from('jobs').select('id,title').order('created_at',{ascending:false}).limit(1000);
+  const jobSel = document.getElementById('jobSel');
+  (jr.data||[]).forEach(j=>{
+    const opt=document.createElement('option');
+    opt.value=j.id; opt.textContent=j.title; jobSel.appendChild(opt);
+  });
+
+  async function countApps({q,job,days}){
+    let query = window.supabase.from('applications').select('id',{count:'exact',head:true});
+    if (q) query = query.or(`candidate_name.ilike.%${q}%,email.ilike.%${q}%`);
+    if (job) query = query.eq('job_id', job);
+    if (days !== 'all'){
+      const since = new Date(Date.now() - Number(days)*24*60*60*1000).toISOString();
+      query = query.gte('created_at', since);
+    }
+    const { count } = await query; return count||0;
+  }
+
+  async function load(){
+    const s = st();
+    document.getElementById('q').value=s.q;
+    document.getElementById('jobSel').value=s.job;
+    document.getElementById('days').value=s.days;
+
+    const total = await countApps(s);
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(s.page, maxPage);
+
+    let q = window.supabase.from('applications')
+      .select('id,job_id,candidate_name,email,message,created_at')
+      .order('created_at',{ascending:false});
+
+    if (s.q) q = q.or(`candidate_name.ilike.%${s.q}%,email.ilike.%${s.q}%`);
+    if (s.job) q = q.eq('job_id', s.job);
+    if (s.days !== 'all'){
+      const since = new Date(Date.now() - Number(s.days)*24*60*60*1000).toISOString();
+      q = q.gte('created_at', since);
+    }
+
+    const from = (page-1)*pageSize;
+    const to = from + pageSize - 1;
+    const { data, error } = await q.range(from, to);
+    if (error){ console.error(error); return ui.error('Failed to load applications'); }
+
+    // fetch job titles for visible rows
+    const ids = Array.from(new Set((data||[]).map(a=>a.job_id)));
+    const jmap = new Map();
+    if(ids.length){
+      const jr = await window.supabase.from('jobs').select('id,title').in('id', ids);
+      (jr.data||[]).forEach(j=>jmap.set(j.id,j.title));
+    }
+
+    const list = document.getElementById('list');
+    if(!data?.length){ list.innerHTML = '<div class="muted">No applications.</div>'; }
+    else {
+      list.innerHTML = `<table>
+        <thead><tr><th>Candidate</th><th>Email</th><th>Job</th><th>Message</th><th>Received</th><th>Actions</th></tr></thead>
+        <tbody>
+        ${data.map(a=>`
+          <tr>
+            <td>${escapeHTML(a.candidate_name||'—')}</td>
+            <td class="muted">${escapeHTML(a.email||'')}</td>
+            <td><a href="/admin-job-edit.html?id=${encodeURIComponent(a.job_id)}">${escapeHTML(jmap.get(a.job_id)||'—')}</a></td>
+            <td class="msg muted">${escapeHTML((a.message||'').slice(0,240))}${a.message && a.message.length>240?'…':''}</td>
+            <td class="muted">${new Date(a.created_at).toLocaleString()}</td>
+            <td><button class="btn" data-del="${a.id}">Delete</button></td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>`;
+
+      list.querySelectorAll('button[data-del]').forEach(b=>b.onclick=async()=>{
+        if(!confirm('Delete this application?')) return;
+        const { error } = await window.supabase.from('applications').delete().eq('id', b.dataset.del);
+        if(error){ ui.error('Delete failed'); return; }
+        ui.success('Deleted'); load();
+      });
+    }
+
+    // pager
+    document.getElementById('pageInfo').textContent = `Page ${page} of ${maxPage}`;
+    document.getElementById('prev').disabled = page<=1;
+    document.getElementById('next').disabled = page>=maxPage;
+    document.getElementById('prev').onclick = ()=>{ set({page:Math.max(1,page-1)}); load(); };
+    document.getElementById('next').onclick = ()=>{ set({page:Math.min(maxPage,page+1)}); load(); };
+  }
+
+  document.getElementById('btnSearch').onclick = ()=>{
+    set({ q:document.getElementById('q').value.trim(), job:document.getElementById('jobSel').value, days:document.getElementById('days').value, page:1 });
+    load();
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>
