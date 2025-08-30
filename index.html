@@ -1,167 +1,113 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GrowIndia Jobs</title>
-  <style>
-    :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--ink:rgba(15,23,42,.9);--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    html,body{margin:0;background:var(--bg);color:#0f172a;font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-    a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
-    .container{max-width:1200px;margin:0 auto;padding:0 16px}
-    header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{display:flex;align-items:center;justify-content:space-between;height:72px}
-    .brand{font-weight:800}
-    .nav-right{display:flex;gap:12px;align-items:center}
-    .btn-pill{display:inline-block;padding:10px 16px;border-radius:999px;font-weight:800;color:#fff;box-shadow:0 6px 16px rgba(2,6,23,.12)}
-    .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
-    .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
-    .hero{padding:48px 0 24px}
-    .hero h1{font-size:36px;margin:0 0 12px;color:var(--ink)}
-    .muted{color:var(--muted)}
-    .search-wrap{max-width:960px;margin:24px auto 0;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;
-      box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);display:flex;align-items:stretch;overflow:hidden}
-    .search-field{flex:1;display:flex;align-items:center;padding:4px 12px}
-    .search-field input{width:100%;border:0;outline:0;padding:16px 12px;font-size:16px;background:transparent;color:#111827}
-    .divider{width:1px;background:var(--line);margin:8px 0}
-    .search-btn{border:0;background:var(--blue);color:#fff;padding:0 22px;font-weight:800;font-size:16px;cursor:pointer}
-    .search-btn:hover{background:var(--blue-600)}
-    .values{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 14px rgba(2,6,23,.06)}
-    .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-    .job{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
-    .job h4{margin:0 0 4px}.meta{color:var(--muted);font-size:14px}
-    .btn-view{display:inline-block;margin-top:6px;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px}
-    .articles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
-    .article{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(2,6,23,.06)}
-    .tag{display:inline-block;font-size:12px;background:#EEF2FF;color:var(--blue);padding:4px 8px;border-radius:999px;margin-bottom:8px}
-    footer{margin-top:48px;background:#fff;border-top:1px solid var(--line)}
-    .foot{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:24px 0}
-    .foot h5{margin:0 0 8px;color:var(--ink)}
-    .foot a{color:#111827;display:block;margin:6px 0}
-    @media (max-width:900px){.jobs,.values,.articles{grid-template-columns:1fr}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>GrowIndia Jobs</title>
+<style>
+:root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
+.brand{font-weight:800}
+.ctas{display:flex;gap:12px}
+.cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
+.cta.orange{background:var(--orange)}
+
+.hero{max-width:1200px;margin:28px auto 12px;padding:0 16px}
+h1{font-size:44px;margin:0 0 8px}
+.search{max-width:960px;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);display:flex;gap:12px;padding:10px}
+.search input{flex:1;border:0;outline:0;background:transparent;padding:10px}
+.find{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:800}
+
+.row{max-width:1200px;margin:12px auto;padding:0 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+.meta{color:var(--muted);font-size:14px}
+
+.section{max-width:1200px;margin:10px auto 36px;padding:0 16px}
+.section h3{margin:10px 0}
+#featuredJobs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.fj{border:1px solid var(--line);border-radius:12px;padding:12px}
+.fj .t{font-weight:800;margin-bottom:4px}
+.fj .m{color:var(--muted);font-size:13px;margin-bottom:8px}
+.btn-ghost.sm{display:inline-block;padding:8px 10px;border-radius:10px;border:1px solid var(--line);text-decoration:none;color:#0f172a}
+
+#articlesList{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.art{display:block;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;text-decoration:none;color:#0f172a}
+.art .tag{font-size:12px;color:var(--muted)}
+.art .title{display:block;font-weight:800;margin-top:4px}
+footer{border-top:1px solid var(--line);background:#fff;padding:24px 16px;margin-top:24px}
+@media (max-width:980px){#featuredJobs{grid-template-columns:repeat(2,1fr)} #articlesList{grid-template-columns:1fr} }
+</style>
 </head>
 <body>
-  <header>
-    <div class="container nav">
-      <div class="brand">GrowIndia Jobs</div>
-      <div class="nav-right">
-        <a class="btn-pill btn-blue" href="/register-candidate.html">Candidate</a>
-        <a class="btn-pill btn-orange" href="/login.html?role=employer">Employer</a>
-      </div>
+<header>
+  <div class="nav">
+    <div class="brand">GrowIndia Jobs</div>
+    <div class="ctas">
+      <a class="cta" href="/register-candidate.html">Candidate</a>
+      <a class="cta orange" href="/login.html?role=employer">Employer</a>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>Find work you’ll actually like.</h1>
-      <div class="muted">Search by title, keyword, or location.</div>
-      <form id="searchForm" class="search-wrap" role="search">
-        <label class="search-field" aria-label="Keywords"><input id="q" placeholder="Job title, keywords, or company"/></label>
-        <div class="divider" aria-hidden="true"></div>
-        <label class="search-field" aria-label="Location"><input id="loc" placeholder="Dehradun, Uttarakhand"/></label>
-        <button class="search-btn" type="submit">Find jobs</button>
-      </form>
-    </section>
+<section class="hero">
+  <h1>Find work you’ll actually like.</h1>
+  <div class="meta">Search by title, keyword, or location.</div>
+  <form class="search" id="searchForm">
+    <input id="q" placeholder="Job title, keywords, or company"/>
+    <input id="loc" placeholder="Dehradun, Uttarakhand" style="max-width:280px"/>
+    <button class="find" type="submit">Find jobs</button>
+  </form>
+</section>
 
-    <section class="values">
-      <div class="card"><strong>1-step apply</strong><br><span class="muted">Fast applications with your saved profile.</span></div>
-      <div class="card"><strong>Zero fees</strong><br><span class="muted">No charges for candidates.</span></div>
-      <div class="card"><strong>For employers</strong><br><span class="muted">Simple tools to post, review, and hire.</span></div>
-    </section>
+<section class="row">
+  <div class="card"><div style="font-weight:800">1-step apply</div><div class="meta">Fast applications with your saved profile.</div></div>
+  <div class="card"><div style="font-weight:800">Zero fees</div><div class="meta">No charges for candidates.</div></div>
+  <div class="card"><div style="font-weight:800">For employers</div><div class="meta">Simple tools to post, review, and hire.</div></div>
+</section>
 
-    <section style="margin:12px 0 8px;display:flex;align-items:center;justify-content:space-between">
-      <h3 style="margin:0">Featured jobs</h3>
-      <a href="/jobs.html">Browse all →</a>
-    </section>
-    <section id="featured" class="jobs" aria-live="polite"><div class="muted">Loading…</div></section>
+<section class="section">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <h3>Featured jobs</h3>
+    <a class="meta" href="/jobs.html">Browse all →</a>
+  </div>
+  <div id="featuredJobs"><div class="meta">Loading…</div></div>
+</section>
 
-    <section style="margin-top:28px;display:flex;align-items:center;justify-content:space-between">
-      <h3 style="margin:0">Articles & Tutorials</h3>
-      <a href="/admin-copy.html" class="muted">Edit →</a>
-    </section>
-    <section id="articles" class="articles" aria-live="polite"><div class="muted">Loading…</div></section>
-  </main>
+<section class="section" id="articles">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <h3>Articles & Tutorials</h3>
+    <a id="articlesEdit" class="meta" href="/admin-copy.html" style="display:none">Edit →</a>
+  </div>
+  <div id="articlesList"><div class="meta">Loading…</div></div>
+</section>
 
-  <footer>
-    <div class="container foot">
-      <div><h5>About</h5><a href="#">Company</a><a href="#">Team</a><a href="#">Careers</a></div>
-      <div><h5>Employer</h5><a href="#">—</a></div>
-      <div><h5>Help</h5><a href="#">Support</a><a href="#">Guides</a></div>
-      <div><h5>Legal</h5><a href="#">Terms</a><a href="#">Privacy</a></div>
-    </div>
-  </footer>
+<footer>
+  <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div><strong>About</strong><div class="meta">Company<br/>Team<br/>Careers</div></div>
+    <div><strong>Employer</strong><div class="meta">Post a job<br/>Pricing</div></div>
+    <div><strong>Help</strong><div class="meta">Support<br/>Guides</div></div>
+    <div><strong>Legal</strong><div class="meta">Terms<br/>Privacy</div></div>
+  </div>
+</footer>
 
-  <!-- Load order MUST be: UMD library -> config.js -> components.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="/config.js"></script>
-  <script src="/components.js?v=18"></script>
-  <script>
-    // Clean hash after email confirmation (so /#access_token… becomes /)
-    (function cleanAuthHash(){
-      if (location.hash && /access_token=|type=signup|type=recovery/.test(location.hash)) {
-        history.replaceState(null,'','/');
-      }
-    })();
+<!-- scripts order -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script src="/components.js?v=20"></script>
+<script>
+  // search redirect
+  document.getElementById('searchForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const q = encodeURIComponent(document.getElementById('q').value||'');
+    const loc = encodeURIComponent(document.getElementById('loc').value||'');
+    location.href = `/jobs.html?q=${q}&loc=${loc}&type=all&page=1`;
+  });
 
-    // Clean known search params on home
-    (function cleanHomeQS(){
-      const p = location.pathname;
-      if ((p === '/' || p === '/index.html') && location.search){
-        const s = new URLSearchParams(location.search);
-        const known = ['q','loc','type','page'];
-        if ([...s.keys()].every(k=>known.includes(k))) history.replaceState(null,'','/');
-      }
-    })();
-
-    // Search → /jobs.html
-    document.getElementById('searchForm').addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const q = encodeURIComponent(document.getElementById('q').value.trim());
-      const loc = encodeURIComponent(document.getElementById('loc').value.trim());
-      const type = 'all';
-      window.location.href = `/jobs.html?q=${q}&loc=${loc}&type=${type}`;
-    });
-
-    // Featured + Articles
-    (async function loadData(){
-      try{
-        const box = document.getElementById('featured');
-        const { data, error } = await db.featuredJobs();
-        if(error) throw error;
-        if(!data?.length){ box.innerHTML = '<div class="muted">No published jobs yet.</div>'; return; }
-        box.innerHTML = data.map(j=>(
-          `<article class="job">
-             <h4>${escapeHtml(j.title)}</h4>
-             <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
-             <div class="meta">Salary: ${(j.salary_min||j.salary_max)?\`₹\${j.salary_min||''}\${j.salary_min&&j.salary_max?'–':''}\${j.salary_max||''}\`:'—'}</div>
-             <a class="btn-view" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
-           </article>`
-        )).join('');
-      }catch(err){
-        document.getElementById('featured').innerHTML = '<div class="muted">Couldn’t load jobs. Please try again later.</div>';
-        ui.toast(err.message || 'Failed to load jobs','error');
-      }
-
-      try{
-        const area = document.getElementById('articles');
-        const { data } = await db.getSiteCopy('home_articles');
-        const items = data?.content?.items || [];
-        area.innerHTML = items.length ? items.map(a => (
-          `<article class="article">
-             <span class="tag">${escapeHtml(a.tag||'Tutorial')}</span>
-             <h4 style="margin:0 0 6px"><a href="${a.url||'#'}" target="_blank" rel="noopener">${escapeHtml(a.title||'Article')}</a></h4>
-             <a href="${a.url||'#'}" target="_blank" rel="noopener">Read →</a>
-           </article>`
-        )).join('') : '<div class="muted">No articles yet.</div>';
-      }catch(err){
-        document.getElementById('articles').innerHTML = '<div class="muted">Couldn’t load articles.</div>';
-        ui.toast(err.message || 'Failed to load articles','error');
-      }
-
-      function escapeHtml(s=''){return s.replace(/[&<>"]+/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
-    })();
-  </script>
+  // mount sections
+  home.mountFeatured();
+  home.mountArticles();
+</script>
 </body>
 </html>
