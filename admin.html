@@ -1,175 +1,157 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Admin — GrowIndia Jobs</title>
-  <link rel="stylesheet" href="/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=11"></script>
-  <script src="/components.js?v=11"></script>
-  <style>
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
-    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:16px 0}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
-    button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
-    button.primary{background:#0ea5e9;border:none;color:#fff}
-    .muted{color:#64748b}
-    .filters{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 16px}
-    .filters input, .filters select{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
-    .pager{display:flex;gap:8px;justify-content:center;margin:16px 0}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin Dashboard — GrowIndia</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js?v=13"></script>
+<script src="/components.js?v=13"></script>
+<style>
+  :root{--bg:#0f172a;--muted:#93a4b8;--line:#1f2b3a;--card:#0f172a;--blue:#0ea5e9;--green:#22c55e;--orange:#f59e0b;--red:#ef4444}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0b1220;color:#e5e7eb}
+  a{color:#0ea5e9;text-decoration:none}
+  .layout{display:flex;min-height:100vh}
+  .side{width:240px;background:#0f172a;border-right:1px solid #1f2b3a;position:sticky;top:0;height:100vh}
+  .brand{padding:14px 16px;font-weight:800;border-bottom:1px solid var(--line)}
+  .nav{padding:12px 8px}
+  .nav h4{margin:14px 10px 6px;color:#9fb3c8;font-size:12px;text-transform:uppercase}
+  .nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:#dbe1ea}
+  .nav a:hover,.nav a.active{background:#111c2e}
+  .content{flex:1;min-width:0}
+  .top{position:sticky;top:0;background:#0b1220;border-bottom:1px solid var(--line);z-index:40}
+  .topin{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+  .btn{display:inline-block;border:1px solid #2b3b52;background:#122036;color:#e5e7eb;border-radius:10px;padding:8px 12px}
+  .btn.pri{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .tile{background:#0f172a;border:1px solid #1f2b3a;border-radius:14px;padding:14px}
+  .tile h3{margin:0 0 6px;font-size:14px;color:#9fb3c8}
+  .kpi{font-size:28px;font-weight:800}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .card{background:#0f172a;border:1px solid #1f2b3a;border-radius:14px}
+  .head{padding:14px;border-bottom:1px solid #1f2b3a;display:flex;justify-content:space-between;align-items:center}
+  .sec{padding:14px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-top:1px solid #1f2b3a;text-align:left}
+  .muted{color:#93a4b8}
+</style>
 </head>
 <body>
-  <main class="wrap">
-    <h1>Admin</h1>
-    <p class="muted">Admins can view all companies, jobs, and applications; toggle job publication; and delete obvious spam.</p>
+<div class="layout">
+  <aside class="side">
+    <div class="brand">GrowIndia Admin</div>
+    <nav class="nav">
+      <a class="active" href="/admin.html">Dashboard</a>
+      <h4>Job Board</h4>
+      <a href="/admin-jobs.html">Jobs</a>
+      <a href="/admin-reports.html">Reports</a>
+      <a href="/admin-apps.html">Applications</a>
+      <h4>Data</h4>
+      <a href="/admin-companies.html">Companies (soon)</a>
+    </nav>
+  </aside>
 
-    <section id="gate" class="card" style="display:none">
-      <strong>Admins only.</strong>
-      <p class="muted">Your account is not in <code>public.admins</code>.</p>
-    </section>
+  <div class="content">
+    <header class="top"><div class="topin">
+      <div class="muted">Admin dashboard</div>
+      <div>
+        <a class="btn" href="/">View site</a>
+        <a class="btn" id="btnSignOut">Sign out</a>
+      </div>
+    </div></header>
 
-    <section id="content" style="display:none">
-      <section class="card">
-        <h2>Companies</h2>
-        <table id="companiesTbl"><thead><tr>
-          <th>Name</th><th>Website</th><th>Owner ID</th><th>Created</th>
-        </tr></thead><tbody></tbody></table>
+    <main class="wrap">
+      <section class="grid">
+        <div class="tile"><h3>Total Jobs</h3><div id="kpiJobs" class="kpi">—</div></div>
+        <div class="tile"><h3>Active Jobs</h3><div id="kpiActive" class="kpi">—</div></div>
+        <div class="tile"><h3>Companies</h3><div id="kpiCos" class="kpi">—</div></div>
+        <div class="tile"><h3>Applications</h3><div id="kpiApps" class="kpi">—</div></div>
       </section>
 
-      <section class="card">
-        <h2>Jobs</h2>
-        <table id="jobsTbl"><thead><tr>
-          <th>Title</th><th>Company</th><th>Meta</th><th>Published</th><th>Actions</th>
-        </tr></thead><tbody></tbody></table>
-      </section>
-
-      <section class="card">
-        <h2>Applications</h2>
-        <div class="filters">
-          <label>Job <select id="a_job"></select></label>
-          <input id="a_q" placeholder="Search name/email/message">
-          <button id="a_apply">Apply</button>
-          <button id="a_reset">Reset</button>
+      <section class="row">
+        <div class="card">
+          <div class="head"><h3 style="margin:0">Recent Jobs</h3><a class="btn pri" href="/admin-jobs.html">Manage Jobs</a></div>
+          <div class="sec" id="recentJobs"><div class="muted">Loading…</div></div>
         </div>
-        <table id="appsTbl"><thead>
-          <tr><th>When</th><th>Job</th><th>Name</th><th>Email</th><th>Message</th><th>Actions</th></tr>
-        </thead><tbody></tbody></table>
-        <div class="pager">
-          <button id="a_prev">Prev</button>
-          <div id="a_info" class="muted"></div>
-          <button id="a_next">Next</button>
+
+        <div class="card">
+          <div class="head"><h3 style="margin:0">Recent Applications</h3><a class="btn" href="/admin-apps.html">View all</a></div>
+          <div class="sec" id="recentApps"><div class="muted">Loading…</div></div>
         </div>
       </section>
-    </section>
-  </main>
+    </main>
+  </div>
+</div>
 
-  <script>
-    (async function(){
-      const { q, ui, isAdmin } = window.app;
-      const sb = window.supabase;
+<script>
+(async function(){
+  const { requireAuth, isAdmin, ui } = window.app;
+  let user; try { user = await requireAuth(); } catch { return location.replace('/login.html'); }
+  if(!(await isAdmin(user.id))) { ui.error('Admins only'); return location.replace('/'); }
 
-      let user; try { user = await window.app.requireAuth(); } catch { return; }
+  document.getElementById('btnSignOut').onclick = async()=>{ await window.supabase.auth.signOut(); location.replace('/'); };
 
-      const admin = await isAdmin(user.id);
-      if (!admin) { q('#gate').style.display='block'; return; }
-      q('#content').style.display='block';
+  // KPIs
+  async function count(table, filter=cb=>cb){ let q = window.supabase.from(table).select('id',{count:'exact',head:true}); q = filter(q); const {count} = await q; return count||0;}
+  const [totalJobs, activeJobs, totalCos, totalApps] = await Promise.all([
+    count('jobs'),
+    count('jobs',q=>q.eq('published',true)),
+    count('companies'),
+    count('applications')
+  ]);
+  document.getElementById('kpiJobs').textContent = totalJobs;
+  document.getElementById('kpiActive').textContent = activeJobs;
+  document.getElementById('kpiCos').textContent = totalCos;
+  document.getElementById('kpiApps').textContent = totalApps;
 
-      async function loadCompanies(){
-        const { data, error } = await sb.from('companies').select('id,name,website,owner_id,created_at').order('created_at',{ ascending:false });
-        if (error) { ui.error('Failed to load companies'); throw error; }
-        const tbody = q('#companiesTbl tbody'); tbody.innerHTML='';
-        (data||[]).forEach(c=>{
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${window.app.escapeHTML(c.name)}</td>
-            <td>${c.website ? `<a href="${window.app.escapeHTML(c.website)}" target="_blank">Website</a>` : '—'}</td>
-            <td class="muted">${c.owner_id}</td>
-            <td class="muted">${new Date(c.created_at).toLocaleString()}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
+  // Recent jobs
+  const rj = await window.supabase.from('jobs')
+    .select('id,title,location,employment_type,published,created_at,company:companies(name)')
+    .order('created_at',{ascending:false}).limit(8);
+  const jobs = rj.data||[];
+  const jWrap = document.getElementById('recentJobs');
+  if(!jobs.length){ jWrap.innerHTML = '<div class="muted">No jobs yet.</div>'; }
+  else {
+    jWrap.innerHTML = `<table>
+      <thead><tr><th>Title</th><th>Company</th><th>Meta</th><th>Status</th></tr></thead>
+      <tbody>${jobs.map(j=>`
+        <tr>
+          <td><a href="/admin-job-edit.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
+          <td>${window.app.escapeHTML(j.company?.name||'—')}</td>
+          <td class="muted">${window.app.escapeHTML(j.location)} • ${window.app.escapeHTML(j.employment_type)}</td>
+          <td>${j.published?'✅ Active':'⛔ Hidden'}</td>
+        </tr>
+      `).join('')}</tbody></table>`;
+  }
 
-      let jobs = [];
-      async function loadJobs(){
-        const { data, error } = await sb.from('jobs')
-          .select('id,title,location,employment_type,published,created_at,company:companies(name)')
-          .order('created_at',{ ascending:false }).limit(1000);
-        if (error) { ui.error('Failed to load jobs'); throw error; }
-        jobs = data||[];
-        const tbody = q('#jobsTbl tbody'); tbody.innerHTML='';
-        jobs.forEach(j=>{
-          const tr = document.createElement('tr');
-          tr.dataset.id=j.id; tr.dataset.published=String(!!j.published);
-          tr.innerHTML = `
-            <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
-            <td>${window.app.escapeHTML(j.company?.name || '—')}</td>
-            <td class="muted">${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span></td>
-            <td>${j.published ? '✅ Yes' : '⛔ No'}</td>
-            <td><button class="toggleBtn">${j.published ? 'Unpublish' : 'Publish'}</button></td>`;
-          tbody.appendChild(tr);
-        });
-
-        const sel = q('#a_job');
-        sel.innerHTML = `<option value="all">All jobs</option>` + jobs.map(j=>`<option value="${j.id}">${window.app.escapeHTML(j.title)}</option>`).join('');
-      }
-
-      async function togglePublished(jobId, current){
-        const next = !current;
-        const { error } = await sb.from('jobs').update({ published: next }).eq('id', jobId);
-        if (error) { ui.error(error.message||'Update failed'); throw error; }
-        ui.success(next?'Published':'Unpublished');
-      }
-
-      q('#jobsTbl').addEventListener('click', async (e)=>{
-        const btn = e.target.closest('.toggleBtn'); if (!btn) return;
-        const tr = e.target.closest('tr'); const id = tr.dataset.id; const current = tr.dataset.published==='true';
-        btn.disabled = true; try { await togglePublished(id,current); await loadJobs(); } catch(_){} finally{ btn.disabled=false; }
-      });
-
-      const pageSize=20; let st={ page:1, jobId:'all', q:'' };
-
-      async function loadApps(){
-        const jobIds = st.jobId==='all' ? jobs.map(j=>j.id) : [st.jobId];
-        const { rows, total } = await window.app.db.appsForJobIds(jobIds,{ page:st.page, pageSize, q:st.q||null });
-        const jmap = new Map(jobs.map(j=>[j.id,j]));
-        const tbody = q('#appsTbl tbody'); tbody.innerHTML='';
-        rows.forEach(r=>{
-          const j = jmap.get(r.job_id);
-          const tr = document.createElement('tr'); tr.dataset.id=r.id;
-          tr.innerHTML = `
-            <td class="muted">${new Date(r.created_at).toLocaleString()}</td>
-            <td>${window.app.escapeHTML(j?.title || '')}</td>
-            <td>${window.app.escapeHTML(r.candidate_name || '')}</td>
-            <td><a href="mailto:${window.app.escapeHTML(r.email)}">${window.app.escapeHTML(r.email)}</a></td>
-            <td>${window.app.escapeHTML((r.message||'').slice(0,180))}${(r.message||'').length>180?'…':''}</td>
-            <td><button class="delBtn">Delete</button></td>`;
-          tbody.appendChild(tr);
-        });
-        const totalPages = Math.max(1, Math.ceil(total/pageSize));
-        q('#a_info').textContent = `Page ${st.page} of ${totalPages}`;
-        q('#a_prev').disabled = st.page<=1; q('#a_next').disabled = st.page>=totalPages;
-      }
-
-      q('#appsTbl').addEventListener('click', async (e)=>{
-        const btn = e.target.closest('.delBtn'); if (!btn) return;
-        const tr = e.target.closest('tr'); const id = tr.dataset.id;
-        btn.disabled=true;
-        try { const { error } = await sb.from('applications').delete().eq('id', id); if (error) throw error; ui.success('Deleted'); await loadApps(); }
-        catch(err){ ui.error(err.message||'Delete failed'); }
-        finally{ btn.disabled=false; }
-      });
-
-      q('#a_apply').addEventListener('click', ()=>{ st.page=1; st.jobId=q('#a_job').value; st.q=q('#a_q').value.trim(); loadApps(); });
-      q('#a_reset').addEventListener('click', ()=>{ st={page:1,jobId:'all',q:''}; q('#a_q').value=''; q('#a_job').value='all'; loadApps(); });
-      q('#a_prev').addEventListener('click', ()=>{ st.page=Math.max(1,st.page-1); loadApps(); });
-      q('#a_next').addEventListener('click', ()=>{ st.page=st.page+1; loadApps(); });
-
-      await loadCompanies(); await loadJobs(); await loadApps();
-    })();
-  </script>
+  // Recent applications
+  const ra = await window.supabase.from('applications')
+    .select('id,job_id,candidate_name,email,created_at')
+    .order('created_at',{ascending:false}).limit(10);
+  const apps = ra.data||[];
+  if(!apps.length){ document.getElementById('recentApps').innerHTML = '<div class="muted">No applications yet.</div>'; }
+  else {
+    // Get job titles
+    const ids = Array.from(new Set(apps.map(a=>a.job_id)));
+    const jmap = new Map();
+    if(ids.length){
+      const jr = await window.supabase.from('jobs').select('id,title').in('id',ids);
+      (jr.data||[]).forEach(j=>jmap.set(j.id,j.title));
+    }
+    document.getElementById('recentApps').innerHTML = `<table>
+      <thead><tr><th>Candidate</th><th>Email</th><th>Job</th><th>Time</th></tr></thead>
+      <tbody>${apps.map(a=>`
+        <tr>
+          <td>${window.app.escapeHTML(a.candidate_name||'—')}</td>
+          <td class="muted">${window.app.escapeHTML(a.email||'')}</td>
+          <td><a href="/admin-job-edit.html?id=${encodeURIComponent(a.job_id)}">${window.app.escapeHTML(jmap.get(a.job_id)||'—')}</a></td>
+          <td class="muted">${new Date(a.created_at).toLocaleString()}</td>
+        </tr>
+      `).join('')}</tbody></table>`;
+  }
+})();
+</script>
 </body>
 </html>
