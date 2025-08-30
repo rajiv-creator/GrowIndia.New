@@ -1,12 +1,3 @@
-# GrowIndia Jobs — Home + Candidate Registration (v15)
-
-All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `window.supabase` from `window.SUPABASE_URL` and `window.SUPABASE_ANON_KEY`). Update `/components.js` with the version below (note the cache‑buster `?v=15`).
-
----
-
-## 1) `/index.html`
-
-```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -15,19 +6,26 @@ All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `
   <title>GrowIndia Jobs</title>
   <style>
     :root{
-      --blue:#0000FF; --blue-600:#0000D0; --orange:#FF6E00; --ink:rgba(15,23,42,.9);
-      --bg:#F6F8FC; --card:#fff; --line:#E5E7EB; --muted:#64748B;
+      --blue:#151B54; --blue-600:#0F143E; --orange:#FF6E00; --ink:rgba(15,23,42,.9);
+      --bg:#F6F8FC; --card:#FFFFFF; --line:#E5E7EB; --muted:#64748B;
     }
-    html,body{margin:0;padding:0;background:var(--bg);color:#0f172a;font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;}
+    html,body{margin:0;padding:0;background:var(--bg);color:#0f172a;
+      font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
     a{color:var(--blue);text-decoration:none}
     a:hover{text-decoration:underline}
     .container{max-width:1200px;margin:0 auto;padding:0 16px}
+
     /* Header */
     header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
-    .brand{font-weight:700;letter-spacing:.2px}
-    .nav a{color:#111827;margin-left:16px}
-    .nav a:hover{color:var(--blue)}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+    .brand{font-weight:800;letter-spacing:.2px}
+    .nav-right{display:flex;gap:14px;align-items:center}
+    .nav-right a.link{color:#111827}
+    .btn{display:inline-block;padding:9px 14px;border-radius:999px;font-weight:700;color:#fff}
+    .btn-blue{background:var(--blue)}
+    .btn-blue:hover{background:var(--blue-600)}
+    .btn-orange{background:var(--orange)}
+    .btn-orange:hover{filter:brightness(.95)}
 
     /* Hero */
     .hero{padding:48px 0 24px}
@@ -35,27 +33,27 @@ All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `
     .muted{color:var(--muted)}
 
     /* Embossed search bar */
-    .search-wrap{max-width:960px;margin:24px auto 0;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);display:flex;align-items:stretch;overflow:hidden}
+    .search-wrap{max-width:960px;margin:24px auto 0;background:#fff;border:1px solid rgba(0,0,0,.06);
+      border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);
+      display:flex;align-items:stretch;overflow:hidden}
     .search-field{flex:1;display:flex;align-items:center;padding:4px 12px}
     .search-field input{width:100%;border:0;outline:0;padding:16px 12px;font-size:16px;background:transparent;color:#111827}
     .divider{width:1px;background:var(--line);margin:8px 0}
-    .search-btn{border:0;background:var(--blue);color:#fff;padding:0 22px;font-weight:600;font-size:16px;cursor:pointer}
+    .search-btn{border:0;background:var(--blue);color:#fff;padding:0 22px;font-weight:700;font-size:16px;cursor:pointer}
     .search-btn:hover{background:var(--blue-600)}
-    .search-btn:focus{outline:3px solid rgba(0,0,255,.25)}
+    .search-btn:focus{outline:3px solid rgba(21,27,84,.25)}
 
-    /* CTA cards */
+    /* CTA cards below hero */
     .cta-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:32px 0}
     .cta{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 4px 14px rgba(2,6,23,.06);display:flex;flex-direction:column;gap:12px}
     .cta h3{margin:0 0 6px}
-    .cta .primary{display:inline-block;padding:10px 14px;border-radius:12px;color:#fff;font-weight:600}
+    .cta .primary{display:inline-block;padding:10px 14px;border-radius:12px;color:#fff;font-weight:700}
     .cta .primary:hover{filter:brightness(.95)}
     .cta .link{color:var(--muted)}
-
-    .candidate{border-color:rgba(0,0,255,.15)}
+    .candidate{border-color:rgba(21,27,84,.18)}
     .candidate .primary{background:var(--blue)}
     .employer{border-color:rgba(255,110,0,.25)}
     .employer .primary{background:var(--orange)}
-
     .cta-actions{display:flex;gap:10px;align-items:center}
 
     /* Value props */
@@ -67,7 +65,7 @@ All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `
     .job{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px}
     .job h4{margin:0 0 4px}
     .job .meta{color:var(--muted);font-size:14px}
-    .job a.btn{margin-top:6px;align-self:flex-start;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px}
+    .job a.btn{margin-top:6px;align-self:flex-start}
 
     /* Footer */
     footer{margin-top:48px;background:#fff;border-top:1px solid var(--line)}
@@ -86,11 +84,13 @@ All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `
   <header>
     <div class="container nav">
       <div class="brand">GrowIndia Jobs</div>
-      <nav>
-        <a href="/jobs.html">Jobs</a>
-        <a href="/post-job.html">Post a Job</a>
-        <a href="/login.html">Sign in</a>
-      </nav>
+      <div class="nav-right">
+        <a class="link" href="/jobs.html">Jobs</a>
+        <a class="link" href="/post-job.html">Post a Job</a>
+        <a class="link" href="/login.html">Sign in</a>
+        <a class="btn btn-blue" href="/register-candidate.html">Candidate</a>
+        <a class="btn btn-orange" href="/login.html?role=employer">Employer</a>
+      </div>
     </div>
   </header>
 
@@ -130,7 +130,7 @@ All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `
     </section>
 
     <section class="values">
-      <div class="card"><strong>1‑step apply</strong><br><span class="muted">Fast applications with your saved profile.</span></div>
+      <div class="card"><strong>1-step apply</strong><br><span class="muted">Fast applications with your saved profile.</span></div>
       <div class="card"><strong>Zero fees</strong><br><span class="muted">No charges for candidates.</span></div>
       <div class="card"><strong>For employers</strong><br><span class="muted">Simple tools to post, review, and hire.</span></div>
     </section>
@@ -169,7 +169,7 @@ All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `
   </footer>
 
   <script src="/config.js"></script>
-  <script src="/components.js?v=15"></script>
+  <script src="/components.js?v=16"></script>
   <script>
     (function(){
       const form = document.getElementById('searchForm');
@@ -198,674 +198,12 @@ All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `
           <h4>${escapeHtml(j.title)}</h4>
           <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
           <div class="meta">Salary: ${salary}</div>
-          <a class="btn" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
+          <a class="btn btn-blue" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
         </article>`
       }
-
       function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
-
       loadFeatured();
     })();
   </script>
 </body>
 </html>
-```
-
----
-
-## 2) `/register-candidate.html` (Step‑1)
-
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Register — Candidate (Step 1)</title>
-  <style>
-    :root{--blue:#0000FF;--blue-600:#0000D0;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
-    .container{max-width:1000px;margin:0 auto;padding:24px 16px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:0;overflow:hidden}
-    .grid{display:grid;grid-template-columns:1fr 1fr}
-    .left{background:#fff;padding:24px;border-right:1px solid var(--line)}
-    .left h2{margin-top:0}
-    .bullets{color:var(--muted)}
-    .bullets li{margin:8px 0}
-    .right{padding:24px}
-    label{display:block;margin:12px 0 4px;color:#0f172a;font-weight:600}
-    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;outline:0}
-    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.15)}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .actions{margin-top:16px;display:flex;gap:10px;align-items:center}
-    button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
-    button.primary:hover{background:var(--blue-600)}
-    .muted{color:var(--muted)}
-    @media (max-width: 900px){.grid{grid-template-columns:1fr}.left{border-right:0;border-bottom:1px solid var(--line)}}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1 style="margin:0 0 12px">Create your candidate profile</h1>
-    <div class="muted">Step 1 of 2</div>
-
-    <section class="card grid">
-      <aside class="left">
-        <h2>On registering, you can…</h2>
-        <ul id="bullets" class="bullets"><li>Loading…</li></ul>
-        <div style="margin-top:16px" class="muted">Admin can edit this copy in <a href="/admin-copy.html">Admin Copy</a>.</div>
-      </aside>
-      <form id="form" class="right">
-        <div class="muted" id="signedInAs"></div>
-        <label>Full name *</label>
-        <input id="full_name" required placeholder="e.g., Ananya Sharma" />
-
-        <label>Mobile number *</label>
-        <input id="phone" required placeholder="e.g., 9876543210" />
-
-        <div class="row">
-          <div>
-            <label>Current location (optional)</label>
-            <input id="current_location" placeholder="City, State" />
-          </div>
-          <div>
-            <label>Headline (optional)</label>
-            <input id="headline" placeholder="e.g., Frontend Developer" />
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="primary" type="submit">Continue</button>
-          <span class="muted">You’ll add experience & skills in Step 2.</span>
-        </div>
-      </form>
-    </section>
-  </div>
-
-  <script src="/config.js"></script>
-  <script src="/components.js?v=15"></script>
-  <script>
-  (async function(){
-    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
-    const user = await app.getSessionUser();
-    document.getElementById('signedInAs').textContent = user?.email ? `Signed in as ${user.email}` : '';
-
-    // Load admin-editable bullets
-    try{
-      const { data } = await db.getSiteCopy('candidate_register_bullets');
-      const bullets = (data?.content?.bullets)||[];
-      const ul = document.getElementById('bullets');
-      ul.innerHTML = bullets.length ? bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join('') : '<li>Build your profile and get noticed</li>';
-    }catch(e){ /* non-fatal */ }
-
-    // Prefill if profile exists; redirect if step 2 already done
-    const { data: profile } = await app.getProfile(user.id);
-    if(profile){
-      document.getElementById('full_name').value = profile.full_name||'';
-      document.getElementById('phone').value = profile.phone||'';
-      document.getElementById('current_location').value = profile.current_location||'';
-      document.getElementById('headline').value = profile.headline||'';
-      // If step 2 complete → dashboard, else stay
-      if(profile.role === 'employer') { app.go('/employer-home.html'); return; }
-      const step2Done = profile.years_experience != null || (profile.skills && profile.skills.trim() !== '');
-      if(step2Done){ app.go('/dashboard.html'); return; }
-    }
-
-    document.getElementById('form').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const full_name = document.getElementById('full_name').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      if(!full_name || !phone){ ui.toast('Name and mobile are required','error'); return; }
-      const payload = {
-        user_id: user.id,
-        role: 'candidate',
-        full_name,
-        phone,
-        current_location: document.getElementById('current_location').value.trim() || null,
-        headline: document.getElementById('headline').value.trim() || null,
-      };
-      const { error } = await app.upsertProfile(payload);
-      if(error){ ui.toast(error.message,'error'); return; }
-      app.go('/register-candidate-step2.html');
-    });
-
-    function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
-  })();
-  </script>
-</body>
-</html>
-```
-
----
-
-## 3) `/register-candidate-step2.html` (Step‑2)
-
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Complete your Profile — Candidate (Step 2)</title>
-  <style>
-    :root{--blue:#0000FF;--blue-600:#0000D0;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
-    .container{max-width:800px;margin:0 auto;padding:24px 16px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
-    label{display:block;margin:12px 0 4px;font-weight:700}
-    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
-    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.15)}
-    .actions{margin-top:16px}
-    button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
-    button.primary:hover{background:var(--blue-600)}
-    .muted{color:var(--muted)}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1 style="margin:0 0 12px">Tell us more</h1>
-    <div class="muted">Step 2 of 2</div>
-    <section class="card">
-      <form id="form">
-        <label>Years of experience</label>
-        <input id="years_experience" type="number" min="0" placeholder="e.g., 3" />
-
-        <label>Key skills (comma‑separated)</label>
-        <input id="skills" placeholder="e.g., React, Node.js, SQL" />
-
-        <label>Preferred locations (comma‑separated)</label>
-        <input id="preferred_locations" placeholder="e.g., Dehradun, Delhi NCR" />
-
-        <label>Expected salary (optional)</label>
-        <input id="expected_salary" type="number" min="0" placeholder="e.g., 600000" />
-
-        <div class="actions">
-          <button class="primary" type="submit">Finish</button>
-        </div>
-      </form>
-    </section>
-  </div>
-
-  <script src="/config.js"></script>
-  <script src="/components.js?v=15"></script>
-  <script>
-  (async function(){
-    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
-    const user = await app.getSessionUser();
-    const { data: profile } = await app.getProfile(user.id);
-    if(!profile){ app.go('/register-candidate.html'); return; }
-    if(profile.role === 'employer'){ app.go('/employer-home.html'); return; }
-
-    // prefill
-    if(profile.years_experience!=null) document.getElementById('years_experience').value = profile.years_experience;
-    if(profile.skills) document.getElementById('skills').value = profile.skills;
-    if(profile.preferred_locations) document.getElementById('preferred_locations').value = profile.preferred_locations;
-    if(profile.expected_salary!=null) document.getElementById('expected_salary').value = profile.expected_salary;
-
-    document.getElementById('form').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const payload = {
-        user_id: user.id,
-        years_experience: toInt(document.getElementById('years_experience').value),
-        skills: orNull(document.getElementById('skills').value.trim()),
-        preferred_locations: orNull(document.getElementById('preferred_locations').value.trim()),
-        expected_salary: toInt(document.getElementById('expected_salary').value)
-      };
-      const { error } = await app.upsertProfile(payload);
-      if(error){ ui.toast(error.message,'error'); return; }
-      ui.toast('Profile updated','success');
-      app.go('/dashboard.html');
-    });
-
-    function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
-    function orNull(v){ return v? v: null }
-  })();
-  </script>
-</body>
-</html>
-```
-
----
-
-## 4) `/admin-copy.html` (Edit site bullets — admin only)
-
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin — Site Copy</title>
-  <style>
-    :root{--blue:#0000FF;--blue-600:#0000D0;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
-    .container{max-width:900px;margin:0 auto;padding:24px 16px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
-    textarea{width:100%;min-height:180px;padding:12px;border:1px solid var(--line);border-radius:10px}
-    button{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
-    button:hover{background:var(--blue-600)}
-    .muted{color:var(--muted)}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Admin — Editable Copy</h1>
-    <p class="muted">Only admins can save. RLS will enforce permissions.</p>
-    <section class="card">
-      <h3>Candidate Register Bullets</h3>
-      <p class="muted">Enter one bullet per line.</p>
-      <textarea id="bullets"></textarea>
-      <div style="margin-top:12px"><button id="save">Save</button></div>
-    </section>
-  </div>
-
-  <script src="/config.js"></script>
-  <script src="/components.js?v=15"></script>
-  <script>
-  (async function(){
-    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
-    // Optionally, gate UI with a client-side check (server will still enforce)
-    // const isAdmin = await app.isAdmin(); if(!isAdmin){ ui.toast('Admins only','error'); }
-
-    const { data } = await db.getSiteCopy('candidate_register_bullets');
-    const bullets = (data?.content?.bullets)||[];
-    const ta = document.getElementById('bullets');
-    ta.value = bullets.join('\n');
-
-    document.getElementById('save').onclick = async ()=>{
-      const lines = ta.value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
-      const content = { bullets: lines };
-      const { error } = await db.updateSiteCopy('candidate_register_bullets', content);
-      if(error){ ui.toast(error.message,'error'); return; }
-      ui.toast('Saved','success');
-    };
-  })();
-  </script>
-</body>
-</html>
-```
-
----
-
-## 5) `/jobs.html` (search, filters, pagination)
-
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jobs</title>
-  <style>
-    :root{--blue:#0000FF;--blue-600:#0000D0;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
-    .container{max-width:1200px;margin:0 auto;padding:24px 16px}
-    .layout{display:grid;grid-template-columns:280px 1fr;gap:16px}
-    .panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:16px}
-    .label{font-weight:700;margin:8px 0 6px;display:block}
-    input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px}
-    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.15)}
-    .jobs{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .job{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
-    .job h3{margin:0 0 4px}
-    .meta{color:var(--muted);font-size:14px}
-    .btn{display:inline-block;margin-top:6px;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px}
-    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-    .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:16px}
-    .pagination button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
-    .pagination button[disabled]{opacity:.5;cursor:not-allowed}
-    @media (max-width: 1000px){.layout{grid-template-columns:1fr}.jobs{grid-template-columns:1fr}}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1 style="margin:0 0 12px">Jobs</h1>
-    <div class="layout">
-      <aside class="panel">
-        <label class="label">Department (placeholder)</label>
-        <select id="dept">
-          <option value="">All</option>
-        </select>
-        <label class="label">Employment Type</label>
-        <select id="type">
-          <option value="all">All</option>
-          <option>full-time</option>
-          <option>part-time</option>
-          <option>contract</option>
-          <option>internship</option>
-        </select>
-        <label class="label">Location</label>
-        <input id="loc" placeholder="e.g., Dehradun" />
-      </aside>
-      <main>
-        <div class="panel toolbar">
-          <form id="searchbar" style="display:flex;gap:8px;flex:1">
-            <input id="q" placeholder="Job title, keywords, or company" style="flex:1" />
-            <button class="btn" type="submit" style="background:var(--blue);border:0">Search</button>
-          </form>
-          <div class="muted">Sort: Newest</div>
-        </div>
-        <section id="grid" class="jobs"></section>
-        <div class="pagination" id="pager"></div>
-      </main>
-    </div>
-  </div>
-
-  <script src="/config.js"></script>
-  <script src="/components.js?v=15"></script>
-  <script>
-  (function(){
-    const params = new URLSearchParams(location.search);
-    const state = {
-      q: decodeURIComponent(params.get('q')||'').trim(),
-      loc: decodeURIComponent(params.get('loc')||'').trim(),
-      type: (params.get('type')||'all'),
-      page: parseInt(params.get('page')||'1',10)||1,
-      pageSize: 12
-    };
-
-    // init controls
-    const qInput = document.getElementById('q'); qInput.value = state.q;
-    const locInput = document.getElementById('loc'); locInput.value = state.loc;
-    const typeSel = document.getElementById('type'); typeSel.value = state.type;
-
-    document.getElementById('searchbar').addEventListener('submit', (e)=>{ e.preventDefault(); state.q = qInput.value.trim(); state.page=1; syncUrlAndLoad(); });
-    typeSel.addEventListener('change', ()=>{ state.type = typeSel.value; state.page=1; syncUrlAndLoad(); });
-    locInput.addEventListener('change', ()=>{ state.loc = locInput.value.trim(); state.page=1; syncUrlAndLoad(); });
-
-    async function load(){
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '<div class="panel">Loading…</div>';
-      try{
-        const { data, count, error } = await db.searchJobs(state);
-        if(error) throw error;
-        if(!data.length){ grid.innerHTML = '<div class="panel">No jobs found.</div>'; renderPager(0); return; }
-        grid.innerHTML = data.map(j=> jobCard(j)).join('');
-        renderPager(count||0);
-      }catch(err){ grid.innerHTML = '<div class="panel">Failed to load jobs.</div>'; ui.toast(err.message,'error'); }
-    }
-
-    function jobCard(j){
-      const salary = (j.salary_min||j.salary_max) ? `₹${j.salary_min||''}${j.salary_min&&j.salary_max?'–':''}${j.salary_max||''}` : '—';
-      return `<article class="job">
-        <h3>${escapeHtml(j.title)}</h3>
-        <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
-        <div class="meta">Salary: ${salary}</div>
-        <a class="btn" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
-      </article>`
-    }
-
-    function renderPager(total){
-      const pager = document.getElementById('pager');
-      const pages = Math.max(1, Math.ceil(total / state.pageSize));
-      pager.innerHTML = '';
-      const prev = document.createElement('button'); prev.textContent = 'Prev'; prev.disabled = state.page<=1; prev.onclick=()=>{ state.page--; syncUrlAndLoad(); };
-      const next = document.createElement('button'); next.textContent = 'Next'; next.disabled = state.page>=pages; next.onclick=()=>{ state.page++; syncUrlAndLoad(); };
-      const info = document.createElement('span'); info.textContent = `Page ${state.page} of ${pages}`;
-      pager.append(prev, info, next);
-    }
-
-    function syncUrlAndLoad(){
-      const u = new URL(location.href);
-      u.searchParams.set('q', state.q);
-      u.searchParams.set('loc', state.loc);
-      u.searchParams.set('type', state.type);
-      u.searchParams.set('page', String(state.page));
-      history.replaceState(null,'',u);
-      load();
-    }
-
-    function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
-
-    syncUrlAndLoad();
-  })();
-  </script>
-</body>
-</html>
-```
-
----
-
-## 6) `/post-auth.html` (routing)
-
-```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Redirecting…</title>
-  <style>body{font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;display:grid;place-items:center;height:100dvh;color:#0f172a}</style>
-</head>
-<body>
-  <div>Signing you in and routing…</div>
-  <script src="/config.js"></script>
-  <script src="/components.js?v=15"></script>
-  <script>
-  (async function(){
-    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
-    const user = await app.getSessionUser();
-    const { data: profile } = await app.getProfile(user.id);
-    if(!profile){ app.go('/register-candidate.html'); return; }
-    if(profile.role === 'employer'){ app.go('/employer-home.html'); return; }
-    // candidate
-    const step2Done = profile.years_experience != null || (profile.skills && profile.skills.trim() !== '');
-    app.go(step2Done ? '/dashboard.html' : '/register-candidate-step2.html');
-  })();
-  </script>
-</body>
-</html>
-```
-
----
-
-## 7) `/components.js?v=15`
-
-```javascript
-// components.js v15 — shared app/db/ui helpers
-// Assumes window.supabase is initialized by /config.js
-(function(){
-  if(!window.supabase){ console.error('Supabase client not found. Make sure /config.js sets window.supabase.'); }
-
-  const sb = window.supabase;
-  const app = window.app || (window.app = {});
-  const ui  = window.ui  || (window.ui  = {});
-  const db  = window.db  || (window.db  = {});
-
-  // ---------- UI helpers ----------
-  ui.toast = function(msg, type='info'){
-    let wrap = document.getElementById('toasts');
-    if(!wrap){ wrap = document.createElement('div'); wrap.id='toasts'; wrap.style.cssText='position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999'; document.body.appendChild(wrap); }
-    const n = document.createElement('div');
-    n.textContent = msg; n.style.cssText = 'background:#fff;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,.1);padding:10px 12px;min-width:200px';
-    if(type==='error'){ n.style.borderColor = '#ef4444' }
-    if(type==='success'){ n.style.borderColor = '#22c55e' }
-    wrap.appendChild(n); setTimeout(()=>{ n.remove(); }, 3500);
-  };
-
-  // ---------- App helpers ----------
-  app.go = (url)=>{ window.location.href = url; };
-
-  app.getSessionUser = async function(){
-    const { data, error } = await sb.auth.getUser(); if(error) throw error; return data.user;
-  };
-
-  app.requireAuth = async function(opts={}){
-    const { data } = await sb.auth.getSession();
-    if(!data.session){
-      const to = opts.redirectTo || '/login.html';
-      window.location.href = to; return Promise.reject(new Error('Auth required'));
-    }
-    return true;
-  };
-
-  app.getProfile = async function(user_id){
-    return await sb.from('profiles').select('*').eq('user_id', user_id).maybeSingle();
-  };
-
-  app.upsertProfile = async function(payload){
-    // upsert by user_id
-    return await sb.from('profiles').upsert(payload, { onConflict: 'user_id' }).select().maybeSingle();
-  };
-
-  // Optional: check admin via admin_users table (policies still enforce server-side)
-  app.isAdmin = async function(){
-    const { data: me } = await app.getSessionUser();
-    if(!me) return false;
-    // if you add an admin_users table, expose a rpc or view. Placeholder returns false.
-    return false;
-  };
-
-  // ---------- DB helpers ----------
-  db.getSiteCopy = async function(key){
-    return await sb.from('site_copy').select('*').eq('key', key).maybeSingle();
-  };
-
-  db.updateSiteCopy = async function(key, content){
-    return await sb.from('site_copy').update({ content, updated_at: new Date().toISOString() }).eq('key', key).select().maybeSingle();
-  };
-
-  db.featuredJobs = async function(){
-    return await sb.from('jobs')
-      .select('id,title,company,location,employment_type,salary_min,salary_max,created_at')
-      .eq('published', true)
-      .order('created_at', { ascending: false })
-      .limit(12);
-  };
-
-  db.searchJobs = async function({ q='', loc='', type='all', page=1, pageSize=12 }){
-    let query = sb.from('jobs')
-      .select('id,title,company,location,employment_type,salary_min,salary_max,created_at', { count: 'exact' })
-      .eq('published', true);
-
-    const term = q.trim();
-    if(term){
-      // OR across title/description/company
-      const like = `%${term}%`;
-      query = query.or(
-        `title.ilike.${like},description.ilike.${like},company.ilike.${like}`
-      );
-    }
-    if(loc && loc.trim()){
-      query = query.ilike('location', `%${loc.trim()}%`);
-    }
-    if(type && type !== 'all'){
-      query = query.eq('employment_type', type);
-    }
-
-    query = query.order('created_at', { ascending: false });
-    const from = (page-1) * pageSize;
-    const to   = from + pageSize - 1;
-    query = query.range(from, to);
-
-    return await query;
-  };
-})();
-```
-
----
-
-## 8) SQL — tables, seeds, and RLS policies
-
-Run in the Supabase SQL editor.
-
-```sql
--- ADMIN SUPPORT (optional helper table for clearer admin checks)
-create table if not exists public.admin_users (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  created_at timestamptz default now()
-);
-
--- PROFILES
-create table if not exists public.profiles (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  role text not null check (role in ('candidate','employer')) default 'candidate',
-  full_name text,
-  phone text,
-  current_location text,
-  headline text,
-  years_experience int,
-  skills text,
-  preferred_locations text,
-  expected_salary int,
-  created_at timestamptz default now()
-);
-
-alter table public.profiles enable row level security;
-
--- Policies: users manage their own row
-create policy if not exists "profiles_select_own" on public.profiles
-  for select using (auth.uid() = user_id);
-
-create policy if not exists "profiles_upsert_own" on public.profiles
-  for insert with check (auth.uid() = user_id);
-
-create policy if not exists "profiles_update_own" on public.profiles
-  for update using (auth.uid() = user_id);
-
--- Optional: admin can select all profiles
-create policy if not exists "profiles_select_admin" on public.profiles
-  for select using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
-
--- SITE COPY
-create table if not exists public.site_copy (
-  key text primary key,
-  content jsonb not null,
-  updated_at timestamptz default now()
-);
-
-alter table public.site_copy enable row level security;
-
--- Anyone (including anon) can read candidate bullets only
-create policy if not exists "sitecopy_read_public_bullets" on public.site_copy
-  for select using (key = 'candidate_register_bullets');
-
--- Admin-only update
-create policy if not exists "sitecopy_update_admin" on public.site_copy
-  for update using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
-
--- Seed content
-insert into public.site_copy(key, content)
-  values ('candidate_register_bullets', '{"bullets":["Build your profile and let recruiters find you","Get job postings delivered to your email","Find a job and grow your career"]}')
-  on conflict (key) do nothing;
-
--- JOBS (assumed existing). Add full-text helpers (optional but recommended)
-alter table public.jobs add column if not exists search_tsv tsvector
-  generated always as (to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(description,''))) stored;
-
-create index if not exists jobs_search_tsv_idx on public.jobs using gin (search_tsv);
-create index if not exists jobs_created_at_idx on public.jobs(created_at desc);
-
--- RLS for jobs: allow public read of published, admins can read all
-alter table public.jobs enable row level security;
-
-create policy if not exists "jobs_read_published" on public.jobs
-  for select using (published = true);
-
-create policy if not exists "jobs_read_admin" on public.jobs
-  for select using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
-
--- APPLICATIONS (outline only — adjust to your existing schema)
--- ensure insert for any authenticated user; reads restricted to admins/owners
--- alter table public.applications enable row level security;
--- create policy ...
-```
-
----
-
-## 9) Smoke‑test checklist
-
-1. **SQL**: Run the SQL block. Add yourself to `admin_users` if needed: `insert into admin_users(user_id) values ('<your-auth-user-id>');`
-2. **Deploy files**: Upload all pages and the new `/components.js?v=15` (replace old). Keep your existing `/config.js`.
-3. **Home**: Visit `/`. Use the **embossed** search to navigate to `/jobs.html?q=dev&loc=Dehradun&type=all`.
-4. **CTAs**: Try **I’m a Candidate → Register**.
-5. **Auth**: After magic‑link sign‑in, `/post-auth.html` should route correctly.
-6. **Step‑1**: Fill **Full name** and **Mobile** → Continue to Step‑2.
-7. **Step‑2**: Enter skills/experience → Finish → lands on `/dashboard.html`.
-8. **Admin copy**: If you’re in `admin_users`, edit bullets at `/admin-copy.html`. Verify Step‑1 left pane updates.
-9. **Jobs**: Confirm featured jobs show latest **published** ones. Use filters & pagination on `/jobs.html`.
-10. **RLS**: From an incognito window, verify published jobs and candidate bullets are readable; updates require admin auth.
-
----
-
-> Tip: If you later add a server-side search function (RPC) that leverages `search_tsv`, you can swap `db.searchJobs` to call it without changing the UI.
