@@ -25,7 +25,11 @@
     .toolbar{display:flex;gap:10px;margin-top:10px}
     .actions{display:flex;gap:10px;margin-top:16px}
     .h{margin:18px 0 6px}
-    @media (max-width:1000px){.grid-2,.row{grid-template-columns:1fr}}
+    .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .job{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+    .job h4{margin:0 0 6px}
+    .meta{color:var(--muted);font-size:14px}
+    @media (max-width:1000px){.grid-2,.row,.jobs{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -37,12 +41,23 @@
   </header>
 
   <div class="wrap">
+    <!-- Welcome card -->
     <div id="welcome" class="card">
       <h2 style="margin:0 0 6px">Welcome<span id="name"></span>!</h2>
       <div id="msg" class="muted" style="margin-bottom:14px">You can complete the rest of your profile later.</div>
       <a class="btn" href="#complete" id="openComplete">Complete your profile →</a>
     </div>
 
+    <!-- Recommended jobs -->
+    <div class="card" style="margin-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h3 style="margin:0">Recommended jobs for you</h3>
+        <a class="btn-ghost" href="/jobs.html">View all</a>
+      </div>
+      <div id="reco" class="jobs" style="margin-top:12px"><div class="muted">Loading…</div></div>
+    </div>
+
+    <!-- Profile completion (opens with #complete) -->
     <div id="complete" class="card" style="margin-top:16px;display:none">
       <h3 style="margin:0 0 8px">Profile completion</h3>
       <div class="muted">Step 2 (optional). Add your basics, experience and education. Use “Add more”.</div>
@@ -50,63 +65,29 @@
       <!-- BASICS -->
       <h4 class="h">Basics</h4>
       <div class="grid-2">
-        <div>
-          <label>Full name</label>
-          <input id="full_name" placeholder="Your name">
-        </div>
-        <div>
-          <label>Phone</label>
-          <input id="phone" placeholder="e.g., 9876543210">
-        </div>
-        <div>
-          <label>Headline</label>
-          <input id="headline" placeholder="e.g., HR Manager">
-        </div>
-        <div>
-          <label>Date of birth</label>
-          <input id="dob" type="date">
-        </div>
-        <div>
-          <label>Years of experience</label>
-          <input id="years_experience" type="number" min="0" placeholder="e.g., 3">
-        </div>
-        <div>
-          <label>Expected salary (₹)</label>
-          <input id="expected_salary" type="number" min="0" placeholder="e.g., 600000">
-        </div>
-        <div>
-          <label>Key skills (comma-separated)</label>
-          <input id="skills" placeholder="e.g., Recruitment, HRMS, Payroll">
-        </div>
-        <div>
-          <label>Preferred locations (comma-separated)</label>
-          <input id="preferred_locations" placeholder="e.g., Delhi, Dehradun">
-        </div>
+        <div><label>Full name</label><input id="full_name" placeholder="Your name"></div>
+        <div><label>Phone</label><input id="phone" placeholder="e.g., 9876543210"></div>
+        <div><label>Headline</label><input id="headline" placeholder="e.g., HR Manager"></div>
+        <div><label>Date of birth</label><input id="dob" type="date"></div>
+        <div><label>Years of experience</label><input id="years_experience" type="number" min="0" placeholder="e.g., 3"></div>
+        <div><label>Expected salary (₹)</label><input id="expected_salary" type="number" min="0" placeholder="e.g., 600000"></div>
+        <div><label>Key skills (comma-separated)</label><input id="skills" placeholder="e.g., Recruitment, HRMS, Payroll"></div>
+        <div><label>Preferred locations (comma-separated)</label><input id="preferred_locations" placeholder="e.g., Delhi, Dehradun"></div>
         <div class="grid-2" style="grid-column:1/-1;gap:12px">
-          <div>
-            <label>Current organization</label>
-            <input id="current_company" placeholder="e.g., Acme Corp">
-          </div>
-          <div>
-            <label>Profile links (comma-separated)</label>
-            <input id="profiles_links" placeholder="https://linkedin.com/in/…, https://github.com/…">
-          </div>
+          <div><label>Current organization</label><input id="current_company" placeholder="e.g., Acme Corp"></div>
+          <div><label>Profile links (comma-separated)</label><input id="profiles_links" placeholder="https://linkedin.com/in/…, https://github.com/…"></div>
         </div>
       </div>
 
       <!-- EXPERIENCE -->
       <h4 class="h">Experience</h4>
       <div id="expList"></div>
-      <div class="toolbar">
-        <button type="button" class="btn-ghost" id="addExp">+ Add experience</button>
-      </div>
+      <div class="toolbar"><button type="button" class="btn-ghost" id="addExp">+ Add experience</button></div>
 
       <!-- EDUCATION -->
       <h4 class="h">Education</h4>
       <div id="eduList"></div>
-      <div class="toolbar">
-        <button type="button" class="btn-ghost" id="addEdu">+ Add education</button>
-      </div>
+      <div class="toolbar"><button type="button" class="btn-ghost" id="addEdu">+ Add education</button></div>
 
       <div class="actions">
         <button class="btn" id="saveAll" type="button">Save & continue</button>
@@ -123,115 +104,62 @@
     await app.requireAuth({ redirectTo: '/register-candidate.html' });
     const user = await app.getSessionUser();
     const { data: p } = await app.getProfile(user.id);
-
     if(p?.full_name){ name.textContent = `, ${p.full_name}`; }
     const q = new URLSearchParams(location.search);
     if(q.has('welcome')) msg.textContent = 'Your email is verified and you are signed in.';
-    else if(q.has('from')) msg.textContent = 'Account created. You can complete your profile anytime.';
-    else if(q.has('updated')) msg.textContent = 'Profile updated successfully.';
-    else if(q.has('skip')) msg.textContent = 'You can complete the rest of your profile later.';
 
-    // Open completion panel when hash or query present
-    const shouldOpen = location.hash === '#complete' || q.has('complete') || q.has('onboard');
+    // open completion when hash present
     openComplete.onclick = (e)=>{ e.preventDefault(); showComplete(true); };
-    if(shouldOpen) showComplete(true);
+    if(location.hash === '#complete' || q.has('complete')) showComplete(true);
 
     // Prefill basics
     if(p){
-      if(p.full_name) full_name.value = p.full_name;
-      if(p.phone) phone.value = p.phone;
-      if(p.headline) headline.value = p.headline;
+      fill(full_name, p.full_name);
+      fill(phone, p.phone);
+      fill(headline, p.headline);
       if(p.dob) dob.value = (p.dob||'').substring(0,10);
       if(p.years_experience!=null) years_experience.value = p.years_experience;
       if(p.expected_salary!=null) expected_salary.value = p.expected_salary;
-      if(p.skills) skills.value = p.skills;
-      if(p.preferred_locations) preferred_locations.value = p.preferred_locations;
-      if(p.current_company) current_company.value = p.current_company;
-      if(p.profiles_links) profiles_links.value = p.profiles_links;
+      fill(skills, p.skills);
+      fill(preferred_locations, p.preferred_locations);
+      fill(current_company, p.current_company);
+      fill(profiles_links, p.profiles_links);
     }
 
-    // Prefill dynamic lists
+    // Experience & Education dynamic rows
     const expData = Array.isArray(p?.experience_json)? p.experience_json : [];
     const eduData = Array.isArray(p?.education_json)?  p.education_json  : [];
-
     const expList = document.getElementById('expList');
     const eduList = document.getElementById('eduList');
 
-    function expItem(data={}){
-      const div = document.createElement('div');
-      div.className='item';
-      div.innerHTML = `
-        <div class="row">
-          <div style="grid-column:1/3">
-            <label>Designation</label><input data-k="designation" value="${esc(data.designation)}" placeholder="e.g., HR Manager">
-          </div>
-          <div style="grid-column:3/5">
-            <label>Company</label><input data-k="company" value="${esc(data.company)}" placeholder="e.g., Acme Corp">
-          </div>
-          <div>
-            <label>Current?</label>
-            <input type="checkbox" data-k="current" ${data.current? 'checked':''} style="width:auto;vertical-align:middle;margin-top:16px">
-          </div>
-          <div>
-            <label>Start</label><input type="date" data-k="start_date" value="${esc(data.start_date)}">
-          </div>
-          <div>
-            <label>End</label><input type="date" data-k="end_date" value="${esc(data.end_date)}">
-          </div>
-          <div style="grid-column:1/-1">
-            <label>Roles / responsibilities</label>
-            <textarea rows="3" data-k="description" placeholder="What did you do?">${esc(data.description)}</textarea>
-          </div>
-        </div>
-        <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>
-      `;
-      div.querySelector('.remove').onclick = ()=> div.remove();
-      return div;
-    }
-
-    function eduItem(data={}){
-      const div = document.createElement('div');
-      div.className='item';
-      div.innerHTML = `
-        <div class="row">
-          <div style="grid-column:1/3">
-            <label>Degree</label><input data-k="degree" value="${esc(data.degree)}" placeholder="e.g., MBA">
-          </div>
-          <div style="grid-column:3/5">
-            <label>Institution</label><input data-k="institution" value="${esc(data.institution)}" placeholder="e.g., DU">
-          </div>
-          <div>
-            <label>Grade/Score</label><input data-k="score" value="${esc(data.score)}" placeholder="optional">
-          </div>
-          <div>
-            <label>Start</label><input type="date" data-k="start_date" value="${esc(data.start_date)}">
-          </div>
-          <div>
-            <label>End</label><input type="date" data-k="end_date" value="${esc(data.end_date)}">
-          </div>
-          <div style="grid-column:1/-1">
-            <label>Notes</label>
-            <textarea rows="2" data-k="description" placeholder="Majors, highlights…">${esc(data.description)}</textarea>
-          </div>
-        </div>
-        <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>
-      `;
-      div.querySelector('.remove').onclick = ()=> div.remove();
-      return div;
-    }
-
-    // Hydrate existing rows or one blank row
+    function expItem(d={}){ const div=document.createElement('div'); div.className='item'; div.innerHTML=`
+      <div class="row">
+        <div style="grid-column:1/3"><label>Designation</label><input data-k="designation" value="${esc(d.designation)}" placeholder="e.g., HR Manager"></div>
+        <div style="grid-column:3/5"><label>Company</label><input data-k="company" value="${esc(d.company)}" placeholder="e.g., Acme Corp"></div>
+        <div><label>Current?</label><input type="checkbox" data-k="current" ${d.current?'checked':''} style="width:auto;vertical-align:middle;margin-top:16px"></div>
+        <div><label>Start</label><input type="date" data-k="start_date" value="${esc(d.start_date)}"></div>
+        <div><label>End</label><input type="date" data-k="end_date" value="${esc(d.end_date)}"></div>
+        <div style="grid-column:1/-1"><label>Roles / responsibilities</label><textarea rows="3" data-k="description" placeholder="What did you do?">${esc(d.description)}</textarea></div>
+      </div>
+      <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>`; div.querySelector('.remove').onclick=()=>div.remove(); return div; }
+    function eduItem(d={}){ const div=document.createElement('div'); div.className='item'; div.innerHTML=`
+      <div class="row">
+        <div style="grid-column:1/3"><label>Degree</label><input data-k="degree" value="${esc(d.degree)}" placeholder="e.g., MBA"></div>
+        <div style="grid-column:3/5"><label>Institution</label><input data-k="institution" value="${esc(d.institution)}" placeholder="e.g., DU"></div>
+        <div><label>Score</label><input data-k="score" value="${esc(d.score)}" placeholder="optional"></div>
+        <div><label>Start</label><input type="date" data-k="start_date" value="${esc(d.start_date)}"></div>
+        <div><label>End</label><input type="date" data-k="end_date" value="${esc(d.end_date)}"></div>
+        <div style="grid-column:1/-1"><label>Notes</label><textarea rows="2" data-k="description" placeholder="Majors, highlights…">${esc(d.description)}</textarea></div>
+      </div>
+      <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>`; div.querySelector('.remove').onclick=()=>div.remove(); return div; }
     if(expData.length){ expData.forEach(d=>expList.appendChild(expItem(d))); } else { expList.appendChild(expItem({})); }
     if(eduData.length){ eduData.forEach(d=>eduList.appendChild(eduItem(d))); } else { eduList.appendChild(eduItem({})); }
-
     document.getElementById('addExp').onclick = ()=> expList.appendChild(expItem({}));
     document.getElementById('addEdu').onclick = ()=> eduList.appendChild(eduItem({}));
 
     // Save
     document.getElementById('saveAll').onclick = async ()=>{
       try{
-        const exp = collect(expList);
-        const edu = collect(eduList);
         const payload = {
           user_id: user.id,
           full_name: nz(full_name.value),
@@ -244,16 +172,43 @@
           preferred_locations: nz(preferred_locations.value),
           current_company: nz(current_company.value),
           profiles_links: nz(profiles_links.value),
-          experience_json: exp,
-          education_json: edu
+          experience_json: collect(expList),
+          education_json: collect(eduList)
         };
         const { error } = await app.upsertProfile(payload);
         if(error) throw error;
         ui.toast('Profile saved','success');
-        // stay on page
       }catch(e){ ui.toast(e.message || 'Save failed','error'); }
     };
 
+    // Recommended jobs
+    try{
+      const box = document.getElementById('reco');
+      const firstSkill = (p?.skills||'').split(',')[0]?.trim();
+      let rows;
+      if(firstSkill){
+        const { data, error } = await db.searchJobs({ q:firstSkill, page:1, pageSize:6 });
+        if(error) throw error; rows = data;
+      }else{
+        const { data, error } = await db.featuredJobs(); if(error) throw error; rows = data?.slice(0,6);
+      }
+      if(!rows?.length){ box.innerHTML = '<div class="muted">No recommendations yet.</div>'; }
+      else{
+        box.innerHTML = rows.map(j=>`
+          <article class="job">
+            <h4>${esc(j.title)}</h4>
+            <div class="meta">${esc(j.company||'')} · ${esc(j.location||'')} · ${esc(j.employment_type||'')}</div>
+            <a class="btn-ghost" href="/job.html?id=${encodeURIComponent(j.id)}" style="margin-top:8px;display:inline-block">View</a>
+          </article>
+        `).join('');
+      }
+    }catch(e){ ui.toast(e.message||'Failed to load recommendations','error'); }
+
+    // helpers
+    function fill(el,val){ if(val) el.value = val; }
+    function nz(v){ return v && v.trim() ? v.trim() : null; }
+    function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
+    function esc(s=''){ return String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
     function collect(listEl){
       const arr = [];
       [...listEl.children].forEach(item=>{
@@ -263,21 +218,12 @@
           const v = (inp.type==='checkbox') ? inp.checked : inp.value.trim();
           obj[k] = v || null;
         });
-        // normalize empty end_date if current=true
         if(obj.current) obj.end_date = null;
         arr.push(obj);
       });
       return arr;
     }
-
-    function nz(v){ return v && v.trim() ? v.trim() : null; }
-    function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
-    function esc(s=''){ return String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
-
-    function showComplete(open){
-      complete.style.display = open ? 'block' : 'none';
-      if(open) location.hash = '#complete';
-    }
+    function showComplete(open){ complete.style.display = open ? 'block' : 'none'; if(open) location.hash='#complete'; }
   })();
   </script>
 </body>
