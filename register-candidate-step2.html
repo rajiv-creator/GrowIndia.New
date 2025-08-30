@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Complete your Profile — Candidate (Step 2)</title>
+  <style>
+    :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+    body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+    .container{max-width:800px;margin:0 auto;padding:24px 16px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
+    label{display:block;margin:12px 0 4px;font-weight:700}
+    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15)}
+    .actions{margin-top:16px}
+    button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+    button.primary:hover{background:var(--blue-600)}
+    .muted{color:var(--muted)}
+    header{background:#fff;border-bottom:1px solid var(--line)}
+    .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:68px}
+    .brand{font-weight:800}
+    .nav-right{display:flex;gap:14px;align-items:center}
+    .nav-right a.link{color:#111827}
+    .btn{padding:9px 14px;border-radius:999px;font-weight:700;color:#fff}
+    .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
+    .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="brand">GrowIndia Jobs</div>
+      <div class="nav-right">
+        <a class="link" href="/jobs.html">Jobs</a>
+        <a class="link" href="/post-job.html">Post a Job</a>
+        <a class="link" href="/login.html">Sign in</a>
+        <a class="btn btn-blue" href="/register-candidate.html">Candidate</a>
+        <a class="btn btn-orange" href="/login.html?role=employer">Employer</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <h1 style="margin:0 0 12px">Tell us more</h1>
+    <div class="muted">Step 2 of 2</div>
+    <section class="card">
+      <form id="form">
+        <label>Years of experience</label>
+        <input id="years_experience" type="number" min="0" placeholder="e.g., 3" />
+        <label>Key skills (comma-separated)</label>
+        <input id="skills" placeholder="e.g., React, Node.js, SQL" />
+        <label>Preferred locations (comma-separated)</label>
+        <input id="preferred_locations" placeholder="e.g., Dehradun, Delhi NCR" />
+        <label>Expected salary (optional)</label>
+        <input id="expected_salary" type="number" min="0" placeholder="e.g., 600000" />
+        <div class="actions">
+          <button class="primary" type="submit">Finish</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/components.js?v=16"></script>
+  <script>
+  (async function(){
+    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
+    const user = await app.getSessionUser();
+    const { data: profile } = await app.getProfile(user.id);
+    if(!profile){ app.go('/register-candidate.html'); return; }
+    if(profile.role === 'employer'){ app.go('/employer-home.html'); return; }
+
+    // prefill
+    if(profile.years_experience!=null) document.getElementById('years_experience').value = profile.years_experience;
+    if(profile.skills) document.getElementById('skills').value = profile.skills;
+    if(profile.preferred_locations) document.getElementById('preferred_locations').value = profile.preferred_locations;
+    if(profile.expected_salary!=null) document.getElementById('expected_salary').value = profile.expected_salary;
+
+    document.getElementById('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const payload = {
+        user_id: user.id,
+        years_experience: toInt(document.getElementById('years_experience').value),
+        skills: orNull(document.getElementById('skills').value.trim()),
+        preferred_locations: orNull(document.getElementById('preferred_locations').value.trim()),
+        expected_salary: toInt(document.getElementById('expected_salary').value)
+      };
+      const { error } = await app.upsertProfile(payload);
+      if(error){ ui.toast(error.message,'error'); return; }
+      ui.toast('Profile updated','success');
+      app.go('/dashboard.html');
+    });
+
+    function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
+    function orNull(v){ return v? v: null }
+  })();
+  </script>
+</body>
+</html>
