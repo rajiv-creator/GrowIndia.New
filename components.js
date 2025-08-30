@@ -1,7 +1,8 @@
-/* components.js v21 — minimal, safe helpers (does not auto-modify the home page) */
+/* components.js v22 */
 (function () {
-  const sb = window.supabase; // created in /config.js
-  // light toasts
+  const sb = window.supabase;
+
+  // tiny toast
   if (!window.ui) {
     window.ui = {
       toast(msg, type = "info") {
@@ -13,15 +14,13 @@
           if (type === "error") el.style.background = "#b91c1c";
           if (type === "success") el.style.background = "#166534";
           document.body.appendChild(el);
-          setTimeout(() => el.remove(), 3200);
-        } catch (e) {
-          alert(msg);
-        }
-      },
+          setTimeout(() => el.remove(), 3000);
+        } catch { alert(msg); }
+      }
     };
   }
 
-  // app helpers used across pages
+  // app helpers (used by register/login/dashboard)
   if (!window.app) {
     window.app = {
       async getSessionUser() {
@@ -30,28 +29,33 @@
         return user;
       },
       async upsertProfile(payload) {
-        // guarantee candidate as default to avoid NOT NULL errors
         if (!payload.role) payload.role = "candidate";
         return sb.from("profiles").upsert(payload, { onConflict: "user_id" });
       },
-      async getProfile(user_id) {
-        return sb.from("profiles").select("*").eq("user_id", user_id).maybeSingle();
-      },
+      // Block unverified users even if Supabase setting allows it
+      isEmailConfirmed(user) {
+        return !!(user?.email_confirmed_at || user?.confirmed_at || user?.user_metadata?.email_confirmed_at);
+      }
     };
   }
 
-  // Optional DB helpers (nothing auto-runs)
+  // very small jobs helper (used on dashboard -> “Recommended jobs”)
   window.db = window.db || {
-    searchJobs: async function ({ q = "", loc = "", type = "all", page = 1, pageSize = 12 } = {}) {
-      let query = sb
-        .from("jobs")
-        .select("id,title,location,employment_type,salary_min,salary_max,company", { count: "exact" })
-        .eq("published", true);
-      if (q) query = query.ilike("title", `%${q}%`);
-      if (loc) query = query.ilike("location", `%${loc}%`);
-      if (type && type !== "all") query = query.eq("employment_type", type);
-      return query.order("created_at", { ascending: false })
-        .range((page - 1) * pageSize, page * pageSize - 1);
-    },
+    async latestJobs(limit = 4) {
+      return sb.from("jobs")
+        .select("id,title,location,employment_type,company", { count: "exact" })
+        .eq("published", true)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+    }
   };
+
+  // generic “scroll-to” action: put data-scroll="#targetId" on any button/link
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-scroll]");
+    if (!el) return;
+    const sel = el.getAttribute("data-scroll");
+    const tgt = document.querySelector(sel);
+    if (tgt) tgt.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 })();
