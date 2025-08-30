@@ -1,161 +1,154 @@
 <script>
-// components.js — v18
+/* =========================================================
+   GrowIndia – Shared components
+   - Header (with conditional CTAs)
+   - Candidate sidebar (injected when signed in)
+   - Small helpers
+   ========================================================= */
 
-(() => {
-  // Expect window.supabase created in /config.js
+(function () {
+  const BRAND = 'GrowIndia Jobs';
   const BLUE = '#151B54';
-  const BLUE_DARK = '#101542';
-  const ORANGE = '#FF6E00';
 
-  // ---------------- UI helpers ----------------
-  const ui = {
-    toast(msg, type='info') {
-      let el = document.createElement('div');
-      el.textContent = msg;
-      el.style.cssText = `
-        position:fixed; right:16px; bottom:16px; z-index:9999;
-        background:${type==='error' ? '#B91C1C' : BLUE};
-        color:#fff; padding:10px 14px; border-radius:10px;
-        box-shadow:0 10px 20px rgba(0,0,0,.18); font:500 14px/1.2 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      `;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 3000);
-    },
-    qs(sel, root=document){ return root.querySelector(sel); },
-    qsa(sel, root=document){ return [...root.querySelectorAll(sel)]; },
-  };
-  window.ui = ui;
+  // Safe Supabase session helper
+  async function getSession() {
+    try {
+      if (!window.supabase || !window.supabase.auth) return null;
+      const { data } = await window.supabase.auth.getSession();
+      return data?.session || null;
+    } catch (e) {
+      console.warn('Session check failed:', e);
+      return null;
+    }
+  }
 
-  // -------------- Header (per-page control) --------------
-  function renderHeader({ showRoleCTAs = true } = {}) {
-    const hdr = document.createElement('header');
-    hdr.innerHTML = `
-      <style>
-        header.site-hd{background:#fff;border-bottom:1px solid #E5E7EB}
-        .hd-wrap{max-width:1200px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
-        .brand{font:700 20px Inter,system-ui; color:${BLUE}}
-        .right{display:flex;gap:12px;align-items:center}
-        .pill{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:999px;font:600 14px Inter,system-ui;color:#fff;background:${BLUE}; box-shadow:0 6px 16px rgba(2,6,23,.12)}
-        .pill.orange{background:${ORANGE};color:#fff}
-        .pill:focus-visible{outline:2px solid ${BLUE}}
-        @media (max-width:560px){ .pill{padding:8px 14px} .brand{font-size:18px}}
-      </style>
-      <div class="hd-wrap">
-        <a class="brand" href="/">GrowIndia Jobs</a>
-        <div class="right">
-          ${showRoleCTAs ? `
-            <a class="pill" href="/register-candidate.html">Candidate</a>
-            <a class="pill orange" href="/login.html?role=employer">Employer</a>
-          ` : ``}
+  function css(strings) {
+    const style = document.createElement('style');
+    style.setAttribute('data-gi', '1');
+    style.textContent = String.raw(strings);
+    document.head.appendChild(style);
+  }
+
+  // ---------- Header ----------
+  async function renderHeader(opts = {}) {
+    const onJobsPage = /\/jobs/i.test(location.pathname);
+    const onDashboard = /\/dashboard/i.test(location.pathname);
+    const bodyWantsHide = document.body.dataset.hideCtas === '1';
+
+    // Default: show CTAs except on jobs/dashboard or when page asks to hide
+    const showCTAs = opts.showCTAs ?? !(onJobsPage || onDashboard || bodyWantsHide);
+
+    const session = await getSession();
+    const isAuthed = !!session;
+
+    const header = document.querySelector('#site-header') || (() => {
+      const h = document.createElement('header');
+      h.id = 'site-header';
+      document.body.prepend(h);
+      return h;
+    })();
+
+    header.innerHTML = `
+      <div class="gi-nav">
+        <a class="gi-brand" href="/">${BRAND}</a>
+        <div class="gi-actions">
+          ${(!showCTAs || isAuthed) ? '' : `
+            <a class="gi-cta gi-candidate" href="/register-candidate.html">Candidate</a>
+            <a class="gi-cta gi-employer"  href="/register-employer.html">Employer</a>
+          `}
         </div>
       </div>
     `;
-    hdr.className = 'site-hd';
-    document.body.prepend(hdr);
+
+    // Header styles (minimal, scoped)
+    css`
+      #site-header{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #eef0f3}
+      .gi-nav{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+      .gi-brand{font-weight:700;text-decoration:none;color:${BLUE}}
+      .gi-actions{display:flex;gap:12px}
+      .gi-cta{display:inline-block;padding:10px 18px;border-radius:999px;font-weight:600;text-decoration:none}
+      .gi-candidate{background:${BLUE};color:#fff}
+      .gi-employer{background:#ff8a00;color:#fff}
+    `;
   }
 
-  // expose minimal “app”
-  const app = {
-    header: renderHeader,
-    async getSessionUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.user ?? null;
-    },
-  };
-  window.app = app;
+  // ---------- Candidate Sidebar ----------
+  async function injectCandidateSidebar() {
+    const onJobsPage = /\/jobs/i.test(location.pathname);
+    const onDashboard = /\/dashboard/i.test(location.pathname);
+    if (!onJobsPage && !onDashboard) return; // rail only on jobs + dashboard
 
-  // ---------------- DB helpers (robust) ----------------
-  // NOTE: We fetch * and filter on the client so we don't crash if a column
-  // name differs (e.g. company vs company_name). Only 'published' is assumed.
-  const db = {
-    async fetchAllPublishedJobs() {
-      // primary attempt with server filter
-      let { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('published', true);
+    const session = await getSession();
+    if (!session) return; // only signed-in users get the rail
 
-      // If RLS or schema mismatch blocks the above, try without server filter
-      if (error) {
-        console.warn('[jobs] primary fetch failed:', error.message);
-        ({ data, error } = await supabase.from('jobs').select('*'));
-        if (error) {
-          throw error;
-        }
+    // Insert sidebar once
+    if (document.querySelector('.gi-rail')) return;
+
+    const rail = document.createElement('aside');
+    rail.className = 'gi-rail';
+    rail.innerHTML = `
+      <div class="gi-rail-card">
+        <div class="gi-rail-meter">
+          <div class="gi-meter-pie"></div>
+          <div class="gi-meter-text">17%</div>
+        </div>
+        <div class="gi-rail-name">Your name</div>
+        <a class="gi-rail-primary" href="/dashboard#complete">Complete profile</a>
+      </div>
+
+      <div class="gi-rail-stats">
+        <div class="gi-stat">
+          <div class="gi-stat-label">Search appearances</div>
+          <div class="gi-stat-num">0</div>
+        </div>
+        <div class="gi-stat">
+          <div class="gi-stat-label">Recruiter actions</div>
+          <div class="gi-stat-num">0</div>
+        </div>
+        <a class="gi-rail-boost" href="/dashboard#boost">Get 3× boost →</a>
+      </div>
+
+      <nav class="gi-rail-nav">
+        <a class="gi-link" href="/dashboard">My home</a>
+        <a class="gi-link gi-link--active" href="/jobs">Jobs</a>
+        <a class="gi-link" href="/companies.html">Companies</a>
+        <a class="gi-link" href="/blogs.html">Blogs</a>
+      </nav>
+    `;
+    document.body.appendChild(rail);
+    document.body.classList.add('gi-with-rail');
+
+    // Styles for rail
+    css`
+      .gi-with-rail{--rail:280px;}
+      @media(min-width:1024px){
+        .gi-with-rail main,.gi-with-rail #content{padding-left:var(--rail)}
+        .gi-rail{position:fixed;top:70px;left:0;width:var(--rail);padding:14px 12px;height:calc(100vh - 70px);overflow:auto;border-right:1px solid #eef0f3;background:#fff;z-index:30}
       }
-      // Ensure only published
-      const safe = (data || []).filter(j => {
-        const v = j.published;
-        return v === true || v === 'true' || v === 1;
-      });
-      return safe;
-    },
+      .gi-rail-card{background:#fff;border:1px solid #eef0f3;border-radius:16px;padding:16px;margin-bottom:12px}
+      .gi-rail-meter{display:flex;align-items:center;gap:12px}
+      .gi-meter-pie{width:64px;height:64px;border-radius:50%;background:conic-gradient(${BLUE} 17%, #e8ecf3 0)}
+      .gi-meter-text{font-weight:700}
+      .gi-rail-name{font-weight:700;margin:6px 0 10px}
+      .gi-rail-primary{display:inline-block;background:${BLUE};color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:600}
+      .gi-rail-stats{background:#fff;border:1px solid #eef0f3;border-radius:16px;padding:14px;margin-bottom:12px}
+      .gi-stat{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+      .gi-stat-label{color:#667085;font-size:14px}
+      .gi-stat-num{font-weight:700}
+      .gi-rail-boost{display:block;margin-top:10px;font-weight:600;text-decoration:none;color:${BLUE}}
+      .gi-rail-nav{background:#fff;border:1px solid #eef0f3;border-radius:16px;padding:8px}
+      .gi-link{display:block;padding:10px 12px;text-decoration:none;border-radius:10px;color:#0f172a}
+      .gi-link--active,.gi-link:hover{background:#f3f5fb}
+    `;
+  }
 
-    /**
-     * Client-side search + filters + pagination
-     * @param {{q?: string, loc?: string, type?: string, page?: number, pageSize?: number}} opts
-     */
-    async searchJobs(opts = {}) {
-      const {
-        q = '', loc = '', type = 'all',
-        page = 1, pageSize = 12
-      } = opts;
+  // ---------- Boot ----------
+  document.addEventListener('DOMContentLoaded', async () => {
+    await renderHeader();       // builds the top header
+    await injectCandidateSidebar(); // adds rail on jobs/dashboard if signed in
+  });
 
-      const all = await db.fetchAllPublishedJobs();
-
-      const term = q.trim().toLowerCase();
-      const locTerm = loc.trim().toLowerCase();
-      const typeTerm = (type || 'all').toLowerCase();
-
-      const read = (obj, ...candidates) => {
-        for (const k of candidates) if (k in obj && obj[k] != null) return String(obj[k]);
-        return '';
-      };
-
-      let filtered = all.filter(j => {
-        const hay = [
-          read(j, 'title'),
-          read(j, 'description'),
-          read(j, 'company'),
-          read(j, 'company_name'),
-          read(j, 'location'),
-          read(j, 'city'),
-          read(j, 'state')
-        ].join(' ').toLowerCase();
-
-        const matchesTerm = term ? hay.includes(term) : true;
-
-        const jobType = read(j, 'employment_type', 'type').toLowerCase();
-        const matchesType = (typeTerm === 'all' || !typeTerm) ? true : jobType.includes(typeTerm);
-
-        const jobLoc = (read(j, 'location', 'city', 'state')).toLowerCase();
-        const matchesLoc = locTerm ? jobLoc.includes(locTerm) : true;
-
-        return matchesTerm && matchesType && matchesLoc;
-      });
-
-      // sort newest first using created_at (fallback to id)
-      filtered.sort((a,b) => {
-        const A = (a.created_at || a.createdAt || a.id || 0);
-        const B = (b.created_at || b.createdAt || b.id || 0);
-        return String(B).localeCompare(String(A));
-      });
-
-      const total = filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      const start = (page - 1) * pageSize;
-      const items = filtered.slice(start, start + pageSize);
-      return { items, total, totalPages };
-    },
-
-    async featuredJobs(limit = 8) {
-      const all = await db.fetchAllPublishedJobs();
-      // same newest-first
-      all.sort((a,b) => String(b.created_at||b.id||0).localeCompare(String(a.created_at||a.id||0)));
-      return all.slice(0, limit);
-    }
-  };
-  window.db = db;
-
+  // Expose for pages that want to control options explicitly
+  window.GI = { renderHeader, injectCandidateSidebar };
 })();
 </script>
