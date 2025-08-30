@@ -17,15 +17,16 @@
 
     /* Header */
     header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:72px}
     .brand{font-weight:800;letter-spacing:.2px}
-    .nav-right{display:flex;gap:14px;align-items:center}
-    .nav-right a.link{color:#111827}
-    .btn{display:inline-block;padding:9px 14px;border-radius:999px;font-weight:700;color:#fff}
+    .nav-right{display:flex;gap:12px;align-items:center}
+    .btn-pill{display:inline-block;padding:10px 16px;border-radius:999px;font-weight:800;color:#fff;box-shadow:0 6px 16px rgba(2,6,23,.12)}
     .btn-blue{background:var(--blue)}
     .btn-blue:hover{background:var(--blue-600)}
+    .btn-blue:focus{outline:3px solid rgba(21,27,84,.22)}
     .btn-orange{background:var(--orange)}
     .btn-orange:hover{filter:brightness(.95)}
+    .btn-orange:focus{outline:3px solid rgba(255,110,0,.25)}
 
     /* Hero */
     .hero{padding:48px 0 24px}
@@ -39,7 +40,7 @@
     .search-field{flex:1;display:flex;align-items:center;padding:4px 12px}
     .search-field input{width:100%;border:0;outline:0;padding:16px 12px;font-size:16px;background:transparent;color:#111827}
     .divider{width:1px;background:var(--line);margin:8px 0}
-    .search-btn{border:0;background:var(--blue);color:#fff;padding:0 22px;font-weight:700;font-size:16px;cursor:pointer}
+    .search-btn{border:0;background:var(--blue);color:#fff;padding:0 22px;font-weight:800;font-size:16px;cursor:pointer}
     .search-btn:hover{background:var(--blue-600)}
     .search-btn:focus{outline:3px solid rgba(21,27,84,.25)}
 
@@ -52,7 +53,12 @@
     .job{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px}
     .job h4{margin:0 0 4px}
     .job .meta{color:var(--muted);font-size:14px}
-    .job a.btn{margin-top:6px;align-self:flex-start}
+    .btn-view{display:inline-block;margin-top:6px;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px}
+
+    /* Articles/Tutorials */
+    .articles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
+    .article{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(2,6,23,.06)}
+    .tag{display:inline-block;font-size:12px;background:#EEF2FF;color:var(--blue);padding:4px 8px;border-radius:999px;margin-bottom:8px}
 
     /* Footer */
     footer{margin-top:48px;background:#fff;border-top:1px solid var(--line)}
@@ -63,6 +69,7 @@
     @media (max-width: 900px){
       .jobs{grid-template-columns:1fr}
       .values{grid-template-columns:1fr}
+      .articles{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -71,11 +78,8 @@
     <div class="container nav">
       <div class="brand">GrowIndia Jobs</div>
       <div class="nav-right">
-        <a class="link" href="/jobs.html">Jobs</a>
-        <a class="link" href="/post-job.html">Post a Job</a>
-        <a class="link" href="/login.html">Sign in</a>
-        <a class="btn btn-blue" href="/register-candidate.html">Candidate</a>
-        <a class="btn btn-orange" href="/login.html?role=employer">Employer</a>
+        <a class="btn-pill btn-blue" href="/register-candidate.html">Candidate</a>
+        <a class="btn-pill btn-orange" href="/login.html?role=employer">Employer</a>
       </div>
     </div>
   </header>
@@ -104,11 +108,22 @@
       <div class="card"><strong>For employers</strong><br><span class="muted">Simple tools to post, review, and hire.</span></div>
     </section>
 
-    <section style="margin: 12px 0 8px; display:flex; align-items:center; justify-content:space-between">
+    <section style="margin:12px 0 8px;display:flex;align-items:center;justify-content:space-between">
       <h3 style="margin:0">Featured jobs</h3>
       <a href="/jobs.html">Browse all →</a>
     </section>
-    <section id="featured" class="jobs" aria-live="polite"></section>
+    <section id="featured" class="jobs" aria-live="polite">
+      <div class="muted">Loading…</div>
+    </section>
+
+    <!-- Articles & Tutorials (admin-editable) -->
+    <section style="margin-top:28px; display:flex; align-items:center; justify-content:space-between">
+      <h3 style="margin:0">Articles & Tutorials</h3>
+      <a href="/admin-copy.html" class="muted" title="Admins can edit">Edit →</a>
+    </section>
+    <section id="articles" class="articles" aria-live="polite">
+      <div class="muted">Loading…</div>
+    </section>
   </main>
 
   <footer>
@@ -121,8 +136,7 @@
       </div>
       <div>
         <h5>Employer</h5>
-        <a href="/post-job.html">Post a job</a>
-        <a href="#">Pricing</a>
+        <a href="#">—</a>
       </div>
       <div>
         <h5>Help</h5>
@@ -138,9 +152,10 @@
   </footer>
 
   <script src="/config.js"></script>
-  <script src="/components.js?v=16"></script>
+  <script src="/components.js?v=17"></script>
   <script>
     (function(){
+      // Search submit
       const form = document.getElementById('searchForm');
       form.addEventListener('submit', (e)=>{
         e.preventDefault();
@@ -150,15 +165,18 @@
         window.location.href = `/jobs.html?q=${q}&loc=${loc}&type=${type}`;
       });
 
+      // Featured jobs
       async function loadFeatured(){
         const grid = document.getElementById('featured');
-        grid.innerHTML = '<div class="muted">Loading…</div>';
         try{
           const { data, error } = await db.featuredJobs();
           if(error) throw error;
-          if(!data || !data.length){ grid.innerHTML = '<div class="muted">No jobs yet.</div>'; return; }
+          if(!data || !data.length){ grid.innerHTML = '<div class="muted">No published jobs yet.</div>'; return; }
           grid.innerHTML = data.map(j=> jobCard(j)).join('');
-        }catch(err){ ui.toast(err.message || 'Failed to load jobs', 'error'); }
+        }catch(err){
+          grid.innerHTML = '<div class="muted">Couldn’t load jobs. Please try again later.</div>';
+          ui.toast(err.message || 'Failed to load jobs','error');
+        }
       }
       function jobCard(j){
         const salary = (j.salary_min||j.salary_max) ? `₹${j.salary_min||''}${j.salary_min&&j.salary_max?'–':''}${j.salary_max||''}` : '—';
@@ -166,11 +184,38 @@
           <h4>${escapeHtml(j.title)}</h4>
           <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
           <div class="meta">Salary: ${salary}</div>
-          <a class="btn btn-blue" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
-        </article>`
+          <a class="btn-view" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
+        </article>`;
       }
+      // Articles
+      async function loadArticles(){
+        const area = document.getElementById('articles');
+        try{
+          const { data, error } = await db.getSiteCopy('home_articles');
+          if(error) throw error;
+          const items = (data?.content?.items)||[];
+          if(!items.length){ area.innerHTML = '<div class="muted">No articles yet.</div>'; return; }
+          area.innerHTML = items.map(a => articleCard(a)).join('');
+        }catch(err){
+          area.innerHTML = '<div class="muted">Couldn’t load articles.</div>';
+          ui.toast(err.message || 'Failed to load articles','error');
+        }
+      }
+      function articleCard(a){
+        const title = escapeHtml(a.title||'Article');
+        const url = a.url || '#';
+        const tag = escapeHtml(a.tag||'Tutorial');
+        return `<article class="article">
+          <span class="tag">${tag}</span>
+          <h4 style="margin:0 0 6px"><a href="${url}" target="_blank" rel="noopener">${title}</a></h4>
+          <a href="${url}" target="_blank" rel="noopener">Read →</a>
+        </article>`;
+      }
+
       function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+
       loadFeatured();
+      loadArticles();
     })();
   </script>
 </body>
