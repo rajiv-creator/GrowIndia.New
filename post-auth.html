@@ -4,14 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Redirecting…</title>
-  <style>
-    body{font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:grid;place-items:center;height:100dvh;color:#0f172a}
-  </style>
+  <style>body{font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:grid;place-items:center;height:100dvh;color:#0f172a}</style>
 </head>
 <body>
   <div>Signing you in and routing…</div>
   <script src="/config.js"></script>
-  <script src="/components.js?v=16"></script>
+  <script src="/components.js?v=17"></script>
   <script>
   (async function(){
     await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
