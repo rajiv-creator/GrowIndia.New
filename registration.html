@@ -14,13 +14,15 @@
     label{display:block;margin:10px 0 6px;font-weight:600}
     input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px}
     button{margin-top:14px;padding:12px 16px;border:none;border-radius:10px;background:#0ea5e9;color:#fff;font-weight:700;cursor:pointer}
+    .muted{color:#64748b}
   </style>
 </head>
 <body>
   <main class="wrap">
     <div class="card">
       <h1 style="margin:0 0 6px">Create your profile</h1>
-      <p style="color:#64748b;margin:0 0 14px">Tell us who you are so we can take you to the right dashboard.</p>
+      <p class="muted" id="who"></p>
+
       <form id="regForm">
         <label for="role">I am a</label>
         <select id="role" required>
@@ -41,32 +43,33 @@
   </main>
 
   <script>
-    (async function(){
-      const { requireAuth, db, ui } = window.app;
-      let user; try { user = await requireAuth(); } catch { window.location.replace('/login.html'); return; }
+  (async function(){
+    const { requireAuth, db, ui } = window.app;
+    let user; try { user = await requireAuth(); } catch { window.location.replace('/login.html'); return; }
+    document.getElementById('who').textContent = `Signed in as ${user.email}`;
 
-      // If profile already exists, skip
+    // If profile already exists, route now
+    try {
+      const prof = await db.getProfile(user.id);
+      if (prof?.role === 'candidate') return window.location.replace('/dashboard.html');
+      if (prof?.role === 'employer')  return window.location.replace('/employer-home.html');
+    } catch {}
+
+    document.getElementById('regForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const role = document.getElementById('role').value;
+      const full_name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      if (!role) return ui.error('Please choose a role');
+      if (!full_name) return ui.error('Name is required');
       try {
-        const prof = await db.getProfile(user.id);
-        if (prof?.role === 'candidate') return window.location.replace('/dashboard.html');
-        if (prof?.role === 'employer')  return window.location.replace('/employer-home.html');
-      } catch {}
-
-      document.getElementById('regForm').addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const role = document.getElementById('role').value;
-        const full_name = document.getElementById('name').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        if (!role) return ui.error('Please choose a role');
-        if (!full_name) return ui.error('Name is required');
-        try {
-          await db.saveProfile({ user_id: user.id, role, full_name, phone });
-          ui.success('Profile saved');
-          if (role==='employer') window.location.replace('/employer-home.html');
-          else window.location.replace('/dashboard.html');
-        } catch(err){ console.error(err); ui.error('Could not save profile'); }
-      });
-    })();
+        await db.saveProfile({ user_id: user.id, role, full_name, phone });
+        ui.success('Profile saved');
+        if (role==='employer') window.location.replace('/employer-home.html');
+        else window.location.replace('/dashboard.html');
+      } catch(err){ console.error(err); ui.error('Could not save profile'); }
+    });
+  })();
   </script>
 </body>
 </html>
