@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finishing sign-in…</title>
+<style>
+  body{font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;background:#F6F8FC}
+  .wrap{max-width:560px;margin:12vh auto;background:#fff;border:1px solid #E5E7EB;border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
+  h1{margin:0 0 6px;color:#151B54}
+  .muted{color:#64748B}
+  a.btn{display:inline-block;margin-top:12px;background:#151B54;color:#fff;padding:10px 14px;border-radius:12px;text-decoration:none;font-weight:800}
+</style>
+<div class="wrap">
+  <h1>Checking your verification…</h1>
+  <div class="muted">Please wait a moment.</div>
+  <div id="state" class="muted" style="margin-top:12px"></div>
+  <a id="go" class="btn" href="/" style="display:none">Continue</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script>
+(async function(){
+  const out = (m)=>{ document.getElementById('state').textContent = m };
+  try{
+    // Supabase (detectSessionInUrl: true) will process the hash automatically.
+    // Give the SDK a tick to store the session, then route.
+    await new Promise(r=>setTimeout(r, 600));
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      out('Email verified. Signing you in and finishing setup...');
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user?.id) {
+          // Ensure profile exists
+          await supabase.from('profiles').upsert({ user_id: userData.user.id, role: 'candidate' }, { onConflict:'user_id' });
+        }
+      } catch {}
+      window.location.replace('/dashboard.html?welcome=1');
+    } else {
+      out('Your email is verified. You can now sign in.');
+      const go = document.getElementById('go'); go.style.display='inline-block'; go.href='/register-candidate.html?verified=1';
+    }
+  }catch(e){
+    out(e.message || 'Something went wrong.');
+    const go = document.getElementById('go'); go.style.display='inline-block';
+  }
+})();
+</script>
