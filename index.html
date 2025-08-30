@@ -93,34 +93,31 @@
     </div>
   </footer>
 
+  <!-- Load order MUST be: UMD library -> config.js -> components.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="/config.js"></script>
-  <script src="/components.js?v=17"></script>
+  <script src="/components.js?v=18"></script>
   <script>
-    // 1) Clean unwanted query-string on home
+    // Clean unwanted query-string on home
     (function cleanHomeQS(){
       const p = location.pathname;
       if ((p === '/' || p === '/index.html') && location.search){
         const s = new URLSearchParams(location.search);
         const known = ['q','loc','type','page'];
-        if ([...s.keys()].every(k=>known.includes(k))) {
-          history.replaceState(null,'','/');
-        }
+        if ([...s.keys()].every(k=>known.includes(k))) history.replaceState(null,'','/');
       }
     })();
 
-    // 2) Search
-    (function(){
-      const form = document.getElementById('searchForm');
-      form.addEventListener('submit', (e)=>{
-        e.preventDefault();
-        const q = encodeURIComponent(document.getElementById('q').value.trim());
-        const loc = encodeURIComponent(document.getElementById('loc').value.trim());
-        const type = 'all';
-        window.location.href = `/jobs.html?q=${q}&loc=${loc}&type=${type}`;
-      });
-    })();
+    // Search → /jobs.html
+    document.getElementById('searchForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const q = encodeURIComponent(document.getElementById('q').value.trim());
+      const loc = encodeURIComponent(document.getElementById('loc').value.trim());
+      const type = 'all';
+      window.location.href = `/jobs.html?q=${q}&loc=${loc}&type=${type}`;
+    });
 
-    // 3) Featured + Articles
+    // Featured + Articles
     (async function loadData(){
       // Featured jobs
       try{
