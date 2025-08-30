@@ -49,8 +49,10 @@
     </section>
   </div>
 
+  <!-- Scripts in correct order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="/config.js"></script>
-  <script src="/components.js?v=17"></script>
+  <script src="/components.js?v=18"></script>
   <script>
     (async function(){
       await app.requireAuth({ redirectTo: '/register-candidate.html' });
