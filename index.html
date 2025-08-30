@@ -1,281 +1,871 @@
+# GrowIndia Jobs — Home + Candidate Registration (v15)
+
+All files are **copy‑paste ready**. Keep your existing `/config.js` (creates `window.supabase` from `window.SUPABASE_URL` and `window.SUPABASE_ANON_KEY`). Update `/components.js` with the version below (note the cache‑buster `?v=15`).
+
+---
+
+## 1) `/index.html`
+
+```html
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>GrowIndia Jobs — Find your next role</title>
-  <meta name="description" content="Browse fresh jobs across India. Search fast, filter smart, and apply in one step. Employers can post in minutes.">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=12"></script>
-  <script src="/components.js?v=12"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GrowIndia Jobs</title>
   <style>
     :root{
-      --bg:#0ea5e9; --bg2:#2563eb; --ink:#0f172a; --muted:#64748b;
-      --card:#fff; --line:#e5e7eb; --chip:#eef2ff; --pill:#f1f5f9;
-      --radius:16px; --shadow:0 10px 30px rgba(2,6,23,.08)
+      --blue:#0000FF; --blue-600:#0000D0; --orange:#FF6E00; --ink:rgba(15,23,42,.9);
+      --bg:#F6F8FC; --card:#fff; --line:#E5E7EB; --muted:#64748B;
     }
-    *{box-sizing:border-box}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;color:var(--ink);background:#fafafa}
-    a{color:#0ea5e9;text-decoration:none}
-    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+    html,body{margin:0;padding:0;background:var(--bg);color:#0f172a;font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;}
+    a{color:var(--blue);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1200px;margin:0 auto;padding:0 16px}
+    /* Header */
+    header{background:#fff;border-bottom:1px solid var(--line)}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .brand{font-weight:700;letter-spacing:.2px}
+    .nav a{color:#111827;margin-left:16px}
+    .nav a:hover{color:var(--blue)}
 
-    /* NAV */
-    .nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid var(--line)}
-    .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
-    .brand{font-weight:900;font-size:28px;letter-spacing:.2px}   /* bigger brand */
-    .nav-links{display:flex;gap:24px;align-items:center}
-    .nav-links a{font-size:18px}                                /* bigger links */
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:700;cursor:pointer}
-    .btn.primary{background:linear-gradient(135deg,var(--bg),var(--bg2));color:#fff;border:none}
-    .btn.small{padding:8px 12px;border-radius:10px;font-weight:600}
+    /* Hero */
+    .hero{padding:48px 0 24px}
+    .hero h1{font-size:36px;line-height:1.15;margin:0 0 12px;color:var(--ink)}
+    .muted{color:var(--muted)}
 
-    /* HERO */
-    .hero{
-      background:
-        radial-gradient(1200px 400px at 80% -50%, rgba(14,165,233,.35), transparent 60%),
-        radial-gradient(900px 380px at 10% -40%, rgba(37,99,235,.35), transparent 60%),
-        linear-gradient(180deg, #f8fbff, #ffffff 38%, #f7fbff 100%);
-      border-bottom:1px solid var(--line);
-    }
-    .hero-inner{padding:48px 0 22px}
-    .hero h1{font-size:36px;line-height:1.15;margin:0 0 8px}     /* smaller headline */
-    .sub{color:var(--muted);font-size:18px;margin:0 0 20px}
-    .search-card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:14px;display:grid;grid-template-columns:1fr 220px 220px 140px;gap:10px}
-    .search-input,.search-select{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px}
-    .search-input input{border:none;outline:none;width:100%;font-size:16px}
-    .search-select select{border:none;outline:none;width:100%;background:#fff;font-size:15px;color:var(--ink)}
-    .search-actions .btn{width:100%}
-    .trending{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .chip{background:var(--pill);border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer;color:#0b1220}
-    .chip:hover{border-color:#cbd5e1;background:#eef2ff}
+    /* Embossed search bar */
+    .search-wrap{max-width:960px;margin:24px auto 0;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);display:flex;align-items:stretch;overflow:hidden}
+    .search-field{flex:1;display:flex;align-items:center;padding:4px 12px}
+    .search-field input{width:100%;border:0;outline:0;padding:16px 12px;font-size:16px;background:transparent;color:#111827}
+    .divider{width:1px;background:var(--line);margin:8px 0}
+    .search-btn{border:0;background:var(--blue);color:#fff;padding:0 22px;font-weight:600;font-size:16px;cursor:pointer}
+    .search-btn:hover{background:var(--blue-600)}
+    .search-btn:focus{outline:3px solid rgba(0,0,255,.25)}
 
-    /* SECTIONS */
-    .section{padding:28px 0}
-    .section h2{margin:0 0 14px}
-    .grid{display:grid;gap:16px}
-    .grid.jobs{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
-    .job-title{font-weight:800;font-size:18px;margin:0 0 6px}
-    .muted{color:var(--muted);font-size:14px}
-    .pill{display:inline-block;background:var(--chip);padding:4px 8px;border-radius:999px;font-size:12px}
-    .job-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-    .salary{color:#0a3a5f;font-weight:700;font-size:14px}
-    .companies{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
-    .co-card{display:flex;align-items:center;gap:10px}
-    .co-logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#e2e8f0,#f8fafc);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;color:#334155}
+    /* CTA cards */
+    .cta-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:32px 0}
+    .cta{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 4px 14px rgba(2,6,23,.06);display:flex;flex-direction:column;gap:12px}
+    .cta h3{margin:0 0 6px}
+    .cta .primary{display:inline-block;padding:10px 14px;border-radius:12px;color:#fff;font-weight:600}
+    .cta .primary:hover{filter:brightness(.95)}
+    .cta .link{color:var(--muted)}
 
-    /* INFO STRIP */
-    .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px}
-    .info{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:center}
-    .info strong{display:block;font-size:18px}
-    .info span{color:var(--muted);font-size:13px}
+    .candidate{border-color:rgba(0,0,255,.15)}
+    .candidate .primary{background:var(--blue)}
+    .employer{border-color:rgba(255,110,0,.25)}
+    .employer .primary{background:var(--orange)}
 
-    /* EMPLOYER CTA */
-    .cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(135deg,var(--bg),var(--bg2));color:#fff;border-radius:18px;padding:18px 20px}
-    .cta p{margin:0;color:#eaf6ff}
+    .cta-actions{display:flex;gap:10px;align-items:center}
 
-    /* FOOTER */
-    footer{border-top:1px solid var(--line);background:#fff;margin-top:10px}
-    .fwrap{max-width:1200px;margin:0 auto;padding:24px 20px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px}
-    .fcol h4{margin:0 0 8px}
-    .fcol a{display:block;color:#0f172a;font-size:14px;margin:6px 0}
-    .bottom{padding:14px 20px;color:#64748b;text-align:center;border-top:1px solid var(--line)}
-    @media (max-width:980px){
-      .search-card{grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:10px}
-      .search-actions{grid-column:1 / -1}
-      .fwrap{grid-template-columns:1fr 1fr}
+    /* Value props */
+    .values{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 32px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 14px rgba(2,6,23,.06)}
+
+    /* Featured jobs */
+    .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .job{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px}
+    .job h4{margin:0 0 4px}
+    .job .meta{color:var(--muted);font-size:14px}
+    .job a.btn{margin-top:6px;align-self:flex-start;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px}
+
+    /* Footer */
+    footer{margin-top:48px;background:#fff;border-top:1px solid var(--line)}
+    .foot{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:24px 0}
+    .foot h5{margin:0 0 8px;color:var(--ink)}
+    .foot a{color:#111827;display:block;margin:6px 0}
+
+    @media (max-width: 900px){
+      .cta-row{grid-template-columns:1fr}
+      .jobs{grid-template-columns:1fr}
+      .values{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <!-- NAV -->
-  <header class="nav">
-    <div class="container nav-inner">
+  <header>
+    <div class="container nav">
       <div class="brand">GrowIndia Jobs</div>
-      <nav class="nav-links">
+      <nav>
         <a href="/jobs.html">Jobs</a>
-        <a href="/employer.html">Post a Job</a>
-        <a class="btn small" href="/login.html">Sign in</a>
+        <a href="/post-job.html">Post a Job</a>
+        <a href="/login.html">Sign in</a>
       </nav>
     </div>
   </header>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="container hero-inner">
-      <h1>Find your next job in minutes.</h1>
-      <p class="sub">Search thousands of roles across India. No login to browse. One-step applications.</p>
+  <main class="container">
+    <section class="hero">
+      <h1>Find work you’ll actually like.</h1>
+      <div class="muted">Search by title, keyword, or location.</div>
 
-      <form id="searchForm" class="search-card" autocomplete="off">
-        <div class="search-input">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#475569" stroke-width="2"/><path d="M20 20l-3.2-3.2" stroke="#475569" stroke-width="2" stroke-linecap="round"/></svg>
-          <input id="q" placeholder="Job title, skills or company" />
-        </div>
-        <div class="search-select">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C7 2 3 6 3 11c0 6 9 11 9 11s9-5 9-11c0-5-4-9-9-9Z" stroke="#475569" stroke-width="2"/><circle cx="12" cy="11" r="3" stroke="#475569" stroke-width="2"/></svg>
-          <select id="loc"><option value="all">All locations</option></select>
-        </div>
-        <div class="search-select">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="6" rx="2" stroke="#475569" stroke-width="2"/><rect x="3" y="14" width="18" height="6" rx="2" stroke="#475569" stroke-width="2"/></svg>
-          <select id="type"><option value="all">All types</option></select>
-        </div>
-        <div class="search-actions">
-          <button class="btn primary" type="submit">Search Jobs</button>
-        </div>
+      <form id="searchForm" class="search-wrap" role="search">
+        <label class="search-field" aria-label="Keywords">
+          <input id="q" name="q" placeholder="Job title, keywords, or company" />
+        </label>
+        <div class="divider" aria-hidden="true"></div>
+        <label class="search-field" aria-label="Location">
+          <input id="loc" name="loc" placeholder="Dehradun, Uttarakhand" />
+        </label>
+        <button class="search-btn" type="submit">Find jobs</button>
       </form>
+    </section>
 
-      <div class="trending" id="trending"></div>
-
-      <div class="strip">
-        <div class="info"><strong>1-step apply</strong><span>No accounts for job seekers</span></div>
-        <div class="info"><strong>Zero fees</strong><span>Always free to browse</span></div>
-        <div class="info"><strong>For employers</strong><span>Post a job in minutes</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURED JOBS -->
-  <section class="section">
-    <div class="container">
-      <h2>Featured jobs</h2>
-      <div id="jobs" class="grid jobs"></div>
-      <div style="margin-top:10px"><a href="/jobs.html">See all jobs →</a></div>
-    </div>
-  </section>
-
-  <!-- TOP COMPANIES -->
-  <section class="section" style="background:#f8fafc;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-    <div class="container">
-      <h2>Top companies hiring</h2>
-      <div id="companies" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))"></div>
-    </div>
-  </section>
-
-  <!-- EMPLOYER CTA -->
-  <section class="section">
-    <div class="container">
-      <div class="cta">
-        <div>
-          <h3 style="margin:0 0 6px">Hiring? Post a job today.</h3>
-          <p>Magic-link sign in, simple dashboard, and a clean applications inbox.</p>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <a class="btn" href="/employer-apps.html">View inbox</a>
-          <a class="btn primary" href="/employer.html">Post a job</a>
+    <section class="cta-row">
+      <div class="cta candidate">
+        <h3>I’m a Candidate</h3>
+        <p class="muted">Build your profile and apply in one step.</p>
+        <div class="cta-actions">
+          <a class="primary" href="/register-candidate.html">Register</a>
+          <a class="link" href="/login.html">Sign in</a>
         </div>
       </div>
-    </div>
-  </section>
+      <div class="cta employer">
+        <h3>I’m an Employer</h3>
+        <p class="muted">Post jobs and manage applications easily.</p>
+        <div class="cta-actions">
+          <a class="primary" href="/login.html?role=employer">Employer login</a>
+        </div>
+      </div>
+    </section>
 
-  <!-- FOOTER -->
+    <section class="values">
+      <div class="card"><strong>1‑step apply</strong><br><span class="muted">Fast applications with your saved profile.</span></div>
+      <div class="card"><strong>Zero fees</strong><br><span class="muted">No charges for candidates.</span></div>
+      <div class="card"><strong>For employers</strong><br><span class="muted">Simple tools to post, review, and hire.</span></div>
+    </section>
+
+    <section style="margin: 12px 0 8px; display:flex; align-items:center; justify-content:space-between">
+      <h3 style="margin:0">Featured jobs</h3>
+      <a href="/jobs.html">Browse all →</a>
+    </section>
+    <section id="featured" class="jobs" aria-live="polite"></section>
+  </main>
+
   <footer>
-    <div class="fwrap">
-      <div class="fcol">
-        <h4>GrowIndia Jobs</h4>
-        <a href="/jobs.html">Browse jobs</a>
-        <a href="/employer.html">Post a job</a>
-        <a href="/login.html">Sign in</a>
+    <div class="container foot">
+      <div>
+        <h5>About</h5>
+        <a href="#">Company</a>
+        <a href="#">Team</a>
+        <a href="#">Careers</a>
       </div>
-      <div class="fcol">
-        <h4>For job seekers</h4>
-        <a href="/jobs.html?type=full-time">Full-time</a>
-        <a href="/jobs.html?type=internship">Internships</a>
-        <a href="/jobs.html?type=contract">Contract</a>
+      <div>
+        <h5>Employer</h5>
+        <a href="/post-job.html">Post a job</a>
+        <a href="#">Pricing</a>
       </div>
-      <div class="fcol">
-        <h4>For employers</h4>
-        <a href="/employer.html">Post a job</a>
-        <a href="/employer-edit.html">Manage jobs</a>
-        <a href="/employer-apps.html">Applications inbox</a>
+      <div>
+        <h5>Help</h5>
+        <a href="#">Support</a>
+        <a href="#">Guides</a>
       </div>
-      <div class="fcol">
-        <h4>Company</h4>
-        <a href="#">About</a>
-        <a href="#">Contact</a>
+      <div>
+        <h5>Legal</h5>
         <a href="#">Terms</a>
+        <a href="#">Privacy</a>
       </div>
     </div>
-    <div class="bottom">© <span id="year"></span> GrowIndia Jobs</div>
   </footer>
 
+  <script src="/config.js"></script>
+  <script src="/components.js?v=15"></script>
   <script>
-    (async function(){
-      const { db, escapeHTML, ui } = window.app;
-
-      // Filters (for the select boxes)
-      try {
-        const { locations, employment_types } = await db.distinctJobFilters();
-        const locSel = document.getElementById('loc');
-        const typeSel = document.getElementById('type');
-        locSel.insertAdjacentHTML('beforeend', locations.map(v=>`<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`).join(''));
-        typeSel.insertAdjacentHTML('beforeend', employment_types.map(v=>`<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`).join(''));
-      } catch(e){ console.warn(e); }
-
-      // Trending chips
-      const trending = document.getElementById('trending');
-      const base = ['Software Engineer','Product Manager','Sales','Marketing','Data Analyst','HR'];
-      try {
-        const { rows } = await db.listJobsPaged({ page:1, pageSize:12, sort:'newest' });
-        const extra = Array.from(new Set(rows.map(j => (j.title||'').split(/\s+/)[0]).filter(Boolean))).slice(0,6);
-        const chips = [...base.slice(0,4), ...extra].slice(0,8);
-        trending.innerHTML = chips.map(c=>`<span class="chip" data-q="${escapeHTML(c)}">${escapeHTML(c)}</span>`).join('');
-        trending.addEventListener('click', (e)=>{
-          const chip = e.target.closest('.chip'); if (!chip) return;
-          const q = chip.dataset.q || '';
-          window.location.href = `/jobs.html?q=${encodeURIComponent(q)}&page=1`;
-        });
-      } catch {}
-
-      // Featured jobs + companies
-      async function loadJobs(){
-        try {
-          const { rows } = await db.listJobsPaged({ page:1, pageSize:8, sort:'newest' });
-          const el = document.getElementById('jobs');
-          el.innerHTML = rows.map(j => `
-            <div class="card">
-              <div class="job-title"><a href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a></div>
-              <div class="muted" style="margin:6px 0">
-                ${escapeHTML(j.company?.name || '—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
-              </div>
-              <div class="job-actions">
-                <div class="salary">${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}</div>
-                <a class="btn small" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
-              </div>
-            </div>
-          `).join('');
-
-          const co = Array.from(new Set(rows.map(r=>r.company?.name).filter(Boolean))).slice(0,8);
-          const companies = document.getElementById('companies');
-          companies.innerHTML = co.map(name => `
-            <div class="card co-card">
-              <div class="co-logo">${escapeHTML((name||'')[0] || 'C')}</div>
-              <div>
-                <div style="font-weight:700">${escapeHTML(name)}</div>
-                <a href="/jobs.html?q=${encodeURIComponent(name)}">View roles →</a>
-              </div>
-            </div>
-          `).join('');
-        } catch (err) { console.error(err); ui.error('Failed to load featured jobs'); }
-      }
-      loadJobs();
-
-      // FIXED: Search submit (don’t shadow window.location)
-      document.getElementById('searchForm').addEventListener('submit', (e)=>{
+    (function(){
+      const form = document.getElementById('searchForm');
+      form.addEventListener('submit', (e)=>{
         e.preventDefault();
-        const qVal   = document.getElementById('q').value.trim();
-        const locVal = document.getElementById('loc').value;
-        const typeVal= document.getElementById('type').value;
-        const params = new URLSearchParams();
-        if (qVal) params.set('q', qVal);
-        if (locVal && locVal !== 'all') params.set('location', locVal);
-        if (typeVal && typeVal !== 'all') params.set('type', typeVal);
-        params.set('page','1');
-        window.location.href = '/jobs.html' + (params.toString() ? '?' + params.toString() : '');
+        const q = encodeURIComponent(document.getElementById('q').value.trim());
+        const loc = encodeURIComponent(document.getElementById('loc').value.trim());
+        const type = 'all';
+        window.location.href = `/jobs.html?q=${q}&loc=${loc}&type=${type}`;
       });
 
-      document.getElementById('year').textContent = new Date().getFullYear();
+      async function loadFeatured(){
+        const grid = document.getElementById('featured');
+        grid.innerHTML = '<div class="muted">Loading…</div>';
+        try{
+          const { data, error } = await db.featuredJobs();
+          if(error) throw error;
+          if(!data || !data.length){ grid.innerHTML = '<div class="muted">No jobs yet.</div>'; return; }
+          grid.innerHTML = data.map(j=> jobCard(j)).join('');
+        }catch(err){ ui.toast(err.message || 'Failed to load jobs', 'error'); }
+      }
+
+      function jobCard(j){
+        const salary = (j.salary_min||j.salary_max) ? `₹${j.salary_min||''}${j.salary_min&&j.salary_max?'–':''}${j.salary_max||''}` : '—';
+        return `<article class="job">
+          <h4>${escapeHtml(j.title)}</h4>
+          <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
+          <div class="meta">Salary: ${salary}</div>
+          <a class="btn" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
+        </article>`
+      }
+
+      function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+
+      loadFeatured();
     })();
   </script>
 </body>
 </html>
+```
+
+---
+
+## 2) `/register-candidate.html` (Step‑1)
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register — Candidate (Step 1)</title>
+  <style>
+    :root{--blue:#0000FF;--blue-600:#0000D0;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
+    .container{max-width:1000px;margin:0 auto;padding:24px 16px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:0;overflow:hidden}
+    .grid{display:grid;grid-template-columns:1fr 1fr}
+    .left{background:#fff;padding:24px;border-right:1px solid var(--line)}
+    .left h2{margin-top:0}
+    .bullets{color:var(--muted)}
+    .bullets li{margin:8px 0}
+    .right{padding:24px}
+    label{display:block;margin:12px 0 4px;color:#0f172a;font-weight:600}
+    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;outline:0}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.15)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{margin-top:16px;display:flex;gap:10px;align-items:center}
+    button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+    button.primary:hover{background:var(--blue-600)}
+    .muted{color:var(--muted)}
+    @media (max-width: 900px){.grid{grid-template-columns:1fr}.left{border-right:0;border-bottom:1px solid var(--line)}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="margin:0 0 12px">Create your candidate profile</h1>
+    <div class="muted">Step 1 of 2</div>
+
+    <section class="card grid">
+      <aside class="left">
+        <h2>On registering, you can…</h2>
+        <ul id="bullets" class="bullets"><li>Loading…</li></ul>
+        <div style="margin-top:16px" class="muted">Admin can edit this copy in <a href="/admin-copy.html">Admin Copy</a>.</div>
+      </aside>
+      <form id="form" class="right">
+        <div class="muted" id="signedInAs"></div>
+        <label>Full name *</label>
+        <input id="full_name" required placeholder="e.g., Ananya Sharma" />
+
+        <label>Mobile number *</label>
+        <input id="phone" required placeholder="e.g., 9876543210" />
+
+        <div class="row">
+          <div>
+            <label>Current location (optional)</label>
+            <input id="current_location" placeholder="City, State" />
+          </div>
+          <div>
+            <label>Headline (optional)</label>
+            <input id="headline" placeholder="e.g., Frontend Developer" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" type="submit">Continue</button>
+          <span class="muted">You’ll add experience & skills in Step 2.</span>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/components.js?v=15"></script>
+  <script>
+  (async function(){
+    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
+    const user = await app.getSessionUser();
+    document.getElementById('signedInAs').textContent = user?.email ? `Signed in as ${user.email}` : '';
+
+    // Load admin-editable bullets
+    try{
+      const { data } = await db.getSiteCopy('candidate_register_bullets');
+      const bullets = (data?.content?.bullets)||[];
+      const ul = document.getElementById('bullets');
+      ul.innerHTML = bullets.length ? bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join('') : '<li>Build your profile and get noticed</li>';
+    }catch(e){ /* non-fatal */ }
+
+    // Prefill if profile exists; redirect if step 2 already done
+    const { data: profile } = await app.getProfile(user.id);
+    if(profile){
+      document.getElementById('full_name').value = profile.full_name||'';
+      document.getElementById('phone').value = profile.phone||'';
+      document.getElementById('current_location').value = profile.current_location||'';
+      document.getElementById('headline').value = profile.headline||'';
+      // If step 2 complete → dashboard, else stay
+      if(profile.role === 'employer') { app.go('/employer-home.html'); return; }
+      const step2Done = profile.years_experience != null || (profile.skills && profile.skills.trim() !== '');
+      if(step2Done){ app.go('/dashboard.html'); return; }
+    }
+
+    document.getElementById('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const full_name = document.getElementById('full_name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      if(!full_name || !phone){ ui.toast('Name and mobile are required','error'); return; }
+      const payload = {
+        user_id: user.id,
+        role: 'candidate',
+        full_name,
+        phone,
+        current_location: document.getElementById('current_location').value.trim() || null,
+        headline: document.getElementById('headline').value.trim() || null,
+      };
+      const { error } = await app.upsertProfile(payload);
+      if(error){ ui.toast(error.message,'error'); return; }
+      app.go('/register-candidate-step2.html');
+    });
+
+    function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+  })();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 3) `/register-candidate-step2.html` (Step‑2)
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Complete your Profile — Candidate (Step 2)</title>
+  <style>
+    :root{--blue:#0000FF;--blue-600:#0000D0;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
+    .container{max-width:800px;margin:0 auto;padding:24px 16px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
+    label{display:block;margin:12px 0 4px;font-weight:700}
+    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.15)}
+    .actions{margin-top:16px}
+    button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+    button.primary:hover{background:var(--blue-600)}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="margin:0 0 12px">Tell us more</h1>
+    <div class="muted">Step 2 of 2</div>
+    <section class="card">
+      <form id="form">
+        <label>Years of experience</label>
+        <input id="years_experience" type="number" min="0" placeholder="e.g., 3" />
+
+        <label>Key skills (comma‑separated)</label>
+        <input id="skills" placeholder="e.g., React, Node.js, SQL" />
+
+        <label>Preferred locations (comma‑separated)</label>
+        <input id="preferred_locations" placeholder="e.g., Dehradun, Delhi NCR" />
+
+        <label>Expected salary (optional)</label>
+        <input id="expected_salary" type="number" min="0" placeholder="e.g., 600000" />
+
+        <div class="actions">
+          <button class="primary" type="submit">Finish</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/components.js?v=15"></script>
+  <script>
+  (async function(){
+    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
+    const user = await app.getSessionUser();
+    const { data: profile } = await app.getProfile(user.id);
+    if(!profile){ app.go('/register-candidate.html'); return; }
+    if(profile.role === 'employer'){ app.go('/employer-home.html'); return; }
+
+    // prefill
+    if(profile.years_experience!=null) document.getElementById('years_experience').value = profile.years_experience;
+    if(profile.skills) document.getElementById('skills').value = profile.skills;
+    if(profile.preferred_locations) document.getElementById('preferred_locations').value = profile.preferred_locations;
+    if(profile.expected_salary!=null) document.getElementById('expected_salary').value = profile.expected_salary;
+
+    document.getElementById('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const payload = {
+        user_id: user.id,
+        years_experience: toInt(document.getElementById('years_experience').value),
+        skills: orNull(document.getElementById('skills').value.trim()),
+        preferred_locations: orNull(document.getElementById('preferred_locations').value.trim()),
+        expected_salary: toInt(document.getElementById('expected_salary').value)
+      };
+      const { error } = await app.upsertProfile(payload);
+      if(error){ ui.toast(error.message,'error'); return; }
+      ui.toast('Profile updated','success');
+      app.go('/dashboard.html');
+    });
+
+    function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
+    function orNull(v){ return v? v: null }
+  })();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 4) `/admin-copy.html` (Edit site bullets — admin only)
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Site Copy</title>
+  <style>
+    :root{--blue:#0000FF;--blue-600:#0000D0;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
+    .container{max-width:900px;margin:0 auto;padding:24px 16px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
+    textarea{width:100%;min-height:180px;padding:12px;border:1px solid var(--line);border-radius:10px}
+    button{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
+    button:hover{background:var(--blue-600)}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin — Editable Copy</h1>
+    <p class="muted">Only admins can save. RLS will enforce permissions.</p>
+    <section class="card">
+      <h3>Candidate Register Bullets</h3>
+      <p class="muted">Enter one bullet per line.</p>
+      <textarea id="bullets"></textarea>
+      <div style="margin-top:12px"><button id="save">Save</button></div>
+    </section>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/components.js?v=15"></script>
+  <script>
+  (async function(){
+    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
+    // Optionally, gate UI with a client-side check (server will still enforce)
+    // const isAdmin = await app.isAdmin(); if(!isAdmin){ ui.toast('Admins only','error'); }
+
+    const { data } = await db.getSiteCopy('candidate_register_bullets');
+    const bullets = (data?.content?.bullets)||[];
+    const ta = document.getElementById('bullets');
+    ta.value = bullets.join('\n');
+
+    document.getElementById('save').onclick = async ()=>{
+      const lines = ta.value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+      const content = { bullets: lines };
+      const { error } = await db.updateSiteCopy('candidate_register_bullets', content);
+      if(error){ ui.toast(error.message,'error'); return; }
+      ui.toast('Saved','success');
+    };
+  })();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 5) `/jobs.html` (search, filters, pagination)
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jobs</title>
+  <style>
+    :root{--blue:#0000FF;--blue-600:#0000D0;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+    body{margin:0;background:var(--bg);font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
+    .container{max-width:1200px;margin:0 auto;padding:24px 16px}
+    .layout{display:grid;grid-template-columns:280px 1fr;gap:16px}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:16px}
+    .label{font-weight:700;margin:8px 0 6px;display:block}
+    input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px}
+    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,0,255,.15)}
+    .jobs{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .job{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+    .job h3{margin:0 0 4px}
+    .meta{color:var(--muted);font-size:14px}
+    .btn{display:inline-block;margin-top:6px;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:16px}
+    .pagination button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+    .pagination button[disabled]{opacity:.5;cursor:not-allowed}
+    @media (max-width: 1000px){.layout{grid-template-columns:1fr}.jobs{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="margin:0 0 12px">Jobs</h1>
+    <div class="layout">
+      <aside class="panel">
+        <label class="label">Department (placeholder)</label>
+        <select id="dept">
+          <option value="">All</option>
+        </select>
+        <label class="label">Employment Type</label>
+        <select id="type">
+          <option value="all">All</option>
+          <option>full-time</option>
+          <option>part-time</option>
+          <option>contract</option>
+          <option>internship</option>
+        </select>
+        <label class="label">Location</label>
+        <input id="loc" placeholder="e.g., Dehradun" />
+      </aside>
+      <main>
+        <div class="panel toolbar">
+          <form id="searchbar" style="display:flex;gap:8px;flex:1">
+            <input id="q" placeholder="Job title, keywords, or company" style="flex:1" />
+            <button class="btn" type="submit" style="background:var(--blue);border:0">Search</button>
+          </form>
+          <div class="muted">Sort: Newest</div>
+        </div>
+        <section id="grid" class="jobs"></section>
+        <div class="pagination" id="pager"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/components.js?v=15"></script>
+  <script>
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const state = {
+      q: decodeURIComponent(params.get('q')||'').trim(),
+      loc: decodeURIComponent(params.get('loc')||'').trim(),
+      type: (params.get('type')||'all'),
+      page: parseInt(params.get('page')||'1',10)||1,
+      pageSize: 12
+    };
+
+    // init controls
+    const qInput = document.getElementById('q'); qInput.value = state.q;
+    const locInput = document.getElementById('loc'); locInput.value = state.loc;
+    const typeSel = document.getElementById('type'); typeSel.value = state.type;
+
+    document.getElementById('searchbar').addEventListener('submit', (e)=>{ e.preventDefault(); state.q = qInput.value.trim(); state.page=1; syncUrlAndLoad(); });
+    typeSel.addEventListener('change', ()=>{ state.type = typeSel.value; state.page=1; syncUrlAndLoad(); });
+    locInput.addEventListener('change', ()=>{ state.loc = locInput.value.trim(); state.page=1; syncUrlAndLoad(); });
+
+    async function load(){
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '<div class="panel">Loading…</div>';
+      try{
+        const { data, count, error } = await db.searchJobs(state);
+        if(error) throw error;
+        if(!data.length){ grid.innerHTML = '<div class="panel">No jobs found.</div>'; renderPager(0); return; }
+        grid.innerHTML = data.map(j=> jobCard(j)).join('');
+        renderPager(count||0);
+      }catch(err){ grid.innerHTML = '<div class="panel">Failed to load jobs.</div>'; ui.toast(err.message,'error'); }
+    }
+
+    function jobCard(j){
+      const salary = (j.salary_min||j.salary_max) ? `₹${j.salary_min||''}${j.salary_min&&j.salary_max?'–':''}${j.salary_max||''}` : '—';
+      return `<article class="job">
+        <h3>${escapeHtml(j.title)}</h3>
+        <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
+        <div class="meta">Salary: ${salary}</div>
+        <a class="btn" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
+      </article>`
+    }
+
+    function renderPager(total){
+      const pager = document.getElementById('pager');
+      const pages = Math.max(1, Math.ceil(total / state.pageSize));
+      pager.innerHTML = '';
+      const prev = document.createElement('button'); prev.textContent = 'Prev'; prev.disabled = state.page<=1; prev.onclick=()=>{ state.page--; syncUrlAndLoad(); };
+      const next = document.createElement('button'); next.textContent = 'Next'; next.disabled = state.page>=pages; next.onclick=()=>{ state.page++; syncUrlAndLoad(); };
+      const info = document.createElement('span'); info.textContent = `Page ${state.page} of ${pages}`;
+      pager.append(prev, info, next);
+    }
+
+    function syncUrlAndLoad(){
+      const u = new URL(location.href);
+      u.searchParams.set('q', state.q);
+      u.searchParams.set('loc', state.loc);
+      u.searchParams.set('type', state.type);
+      u.searchParams.set('page', String(state.page));
+      history.replaceState(null,'',u);
+      load();
+    }
+
+    function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+
+    syncUrlAndLoad();
+  })();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 6) `/post-auth.html` (routing)
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redirecting…</title>
+  <style>body{font-family:Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;display:grid;place-items:center;height:100dvh;color:#0f172a}</style>
+</head>
+<body>
+  <div>Signing you in and routing…</div>
+  <script src="/config.js"></script>
+  <script src="/components.js?v=15"></script>
+  <script>
+  (async function(){
+    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
+    const user = await app.getSessionUser();
+    const { data: profile } = await app.getProfile(user.id);
+    if(!profile){ app.go('/register-candidate.html'); return; }
+    if(profile.role === 'employer'){ app.go('/employer-home.html'); return; }
+    // candidate
+    const step2Done = profile.years_experience != null || (profile.skills && profile.skills.trim() !== '');
+    app.go(step2Done ? '/dashboard.html' : '/register-candidate-step2.html');
+  })();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 7) `/components.js?v=15`
+
+```javascript
+// components.js v15 — shared app/db/ui helpers
+// Assumes window.supabase is initialized by /config.js
+(function(){
+  if(!window.supabase){ console.error('Supabase client not found. Make sure /config.js sets window.supabase.'); }
+
+  const sb = window.supabase;
+  const app = window.app || (window.app = {});
+  const ui  = window.ui  || (window.ui  = {});
+  const db  = window.db  || (window.db  = {});
+
+  // ---------- UI helpers ----------
+  ui.toast = function(msg, type='info'){
+    let wrap = document.getElementById('toasts');
+    if(!wrap){ wrap = document.createElement('div'); wrap.id='toasts'; wrap.style.cssText='position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999'; document.body.appendChild(wrap); }
+    const n = document.createElement('div');
+    n.textContent = msg; n.style.cssText = 'background:#fff;border:1px solid #E5E7EB;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,.1);padding:10px 12px;min-width:200px';
+    if(type==='error'){ n.style.borderColor = '#ef4444' }
+    if(type==='success'){ n.style.borderColor = '#22c55e' }
+    wrap.appendChild(n); setTimeout(()=>{ n.remove(); }, 3500);
+  };
+
+  // ---------- App helpers ----------
+  app.go = (url)=>{ window.location.href = url; };
+
+  app.getSessionUser = async function(){
+    const { data, error } = await sb.auth.getUser(); if(error) throw error; return data.user;
+  };
+
+  app.requireAuth = async function(opts={}){
+    const { data } = await sb.auth.getSession();
+    if(!data.session){
+      const to = opts.redirectTo || '/login.html';
+      window.location.href = to; return Promise.reject(new Error('Auth required'));
+    }
+    return true;
+  };
+
+  app.getProfile = async function(user_id){
+    return await sb.from('profiles').select('*').eq('user_id', user_id).maybeSingle();
+  };
+
+  app.upsertProfile = async function(payload){
+    // upsert by user_id
+    return await sb.from('profiles').upsert(payload, { onConflict: 'user_id' }).select().maybeSingle();
+  };
+
+  // Optional: check admin via admin_users table (policies still enforce server-side)
+  app.isAdmin = async function(){
+    const { data: me } = await app.getSessionUser();
+    if(!me) return false;
+    // if you add an admin_users table, expose a rpc or view. Placeholder returns false.
+    return false;
+  };
+
+  // ---------- DB helpers ----------
+  db.getSiteCopy = async function(key){
+    return await sb.from('site_copy').select('*').eq('key', key).maybeSingle();
+  };
+
+  db.updateSiteCopy = async function(key, content){
+    return await sb.from('site_copy').update({ content, updated_at: new Date().toISOString() }).eq('key', key).select().maybeSingle();
+  };
+
+  db.featuredJobs = async function(){
+    return await sb.from('jobs')
+      .select('id,title,company,location,employment_type,salary_min,salary_max,created_at')
+      .eq('published', true)
+      .order('created_at', { ascending: false })
+      .limit(12);
+  };
+
+  db.searchJobs = async function({ q='', loc='', type='all', page=1, pageSize=12 }){
+    let query = sb.from('jobs')
+      .select('id,title,company,location,employment_type,salary_min,salary_max,created_at', { count: 'exact' })
+      .eq('published', true);
+
+    const term = q.trim();
+    if(term){
+      // OR across title/description/company
+      const like = `%${term}%`;
+      query = query.or(
+        `title.ilike.${like},description.ilike.${like},company.ilike.${like}`
+      );
+    }
+    if(loc && loc.trim()){
+      query = query.ilike('location', `%${loc.trim()}%`);
+    }
+    if(type && type !== 'all'){
+      query = query.eq('employment_type', type);
+    }
+
+    query = query.order('created_at', { ascending: false });
+    const from = (page-1) * pageSize;
+    const to   = from + pageSize - 1;
+    query = query.range(from, to);
+
+    return await query;
+  };
+})();
+```
+
+---
+
+## 8) SQL — tables, seeds, and RLS policies
+
+Run in the Supabase SQL editor.
+
+```sql
+-- ADMIN SUPPORT (optional helper table for clearer admin checks)
+create table if not exists public.admin_users (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz default now()
+);
+
+-- PROFILES
+create table if not exists public.profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  role text not null check (role in ('candidate','employer')) default 'candidate',
+  full_name text,
+  phone text,
+  current_location text,
+  headline text,
+  years_experience int,
+  skills text,
+  preferred_locations text,
+  expected_salary int,
+  created_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- Policies: users manage their own row
+create policy if not exists "profiles_select_own" on public.profiles
+  for select using (auth.uid() = user_id);
+
+create policy if not exists "profiles_upsert_own" on public.profiles
+  for insert with check (auth.uid() = user_id);
+
+create policy if not exists "profiles_update_own" on public.profiles
+  for update using (auth.uid() = user_id);
+
+-- Optional: admin can select all profiles
+create policy if not exists "profiles_select_admin" on public.profiles
+  for select using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+-- SITE COPY
+create table if not exists public.site_copy (
+  key text primary key,
+  content jsonb not null,
+  updated_at timestamptz default now()
+);
+
+alter table public.site_copy enable row level security;
+
+-- Anyone (including anon) can read candidate bullets only
+create policy if not exists "sitecopy_read_public_bullets" on public.site_copy
+  for select using (key = 'candidate_register_bullets');
+
+-- Admin-only update
+create policy if not exists "sitecopy_update_admin" on public.site_copy
+  for update using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+-- Seed content
+insert into public.site_copy(key, content)
+  values ('candidate_register_bullets', '{"bullets":["Build your profile and let recruiters find you","Get job postings delivered to your email","Find a job and grow your career"]}')
+  on conflict (key) do nothing;
+
+-- JOBS (assumed existing). Add full-text helpers (optional but recommended)
+alter table public.jobs add column if not exists search_tsv tsvector
+  generated always as (to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(description,''))) stored;
+
+create index if not exists jobs_search_tsv_idx on public.jobs using gin (search_tsv);
+create index if not exists jobs_created_at_idx on public.jobs(created_at desc);
+
+-- RLS for jobs: allow public read of published, admins can read all
+alter table public.jobs enable row level security;
+
+create policy if not exists "jobs_read_published" on public.jobs
+  for select using (published = true);
+
+create policy if not exists "jobs_read_admin" on public.jobs
+  for select using (exists (select 1 from public.admin_users a where a.user_id = auth.uid()));
+
+-- APPLICATIONS (outline only — adjust to your existing schema)
+-- ensure insert for any authenticated user; reads restricted to admins/owners
+-- alter table public.applications enable row level security;
+-- create policy ...
+```
+
+---
+
+## 9) Smoke‑test checklist
+
+1. **SQL**: Run the SQL block. Add yourself to `admin_users` if needed: `insert into admin_users(user_id) values ('<your-auth-user-id>');`
+2. **Deploy files**: Upload all pages and the new `/components.js?v=15` (replace old). Keep your existing `/config.js`.
+3. **Home**: Visit `/`. Use the **embossed** search to navigate to `/jobs.html?q=dev&loc=Dehradun&type=all`.
+4. **CTAs**: Try **I’m a Candidate → Register**.
+5. **Auth**: After magic‑link sign‑in, `/post-auth.html` should route correctly.
+6. **Step‑1**: Fill **Full name** and **Mobile** → Continue to Step‑2.
+7. **Step‑2**: Enter skills/experience → Finish → lands on `/dashboard.html`.
+8. **Admin copy**: If you’re in `admin_users`, edit bullets at `/admin-copy.html`. Verify Step‑1 left pane updates.
+9. **Jobs**: Confirm featured jobs show latest **published** ones. Use filters & pagination on `/jobs.html`.
+10. **RLS**: From an incognito window, verify published jobs and candidate bullets are readable; updates require admin auth.
+
+---
+
+> Tip: If you later add a server-side search function (RPC) that leverages `search_tsv`, you can swap `db.searchJobs` to call it without changing the UI.
