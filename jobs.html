@@ -1,169 +1,153 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Jobs — GrowIndia</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=13"></script>
-  <script src="/components.js?v=13"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jobs</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#fbfcfe;color:#0f172a}
-    .top{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #e5e7eb}
-    .topin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B;--ink:rgba(15,23,42,.9)}
+    body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+    .container{max-width:1200px;margin:0 auto;padding:24px 16px}
+    header{background:#fff;border-bottom:1px solid var(--line)}
+    .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:68px}
     .brand{font-weight:800}
-    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;display:grid;grid-template-columns:300px 1fr;gap:16px}
-    .panel{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 28px rgba(2,6,23,.06);padding:14px}
-    .sec{border-top:1px solid #eef2f7;padding:12px 0}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-    .chip{padding:6px 10px;border-radius:999px;background:#f3f6ff;border:1px solid #e5e7eb;font-size:12px;cursor:pointer}
-    .controls{display:flex;gap:8px;flex-wrap:wrap}
-    input,select{padding:10px;border:1px solid #cbd5e1;border-radius:10px}
-    .job{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 6px 18px rgba(2,6,23,.05);padding:14px;margin-bottom:12px}
-    .job h3{margin:0 0 6px}
-    .muted{color:#64748b}
-    .pill{display:inline-block;background:#eef2ff;border-radius:999px;padding:3px 8px;font-size:12px}
-    .resultTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-    .pager{display:flex;gap:8px;justify-content:center;margin:14px 0}
-    .btn{padding:8px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
-    .btn.primary{background:#0ea5e9;color:#fff;border:none}
+    .nav-right{display:flex;gap:14px;align-items:center}
+    .nav-right a.link{color:#111827}
+    .btn{display:inline-block;padding:9px 14px;border-radius:999px;font-weight:700;color:#fff}
+    .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
+    .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
+
+    .layout{display:grid;grid-template-columns:280px 1fr;gap:16px}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:16px}
+    .label{font-weight:700;margin:8px 0 6px;display:block}
+    input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px}
+    input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15)}
+
+    .jobs{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .job{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+    .job h3{margin:0 0 4px}
+    .meta{color:var(--muted);font-size:14px}
+    .btn-small{display:inline-block;margin-top:6px;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:16px}
+    .pagination button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+    .pagination button[disabled]{opacity:.5;cursor:not-allowed}
+    @media (max-width: 1000px){.layout{grid-template-columns:1fr}.jobs{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-<header class="top">
-  <div class="topin">
-    <div class="brand">GrowIndia Jobs</div>
-    <nav><a href="/index.html">Home</a> · <a href="/employer.html">Post a job</a></nav>
-  </div>
-</header>
-
-<main class="wrap">
-  <!-- Left filters -->
-  <aside class="panel">
-    <h3 style="margin:0 0 8px">All Filters</h3>
-
-    <div class="sec">
-      <div class="muted" style="font-weight:700;margin-bottom:6px">Keyword</div>
-      <input id="f_q" placeholder="role, company, skills">
-    </div>
-
-    <div class="sec">
-      <div class="muted" style="font-weight:700;margin-bottom:6px">Location</div>
-      <select id="f_location"></select>
-    </div>
-
-    <div class="sec">
-      <div class="muted" style="font-weight:700;margin-bottom:6px">Employment type</div>
-      <select id="f_type"></select>
-    </div>
-
-    <div class="sec">
-      <button id="btnReset" class="btn">Reset filters</button>
-    </div>
-  </aside>
-
-  <!-- Right content -->
-  <section>
-    <div class="panel">
-      <div class="resultTop">
-        <div id="count" class="muted">Loading…</div>
-        <div class="controls">
-          <label>Sort
-            <select id="f_sort">
-              <option value="newest">Newest</option>
-              <option value="pay-max">Pay (Max → Min)</option>
-              <option value="pay-min">Pay (Min → Max)</option>
-            </select>
-          </label>
-          <button id="btnSearch" class="btn primary">Search</button>
-        </div>
+  <header>
+    <div class="nav">
+      <div class="brand">GrowIndia Jobs</div>
+      <div class="nav-right">
+        <a class="link" href="/jobs.html">Jobs</a>
+        <a class="link" href="/post-job.html">Post a Job</a>
+        <a class="link" href="/login.html">Sign in</a>
+        <a class="btn btn-blue" href="/register-candidate.html">Candidate</a>
+        <a class="btn btn-orange" href="/login.html?role=employer">Employer</a>
       </div>
-      <div class="chips" id="chips"></div>
     </div>
+  </header>
 
-    <div id="list"></div>
-    <div class="pager">
-      <button id="prev" class="btn">Prev</button>
-      <div id="pageInfo" class="muted"></div>
-      <button id="next" class="btn">Next</button>
+  <div class="container">
+    <h1 style="margin:0 0 12px">Jobs</h1>
+    <div class="layout">
+      <aside class="panel">
+        <label class="label">Department (placeholder)</label>
+        <select id="dept">
+          <option value="">All</option>
+        </select>
+        <label class="label">Employment Type</label>
+        <select id="type">
+          <option value="all">All</option>
+          <option>full-time</option>
+          <option>part-time</option>
+          <option>contract</option>
+          <option>internship</option>
+        </select>
+        <label class="label">Location</label>
+        <input id="loc" placeholder="e.g., Dehradun" />
+      </aside>
+      <main>
+        <div class="panel toolbar">
+          <form id="searchbar" style="display:flex;gap:8px;flex:1">
+            <input id="q" placeholder="Job title, keywords, or company" style="flex:1" />
+            <button class="btn btn-blue" type="submit" style="border:0">Search</button>
+          </form>
+          <div class="muted">Sort: Newest</div>
+        </div>
+        <section id="grid" class="jobs"></section>
+        <div class="pagination" id="pager"></div>
+      </main>
     </div>
-  </section>
-</main>
+  </div>
 
-<script>
-(async function(){
-  const { db, escapeHTML, setQueryParams, debounce, ui } = window.app;
-  const pageSize = 12;
-  function state(){ const u=new URL(location.href); return { page:Math.max(1,Number(u.searchParams.get('page')||'1')), q:u.searchParams.get('q')||'', location:u.searchParams.get('location')||'all', type:u.searchParams.get('type')||'all', sort:u.searchParams.get('sort')||'newest' }; }
+  <script src="/config.js"></script>
+  <script src="/components.js?v=16"></script>
+  <script>
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const state = {
+      q: decodeURIComponent(params.get('q')||'').trim(),
+      loc: decodeURIComponent(params.get('loc')||'').trim(),
+      type: (params.get('type')||'all'),
+      page: parseInt(params.get('page')||'1',10)||1,
+      pageSize: 12
+    };
 
-  async function loadFilters(){
-    const { locations, employment_types } = await db.distinctJobFilters();
-    const locSel = document.getElementById('f_location');
-    const typeSel = document.getElementById('f_type');
-    locSel.innerHTML = ['all',...locations].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
-    typeSel.innerHTML = ['all',...employment_types].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
-  }
+    const qInput = document.getElementById('q'); qInput.value = state.q;
+    const locInput = document.getElementById('loc'); locInput.value = state.loc;
+    const typeSel = document.getElementById('type'); typeSel.value = state.type;
 
-  function renderChips(s){
-    const chips = document.getElementById('chips');
-    const arr=[];
-    if(s.q) arr.push(`"${escapeHTML(s.q)}"`);
-    if(s.location!=='all') arr.push(`Location: ${escapeHTML(s.location)}`);
-    if(s.type!=='all') arr.push(`Type: ${escapeHTML(s.type)}`);
-    chips.innerHTML = arr.map(t=>`<span class="chip">${t}</span>`).join('');
-  }
+    document.getElementById('searchbar').addEventListener('submit', (e)=>{ e.preventDefault(); state.q = qInput.value.trim(); state.page=1; syncUrlAndLoad(); });
+    typeSel.addEventListener('change', ()=>{ state.type = typeSel.value; state.page=1; syncUrlAndLoad(); });
+    locInput.addEventListener('change', ()=>{ state.loc = locInput.value.trim(); state.page=1; syncUrlAndLoad(); });
 
-  async function render(){
-    const s = state();
-    document.getElementById('f_q').value=s.q;
-    document.getElementById('f_location').value=s.location;
-    document.getElementById('f_type').value=s.type;
-    document.getElementById('f_sort').value=s.sort;
+    async function load(){
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '<div class="panel">Loading…</div>';
+      try{
+        const { data, count, error } = await db.searchJobs(state);
+        if(error) throw error;
+        if(!data.length){ grid.innerHTML = '<div class="panel">No jobs found.</div>'; renderPager(0); return; }
+        grid.innerHTML = data.map(j=> jobCard(j)).join('');
+        renderPager(count||0);
+      }catch(err){ grid.innerHTML = '<div class="panel">Failed to load jobs.</div>'; ui.toast(err.message,'error'); }
+    }
 
-    try{
-      const { rows, total } = await db.listJobsPaged({
-        page:s.page, pageSize,
-        location: s.location==='all'?null:s.location,
-        employment_type: s.type==='all'?null:s.type,
-        q: s.q || null, sort: s.sort
-      });
-      document.getElementById('count').textContent=`${total} job${total===1?'':'s'} found`;
+    function jobCard(j){
+      const salary = (j.salary_min||j.salary_max) ? `₹${j.salary_min||''}${j.salary_min&&j.salary_max?'–':''}${j.salary_max||''}` : '—';
+      return `<article class="job">
+        <h3>${escapeHtml(j.title)}</h3>
+        <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
+        <div class="meta">Salary: ${salary}</div>
+        <a class="btn-small" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
+      </article>`
+    }
 
-      const list=document.getElementById('list'); list.innerHTML='';
-      rows.forEach(j=>{
-        const el=document.createElement('div'); el.className='job';
-        const snippet = (j.description||'').replace(/\s+/g,' ').slice(0,150);
-        el.innerHTML = `
-          <h3><a href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a></h3>
-          <div class="muted" style="margin:4px 0 6px">
-            ${escapeHTML(j.company?.name||'—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
-          </div>
-          <div class="muted">${escapeHTML(snippet)}${snippet.length===150?'…':''}</div>
-          <div style="margin-top:8px;color:#0a3a5f;font-weight:700">${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}</div>
-        `;
-        list.appendChild(el);
-      });
+    function renderPager(total){
+      const pager = document.getElementById('pager');
+      const pages = Math.max(1, Math.ceil(total / state.pageSize));
+      pager.innerHTML = '';
+      const prev = document.createElement('button'); prev.textContent = 'Prev'; prev.disabled = state.page<=1; prev.onclick=()=>{ state.page--; syncUrlAndLoad(); };
+      const next = document.createElement('button'); next.textContent = 'Next'; next.disabled = state.page>=pages; next.onclick=()=>{ state.page++; syncUrlAndLoad(); };
+      const info = document.createElement('span'); info.textContent = `Page ${state.page} of ${pages}`;
+      pager.append(prev, info, next);
+    }
 
-      const totalPages=Math.max(1,Math.ceil(total/pageSize));
-      document.getElementById('pageInfo').textContent=`Page ${s.page} of ${totalPages}`;
-      document.getElementById('prev').disabled=s.page<=1;
-      document.getElementById('next').disabled=s.page>=totalPages;
-      renderChips(s);
-    } catch(e){ console.error(e); ui.error('Failed to load jobs'); }
-  }
+    function syncUrlAndLoad(){
+      const u = new URL(location.href);
+      u.searchParams.set('q', state.q);
+      u.searchParams.set('loc', state.loc);
+      u.searchParams.set('type', state.type);
+      u.searchParams.set('page', String(state.page));
+      history.replaceState(null,'',u);
+      load();
+    }
+    function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
 
-  await loadFilters();
-  render();
-
-  document.getElementById('btnSearch').onclick=()=>{ setQueryParams({page:1,q:document.getElementById('f_q').value.trim(), location:document.getElementById('f_location').value, type:document.getElementById('f_type').value, sort:document.getElementById('f_sort').value}); render(); };
-  document.getElementById('f_q').addEventListener('input', debounce(()=>document.getElementById('btnSearch').click(),400));
-  document.getElementById('f_location').onchange=()=>document.getElementById('btnSearch').click();
-  document.getElementById('f_type').onchange=()=>document.getElementById('btnSearch').click();
-  document.getElementById('f_sort').onchange=()=>document.getElementById('btnSearch').click();
-  document.getElementById('btnReset').onclick=()=>{ setQueryParams({page:1,q:null,location:null,type:null,sort:'newest'}); render(); };
-  document.getElementById('prev').onclick=()=>{ const s=state(); setQueryParams({page:s.page-1}); render(); };
-  document.getElementById('next').onclick=()=>{ const s=state(); setQueryParams({page:s.page+1}); render(); };
-})();
-</script>
+    syncUrlAndLoad();
+  })();
+  </script>
 </body>
 </html>
