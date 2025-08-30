@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Candidate — Sign up / Sign in</title>
+  <title>Create account — GrowIndia Jobs</title>
   <style>
     :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
     body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -17,9 +17,6 @@
     .container{max-width:720px;margin:0 auto;padding:24px 16px}
     .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
     h1{margin:0 0 8px}
-    .tabs{display:flex;gap:8px;margin:6px 0 16px}
-    .tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
-    .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
     label{display:block;margin:10px 0 6px;font-weight:700}
     input[type="text"],input[type="email"],input[type="password"],input[type="tel"]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
     input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15)}
@@ -44,125 +41,72 @@
 
   <div class="container">
     <h1>Candidate account</h1>
-    <div class="muted">Create your account or sign in to continue.</div>
+    <div class="muted">Create your account to continue.</div>
 
     <section class="card">
-      <div class="tabs">
-        <button id="tabSignup" class="tab active" type="button">Sign up</button>
-        <button id="tabSignin" class="tab" type="button">Sign in</button>
-      </div>
-
       <form id="form">
-        <div id="signupFields">
-          <label>Full name</label>
-          <input id="full_name" type="text" required placeholder="e.g., Ananya Sharma"/>
+        <label>Full name</label>
+        <input id="full_name" type="text" required placeholder="e.g., Ananya Sharma"/>
 
-          <label>Email</label>
-          <input id="email" type="email" required placeholder="you@example.com"/>
+        <label>Email</label>
+        <input id="email" type="email" required placeholder="you@example.com"/>
 
-          <label>Password</label>
-          <input id="password" type="password" required placeholder="Minimum 6 characters"/>
+        <label>Password</label>
+        <input id="password" type="password" required placeholder="Minimum 6 characters"/>
 
-          <label>Confirm password</label>
-          <input id="confirm" type="password" required placeholder="Re-enter password"/>
+        <label>Confirm password</label>
+        <input id="confirm" type="password" required placeholder="Re-enter password"/>
 
-          <label>Phone</label>
-          <input id="phone" type="tel" required placeholder="e.g., 9876543210"/>
+        <label>Phone</label>
+        <input id="phone" type="tel" required placeholder="e.g., 9876543210"/>
 
-          <label>Upload CV (PDF/DOC)</label>
-          <input id="cv" type="file" accept=".pdf,.doc,.docx,.rtf" />
-        </div>
-
-        <div id="signinFields" style="display:none">
-          <label>Email</label>
-          <input id="email_in" type="email" placeholder="you@example.com"/>
-
-          <label>Password</label>
-          <input id="password_in" type="password" placeholder="Your password"/>
-        </div>
+        <label>Upload CV (PDF/DOC)</label>
+        <input id="cv" type="file" accept=".pdf,.doc,.docx,.rtf" />
 
         <div class="actions">
           <button class="primary" type="submit">Next</button>
-          <span class="muted" id="inlineHelp">Already have an account? Click <a id="linkSignin" class="link">Sign in</a>.</span>
+          <span class="muted">Already have an account? <a class="link" href="/login.html">Sign in</a>.</span>
         </div>
       </form>
     </section>
   </div>
 
-  <!-- MUST be: UMD → config.js → components.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="/config.js"></script>
   <script src="/components.js?v=19"></script>
   <script>
-    (function(){
-      const tabSignup = document.getElementById('tabSignup');
-      const tabSignin = document.getElementById('tabSignin');
-      const signup = document.getElementById('signupFields');
-      const signin = document.getElementById('signinFields');
-      const linkSignin = document.getElementById('linkSignin');
-      let mode = 'signup';
+  (function(){
+    document.getElementById('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      try{
+        const full_name = v('full_name'), email = v('email'), password = v('password'), confirm = v('confirm'), phone = v('phone');
+        if(password !== confirm){ ui.toast('Passwords do not match','error'); return; }
 
-      function show(modeName){
-        mode = modeName;
-        if(mode==='signup'){
-          tabSignup.classList.add('active'); tabSignin.classList.remove('active');
-          signup.style.display='block'; signin.style.display='none';
-          document.getElementById('inlineHelp').innerHTML =
-            'Already have an account? Click <a id="linkSignin" class="link">Sign in</a>.';
-          document.getElementById('linkSignin').onclick = (e)=>{e.preventDefault();show('signin');};
-        }else{
-          tabSignin.classList.add('active'); tabSignup.classList.remove('active');
-          signup.style.display='none'; signin.style.display='block';
-          document.getElementById('inlineHelp').textContent = 'New here? Switch to “Sign up”.';
+        const { error } = await supabase.auth.signUp({ email, password });
+        if(error) throw error;
+
+        const u = await app.getSessionUser().catch(()=>null);
+        if(!u){ ui.toast('Check your email to verify, then sign in.','success'); return; }
+
+        // Optional CV upload
+        let cv_url = null;
+        const file = document.getElementById('cv').files[0];
+        if(file){
+          const key = `user-${u.id}/${Date.now()}-${file.name}`.replace(/\s+/g,'-');
+          const up = await supabase.storage.from('cvs').upload(key, file, { upsert: true });
+          if(up.error) throw up.error;
+          const { data: pub } = supabase.storage.from('cvs').getPublicUrl(key);
+          cv_url = pub.publicUrl;
         }
+
+        await app.upsertProfile({ user_id: u.id, role:'candidate', full_name, phone, cv_url });
+        app.go('/dashboard.html#complete');
+      }catch(err){
+        ui.toast(err.message || 'Something went wrong','error');
       }
-
-      tabSignup.onclick = ()=> show('signup');
-      tabSignin.onclick = ()=> show('signin');
-      linkSignin.onclick = (e)=>{ e.preventDefault(); show('signin'); };
-
-      document.getElementById('form').addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        try{
-          if(mode==='signup'){
-            const full_name = v('full_name'), email = v('email'), password = v('password'), confirm = v('confirm'), phone = v('phone');
-            if(password !== confirm){ ui.toast('Passwords do not match','error'); return; }
-            const { data, error } = await window.supabase.auth.signUp({ email, password });
-            if(error) throw error;
-
-            const u = await app.getSessionUser().catch(()=>null);
-            if(!u){ ui.toast('Check your email to verify, then sign in.','success'); return; }
-
-            // Optional CV upload
-            let cv_url = null;
-            const file = document.getElementById('cv').files[0];
-            if(file){
-              const key = `user-${u.id}/${Date.now()}-${file.name}`.replace(/\s+/g,'-');
-              const up = await window.supabase.storage.from('cvs').upload(key, file, { upsert: true });
-              if(up.error) throw up.error;
-              const { data: pub } = window.supabase.storage.from('cvs').getPublicUrl(key);
-              cv_url = pub.publicUrl;
-            }
-
-            await app.upsertProfile({ user_id: u.id, role:'candidate', full_name, phone, cv_url });
-            // Land inside dashboard (profile panel open)
-            app.go('/dashboard.html#complete');
-
-          }else{
-            const email = v('email_in'), password = v('password_in');
-            const { error } = await window.supabase.auth.signInWithPassword({ email, password });
-            if(error) throw error;
-            const u = await app.getSessionUser();
-            await app.upsertProfile({ user_id: u.id, role:'candidate' });
-            app.go('/dashboard.html#complete');
-          }
-        }catch(err){
-          ui.toast(err.message || 'Something went wrong','error');
-        }
-      });
-
-      function v(id){ return document.getElementById(id).value.trim(); }
-    })();
+    });
+    function v(id){ return document.getElementById(id).value.trim(); }
+  })();
   </script>
 </body>
 </html>
