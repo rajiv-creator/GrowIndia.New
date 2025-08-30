@@ -1,165 +1,118 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Dashboard — GrowIndia Jobs</title>
-<style>
-:root{--blue:#151B54;--bg:#F6F8FC;--line:#E5E7EB;--muted:#64748B}
-html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-header{background:#fff;border-bottom:1px solid var(--line)}
-.nav{max-width:1180px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
-.brand{font-weight:800}
-.grid{max-width:1180px;margin:28px auto;padding:0 16px;display:grid;grid-template-columns:280px 1fr 360px;gap:16px}
-.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(2,6,23,.06)}
-.badge{display:inline-block;background:var(--blue);color:#fff;border-radius:10px;padding:10px 12px;font-weight:800}
-.sub{color:var(--muted)}
-.btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:10px 14px;font-weight:800;text-decoration:none;border:0;cursor:pointer}
-.list a{display:block;border:1px solid var(--line);padding:12px;border-radius:12px;margin:10px 0;background:#fff;text-decoration:none;color:inherit}
-.jobs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.job{border:1px solid var(--line);padding:12px;border-radius:12px}
-h3{margin:0 0 8px} h4{margin:0 0 8px}
-</style></head><body>
-<header><div class="nav"><div class="brand">GrowIndia Jobs</div></div></header>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — GrowIndia Jobs</title>
+  <style>
+    :root{--blue:#151B54;--orange:#FF6E00;--muted:#64748B;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111}
+    header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid var(--line)}
+    .brand{font-weight:700}
+    .wrap{max-width:1180px;margin:24px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:280px 1fr 320px;gap:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(2,6,23,.06);padding:16px}
+    .big{padding:20px}
+    h3{margin:0 0 10px}
+    .btn{display:inline-block;padding:10px 14px;border-radius:12px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700}
+    .btn--ghost{background:#fff;color:var(--blue);border:1px solid var(--line)}
+    .sub{color:var(--muted);font-size:14px}
+    .jobs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .job{border:1px solid var(--line);border-radius:12px;padding:12px}
+    input, textarea{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:inherit}
+    textarea{height:96px;padding:10px;resize:vertical}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">GrowIndia Jobs</div>
+    <nav style="display:flex;gap:10px">
+      <a class="btn btn--ghost" href="/login.html" onclick="window.supabase?.auth.signOut()">Sign out</a>
+    </nav>
+  </header>
 
-<section class="grid">
-  <!-- LEFT column (sidebar) -->
-  <div>
-    <div class="card">
-      <div style="display:flex;gap:16px;align-items:center">
-        <div style="width:94px;height:94px;border-radius:50%;background:conic-gradient(#151B54 17%,#E5E7EB 0);display:flex;align-items:center;justify-content:center;color:#151B54;font-weight:800">17%</div>
-        <div>
-          <strong id="uName">Your name</strong><br/>
-          <button class="badge" data-scroll="#complete">Complete profile</button>
+  <div class="wrap">
+    <div class="grid">
+
+      <!-- Left rail -->
+      <div class="card big">
+        <div style="display:flex;gap:16px;align-items:center">
+          <div style="width:76px;height:76px;border-radius:50%;background:#e5e7eb"></div>
+          <div>
+            <div class="sub">Welcome</div>
+            <div id="uName" style="font-weight:800">Your name</div>
+          </div>
+        </div>
+        <div style="margin-top:16px"><a class="btn btn--ghost" href="#complete">Complete profile</a></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+          <div class="card"><div class="sub">Search appearances</div><div style="font-weight:800">0</div></div>
+          <div class="card"><div class="sub">Recruiter actions</div><div style="font-weight:800">0</div></div>
+        </div>
+
+        <div style="margin-top:16px"><a class="btn btn--ghost" href="/jobs.html">Jobs</a></div>
+        <div style="margin-top:8px"><a class="btn btn--ghost" href="/companies.html">Companies</a></div>
+        <div style="margin-top:8px"><a class="btn btn--ghost" href="/blogs.html">Blogs</a></div>
+      </div>
+
+      <!-- Middle column -->
+      <div style="display:grid;gap:16px">
+        <div class="card big">
+          <h3>Recommended jobs for you</h3>
+          <div class="sub" id="jobs">Loading…</div>
+        </div>
+
+        <div class="card big" id="complete">
+          <h3>Profile completion</h3>
+          <p class="sub" style="margin-top:-4px">Add your basics; you can do more later.</p>
+
+          <div class="two">
+            <div><div class="sub">Full name</div><input id="p_full" placeholder="e.g., Ananya Sharma" /></div>
+            <div><div class="sub">Phone</div><input id="p_phone" placeholder="e.g., 9876543210" /></div>
+          </div>
+
+          <div class="two" style="margin-top:10px">
+            <div><div class="sub">Headline</div><input id="p_head" placeholder="e.g., Frontend Developer" /></div>
+            <div><div class="sub">Expected salary (₹)</div><input id="p_sal" placeholder="e.g., 600000" /></div>
+          </div>
+
+          <div style="margin-top:14px">
+            <button id="saveProfile" class="btn">Save</button>
+            <a class="btn btn--ghost" style="margin-left:8px" href="/jobs.html">Browse jobs</a>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="sub">Search appearances<br/><strong>0</strong></div>
-      <div class="sub">Recruiter actions<br/><strong>0</strong></div>
-      <a class="btn" style="grid-column:1/3;justify-self:start">Get 3× boost →</a>
-    </div>
+      <!-- Right rail -->
+      <div style="display:grid;gap:16px">
+        <div class="card big">
+          <h3>Get the app</h3>
+          <div class="sub">Scan to download</div>
+          <div style="margin:10px 0 16px;height:120px;background:#eef2ff;border:1px dashed #c7d2fe;border-radius:12px;display:flex;align-items:center;justify-content:center">QR</div>
+          <a class="btn btn--ghost" href="#">Download</a>
+        </div>
 
-    <div class="list">
-      <a href="/dashboard.html">My home</a>
-      <a href="/jobs.html?q=&loc=&type=all">Jobs</a>
-      <a href="/companies.html">Companies</a>
-      <a href="/blogs.html">Blogs</a>
-    </div>
-  </div>
+        <div class="card big">
+          <h3>Become a Pro!</h3>
+          <div class="sub">Get enhanced profile, hidden jobs &amp; more tools.</div>
+          <a class="btn btn--ghost" style="margin-top:10px" href="#">Upgrade now</a>
+        </div>
 
-  <!-- MIDDLE column -->
-  <div>
-    <!-- MOVED LEFT: Get the app + Pro block (was on the right) -->
-    <div class="card" style="display:grid;grid-template-columns:140px 1fr auto;gap:16px;align-items:center">
-      <div style="width:120px;height:120px;border:1px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center">QR</div>
-      <div><h3 style="margin:0">Get the app</h3><div class="sub">Scan to download</div></div>
-      <a class="btn">Download</a>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <h3 style="margin:0">Recommended jobs for you</h3>
-        <a href="/jobs.html?q=&loc=&type=all" class="btn" style="background:#0F143E">View all</a>
+        <div class="card big">
+          <h3>What is email writing?</h3>
+          <div class="sub">A complete guide for clear communication</div>
+          <a class="btn btn--ghost" style="margin-top:10px" href="#">Know more</a>
+        </div>
       </div>
-      <div id="jobs" class="jobs" style="margin-top:12px"><div class="sub">Loading…</div></div>
-    </div>
 
-    <div id="resume-steps" class="card">
-      <h3>Create your resume in 3 easy steps ✨</h3>
-      <ol class="sub" style="line-height:1.8;margin-bottom:12px">
-        <li>Add the missing details in your profile</li>
-        <li>Choose a template for your resume</li>
-        <li>Improve the content with AI</li>
-      </ol>
-      <button class="btn" data-scroll="#complete">Create resume</button>
-    </div>
-
-    <div id="complete" class="card">
-      <h3 style="margin:0 0 8px">Profile completion</h3>
-      <div class="sub">Step 2 (optional). Add basics, experience & education. Use “Add more”.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-        <div><div class="sub">Full name</div><input id="p_full" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px"/></div>
-        <div><div class="sub">Phone</div><input id="p_phone" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px"/></div>
-        <div><div class="sub">Headline</div><input id="p_head" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px"/></div>
-        <div><div class="sub">Expected salary (₹)</div><input id="p_sal" type="number" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px"/></div>
-        <div style="grid-column:1/3"><button id="saveProfile" class="btn">Save</button></div>
-      </div>
     </div>
   </div>
 
-  <!-- RIGHT column (misc/info) -->
-  <div>
-    <div class="card">
-      <h3 style="margin:0">Become a Pro!</h3>
-      <div class="sub">Get enhanced profile, hidden jobs & more tools.</div>
-      <div style="margin-top:12px"><a class="btn">Upgrade now</a></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin:0">What is email writing?</h3>
-      <div class="sub">A complete guide for clear communication</div>
-      <div style="margin-top:12px"><a class="btn" style="background:#0F143E">Know more</a></div>
-    </div>
-  </div>
-</section>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="/config.js"></script>
-<script src="/components.js?v=22"></script>
-<script>
-(async function init(){
-  try{
-    const { data:{ user } } = await window.supabase.auth.getUser();
-    if(!user){ location.href='/login.html'; return; }
-    if(!app.isEmailConfirmed(user)){
-      await window.supabase.auth.signOut();
-      ui.toast('Please verify your email to continue.','error');
-      location.href='/login.html'; return;
-    }
-
-    // name in header card
-    document.getElementById('uName').textContent = user.user_metadata?.full_name || 'Your name';
-
-    // load existing profile basics
-    const { data: prof } = await window.supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
-    if(prof){
-      document.getElementById('p_full').value  = prof.full_name || '';
-      document.getElementById('p_phone').value = prof.phone || '';
-      document.getElementById('p_head').value  = prof.headline || '';
-      document.getElementById('p_sal').value   = prof.expected_salary || '';
-    }
-
-    // save basics
-    document.getElementById('saveProfile').addEventListener('click', async ()=>{
-      const payload = {
-        user_id: user.id, role:'candidate',
-        full_name: document.getElementById('p_full').value.trim(),
-        phone: document.getElementById('p_phone').value.trim(),
-        headline: document.getElementById('p_head').value.trim(),
-        expected_salary: document.getElementById('p_sal').value ? parseInt(document.getElementById('p_sal').value,10) : null
-      };
-      const { error } = await app.upsertProfile(payload);
-      if(error) return ui.toast(error.message,'error');
-      ui.toast('Saved','success');
-    });
-
-    // recommended jobs
-    const cont = document.getElementById('jobs');
-    const { data, error } = await db.latestJobs(4);
-    if(error){ cont.innerHTML = `<div class="sub">Couldn’t load jobs.</div>`; }
-    else{
-      if(!data || !data.length){ cont.innerHTML = `<div class="sub">No jobs yet.</div>`; }
-      else{
-        cont.innerHTML = '';
-        data.forEach(j=>{
-          const el = document.createElement('div');
-          el.className = 'job';
-          el.innerHTML = `<h4>${j.title}</h4><div class="sub">• ${j.location||'—'} • ${j.employment_type||''}</div>
-                          <div style="margin-top:8px"><a class="btn" href="/job.html?id=${j.id}">View</a></div>`;
-          cont.appendChild(el);
-        });
-      }
-    }
-  }catch(e){ ui.toast(e.message||'Error','error'); }
-})();
-</script>
-</body></html>
+  <!-- Required order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script defer src="/config.js?v=1"></script>
+  <script defer src="/components.js?v=23"></script>
+</body>
+</html>
