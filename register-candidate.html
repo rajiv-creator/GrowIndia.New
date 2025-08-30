@@ -1,156 +1,87 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Candidate account — GrowIndia Jobs</title>
-  <style>
-    :root{--blue:#151B54;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-    header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
-    .brand{font-weight:800}
-    .ctas{display:flex;gap:12px}
-    .cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
-    .cta.orange{background:#FF6E00}
-    .wrap{max-width:960px;margin:28px auto;padding:0 16px}
-    h1{font-size:40px;margin:0 0 4px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:18px}
-    label{display:block;margin:12px 0 6px;font-weight:700}
-    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
-    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15);outline:0}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:720px){.row{grid-template-columns:1fr}}
-    .btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:12px 18px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
-    .btn[disabled]{opacity:.6;cursor:not-allowed}
-    .meta{color:var(--muted);font-size:14px}
-  </style>
-</head>
-<body>
-<header>
-  <div class="nav">
-    <div class="brand">GrowIndia Jobs</div>
-    <div class="ctas">
-      <a class="cta" href="/register-candidate.html">Candidate</a>
-      <a class="cta orange" href="/login.html?role=employer">Employer</a>
-    </div>
-  </div>
-</header>
-
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Candidate account — GrowIndia Jobs</title>
+<style>
+:root{--blue:#151B54;--bg:#F6F8FC;--line:#E5E7EB}
+html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.nav{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
+.brand{font-weight:800}
+.cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
+.wrap{max-width:960px;margin:28px auto;padding:0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:18px}
+label{display:block;margin:12px 0 6px;font-weight:700}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15);outline:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:720px){.row{grid-template-columns:1fr}}
+.btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:12px 18px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.meta{color:#64748B;font-size:14px}
+</style></head><body>
+<header><div class="nav"><div class="brand">GrowIndia Jobs</div><a class="cta" href="/login.html">Sign in</a></div></header>
 <main class="wrap">
   <h1>Candidate account</h1>
-  <div class="meta">Create your account to continue.</div>
-
-  <section class="card" style="margin-top:12px">
-    <form id="form" autocomplete="on">
-      <label>Full name</label>
-      <input id="full_name" placeholder="e.g., Ananya Sharma" required>
-
-      <label>Email</label>
-      <input id="email" type="email" placeholder="you@example.com" required>
-
+  <section class="card">
+    <form id="form">
+      <label>Full name</label><input id="full_name" required placeholder="e.g., Ananya Sharma"/>
+      <label>Email</label><input id="email" type="email" required placeholder="you@example.com"/>
       <div class="row">
-        <div>
-          <label>Password</label>
-          <input id="password" type="password" minlength="6" placeholder="Minimum 6 characters" required>
-        </div>
-        <div>
-          <label>Confirm password</label>
-          <input id="password2" type="password" minlength="6" placeholder="Re-enter password" required>
-        </div>
+        <div><label>Password</label><input id="password" type="password" minlength="6" required placeholder="Minimum 6 characters"/></div>
+        <div><label>Confirm password</label><input id="password2" type="password" minlength="6" required placeholder="Re-enter password"/></div>
       </div>
-
-      <label>Phone</label>
-      <input id="phone" placeholder="e.g., 9876543210" required>
-
-      <label>Upload CV (PDF/DOC)</label>
-      <input id="cv" type="file" accept=".pdf,.doc,.docx"/>
-
+      <label>Phone</label><input id="phone" required placeholder="e.g., 9876543210"/>
+      <label>Upload CV (PDF/DOC)</label><input id="cv" type="file" accept=".pdf,.doc,.docx"/>
       <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
-        <button id="nextBtn" type="submit" class="btn">Next</button>
+        <button id="nextBtn" class="btn" type="submit">Next</button>
         <span class="meta">Already have an account? <a href="/login.html">Sign in</a>.</span>
       </div>
     </form>
   </section>
 </main>
 
-<!-- Correct order: Supabase -> config -> (safety shim) -> components -> page code -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
-
-<!-- Safety shim: if components.js fails to load for any reason, we still have app/ui -->
-<script>
-  if(!window.ui){ window.ui = { toast:(m)=>alert(m) } }
-  if(!window.app){
-    window.app = {
-      async upsertProfile(payload){
-        if(!payload.role) payload.role='candidate';
-        return window.supabase.from('profiles').upsert(payload,{ onConflict:'user_id' });
-      },
-      async getSessionUser(){
-        const { data:{ user } } = await window.supabase.auth.getUser(); return user;
-      }
-    };
-  }
-</script>
-
-<script src="/components.js?v=21"></script>
+<script src="/components.js?v=22"></script>
 <script>
   const form = document.getElementById('form');
   form.addEventListener('submit', submitSignup);
 
   async function submitSignup(e){
     e.preventDefault();
-    const btn   = document.getElementById('nextBtn');
-    const email = document.getElementById('email').value.trim();
-    const pass  = document.getElementById('password').value;
-    const pass2 = document.getElementById('password2').value;
-    const name  = document.getElementById('full_name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const cv    = document.getElementById('cv').files[0];
-
-    if(pass !== pass2){ ui.toast('Passwords do not match.','error'); return; }
-
+    const btn = document.getElementById('nextBtn'); btn.disabled = true;
     try{
-      btn.disabled = true;
+      const name  = document.getElementById('full_name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const pass  = document.getElementById('password').value;
+      const pass2 = document.getElementById('password2').value;
+      const phone = document.getElementById('phone').value.trim();
+      const cv    = document.getElementById('cv').files[0];
 
-      const { error: sErr } = await window.supabase.auth.signUp({
+      if(pass!==pass2) return ui.toast('Passwords do not match.','error');
+
+      const { error } = await window.supabase.auth.signUp({
         email, password: pass,
-        options: {
-          data: { full_name: name },
-          emailRedirectTo: location.origin + '/post-auth.html'
-        }
+        options: { data: { full_name: name }, emailRedirectTo: location.origin + '/post-auth.html' }
       });
-      if(sErr) throw sErr;
+      if(error) throw error;
 
-      // Try to get an active user (if email confirm is disabled)
+      // Try session (if email confirmation disabled). If not, we’ll tell the user to verify.
       const { data:{ user } } = await window.supabase.auth.getUser();
-
-      // Upload CV only if we have a user/session
-      let cv_url = null;
-      if(user && cv){
-        const path = `${user.id}/${Date.now()}_${cv.name.replace(/\s+/g,'_')}`;
-        const up = await window.supabase.storage.from('cvs').upload(path, cv).catch(()=>({error:true}));
-        if(!up.error){
-          const { data:pub } = await window.supabase.storage.from('cvs').getPublicUrl(path);
-          cv_url = pub?.publicUrl || null;
-        }
-      }
-
-      // Create/Update profile (handles both cases)
       if(user){
+        let cv_url=null;
+        if(cv){
+          const path=`${user.id}/${Date.now()}_${cv.name.replace(/\s+/g,'_')}`;
+          const up=await window.supabase.storage.from('cvs').upload(path,cv).catch(()=>({error:true}));
+          if(!up.error){ const {data:pub}=await window.supabase.storage.from('cvs').getPublicUrl(path); cv_url = pub?.publicUrl||null; }
+        }
         await app.upsertProfile({ user_id:user.id, role:'candidate', full_name:name, phone, cv_url });
-        location.href = '/dashboard.html#complete';
+        location.href='/dashboard.html#complete';
       }else{
         ui.toast('Check your email to confirm your account, then sign in.','success');
-        location.href = '/login.html?notice=verify';
+        location.href='/login.html?notice=verify';
       }
-    }catch(err){
-      ui.toast(err.message || 'Sign-up failed','error');
-    }finally{
-      btn.disabled = false;
-    }
+    }catch(err){ ui.toast(err.message||'Sign-up failed','error'); }
+    finally{ btn.disabled=false; }
   }
 </script>
-</body>
-</html>
+</body></html>
