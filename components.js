@@ -1,4 +1,4 @@
-// components.js v18 — safe lazy access to Supabase client
+// components.js v19 — safe lazy access; tolerant selects
 (function(){
   const app = (window.app ||= {});
   const ui  = (window.ui  ||= {});
@@ -64,10 +64,10 @@
       .select().maybeSingle();
   };
 
-  // Jobs
+  // Jobs (select * so we don't break when some columns are missing)
   db.featuredJobs = async function(){
     return await client().from('jobs')
-      .select('id,title,company,location,employment_type,salary_min,salary_max,created_at')
+      .select('*')
       .eq('published', true)
       .order('created_at', { ascending: false })
       .limit(12);
@@ -75,7 +75,7 @@
 
   db.searchJobs = async function({ q='', loc='', type='all', page=1, pageSize=12 }){
     let query = client().from('jobs')
-      .select('id,title,company,location,employment_type,salary_min,salary_max,created_at', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .eq('published', true);
 
     const term = q.trim();
