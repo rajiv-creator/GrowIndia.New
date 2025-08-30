@@ -43,21 +43,8 @@
     .search-btn:hover{background:var(--blue-600)}
     .search-btn:focus{outline:3px solid rgba(21,27,84,.25)}
 
-    /* CTA cards below hero */
-    .cta-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:32px 0}
-    .cta{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 4px 14px rgba(2,6,23,.06);display:flex;flex-direction:column;gap:12px}
-    .cta h3{margin:0 0 6px}
-    .cta .primary{display:inline-block;padding:10px 14px;border-radius:12px;color:#fff;font-weight:700}
-    .cta .primary:hover{filter:brightness(.95)}
-    .cta .link{color:var(--muted)}
-    .candidate{border-color:rgba(21,27,84,.18)}
-    .candidate .primary{background:var(--blue)}
-    .employer{border-color:rgba(255,110,0,.25)}
-    .employer .primary{background:var(--orange)}
-    .cta-actions{display:flex;gap:10px;align-items:center}
-
     /* Value props */
-    .values{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 32px}
+    .values{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 14px rgba(2,6,23,.06)}
 
     /* Featured jobs */
@@ -74,7 +61,6 @@
     .foot a{color:#111827;display:block;margin:6px 0}
 
     @media (max-width: 900px){
-      .cta-row{grid-template-columns:1fr}
       .jobs{grid-template-columns:1fr}
       .values{grid-template-columns:1fr}
     }
@@ -111,24 +97,7 @@
       </form>
     </section>
 
-    <section class="cta-row">
-      <div class="cta candidate">
-        <h3>I’m a Candidate</h3>
-        <p class="muted">Build your profile and apply in one step.</p>
-        <div class="cta-actions">
-          <a class="primary" href="/register-candidate.html">Register</a>
-          <a class="link" href="/login.html">Sign in</a>
-        </div>
-      </div>
-      <div class="cta employer">
-        <h3>I’m an Employer</h3>
-        <p class="muted">Post jobs and manage applications easily.</p>
-        <div class="cta-actions">
-          <a class="primary" href="/login.html?role=employer">Employer login</a>
-        </div>
-      </div>
-    </section>
-
+    <!-- Value props -->
     <section class="values">
       <div class="card"><strong>1-step apply</strong><br><span class="muted">Fast applications with your saved profile.</span></div>
       <div class="card"><strong>Zero fees</strong><br><span class="muted">No charges for candidates.</span></div>
@@ -191,7 +160,6 @@
           grid.innerHTML = data.map(j=> jobCard(j)).join('');
         }catch(err){ ui.toast(err.message || 'Failed to load jobs', 'error'); }
       }
-
       function jobCard(j){
         const salary = (j.salary_min||j.salary_max) ? `₹${j.salary_min||''}${j.salary_min&&j.salary_max?'–':''}${j.salary_max||''}` : '—';
         return `<article class="job">
