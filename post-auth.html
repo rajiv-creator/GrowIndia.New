@@ -1,35 +1,26 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Signing you in…</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=13"></script>
-  <script src="/components.js?v=13"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redirecting…</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f8fafc;color:#0f172a}
-    .box{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(2,6,23,.06);text-align:center}
+    body{font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:grid;place-items:center;height:100dvh;color:#0f172a}
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Signing you in…</h2>
-    <div>Please wait while we redirect you to your dashboard.</div>
-  </div>
-
+  <div>Signing you in and routing…</div>
+  <script src="/config.js"></script>
+  <script src="/components.js?v=16"></script>
   <script>
   (async function(){
-    try{
-      const { user } = await window.app.requireAuth();
-      // check profile record
-      const prof = await window.app.db.getProfile(user.id);
-      if (!prof) { window.location.replace('/registration.html'); return; }
-      if (prof.role === 'employer') window.location.replace('/employer-home.html');
-      else window.location.replace('/dashboard.html'); // candidate
-    }catch(e){
-      window.location.replace('/login.html');
-    }
+    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
+    const user = await app.getSessionUser();
+    const { data: profile } = await app.getProfile(user.id);
+    if(!profile){ app.go('/register-candidate.html'); return; }
+    if(profile.role === 'employer'){ app.go('/employer-home.html'); return; }
+    const step2Done = profile.years_experience != null || (profile.skills && profile.skills.trim() !== '');
+    app.go(step2Done ? '/dashboard.html' : '/register-candidate-step2.html');
   })();
   </script>
 </body>
