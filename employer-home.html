@@ -1,36 +1,39 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Recruiter Home — GrowIndia</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=13"></script>
-  <script src="/components.js?v=13"></script>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f6f8fc;color:#0f172a}
-    .top{position:sticky;top:0;background:#fff;border-bottom:1px solid #e5e7eb;z-index:50}
-    .topin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:24px}
-    .brand{font-weight:800}
-    .menu{display:flex;gap:18px;position:relative}
-    .menu > div{position:relative}
-    .menu a{color:#0f172a;text-decoration:none;font-weight:600}
-    .dd{display:none;position:absolute;top:28px;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 12px 28px rgba(2,6,23,.12);min-width:240px;overflow:hidden}
-    .dd a{display:block;padding:10px 12px;border-top:1px solid #f1f5f9}
-    .menu > div:hover .dd{display:block}
-    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px}
-    .hero{background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;border-radius:14px;padding:18px}
-    .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-top:16px}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 28px rgba(2,6,23,.06)}
-    .head{padding:14px;border-bottom:1px solid #eef2f7;display:flex;justify-content:space-between;align-items:center}
-    .sec{padding:14px;border-top:1px solid #eef2f7}
-    .btn{display:inline-block;background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:10px 14px;text-decoration:none;font-weight:700}
-    .btn.alt{background:#fff;color:#0f172a;border:1px solid #e5e7eb}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-top:1px solid #eef2f7;text-align:left}
-    .muted{color:#64748b}
-    .pill{display:inline-block;background:#eef2ff;border-radius:999px;padding:3px 8px;font-size:12px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Recruiter Home — GrowIndia</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js?v=13"></script>
+<script src="/components.js?v=13"></script>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f6f8fc;color:#0f172a}
+  .top{position:sticky;top:0;background:#fff;border-bottom:1px solid #e5e7eb;z-index:50}
+  .topin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:24px}
+  .brand{font-weight:800}
+  .menu{display:flex;gap:18px;position:relative}
+  .menu > div{position:relative}
+  .menu a{color:#0f172a;text-decoration:none;font-weight:600}
+  .dd{display:none;position:absolute;top:28px;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 12px 28px rgba(2,6,23,.12);min-width:240px;overflow:hidden}
+  .dd a{display:block;padding:10px 12px;border-top:1px solid #f1f5f9}
+  .menu > div:hover .dd{display:block}
+  .hero{max-width:1200px;margin:16px auto 0;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;border-radius:14px;padding:18px}
+  .wrap{max-width:1200px;margin:0 auto;padding:18px}
+  .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-top:16px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 28px rgba(2,6,23,.06)}
+  .head{padding:14px;border-bottom:1px solid #eef2f7;display:flex;justify-content:space-between;align-items:center}
+  .sec{padding:14px}
+  .btn{display:inline-block;background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:10px 14px;text-decoration:none;font-weight:700;cursor:pointer}
+  .btn.alt{background:#fff;color:#0f172a;border:1px solid #e5e7eb}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-top:1px solid #eef2f7;text-align:left}
+  .muted{color:#64748b}
+  .meter{height:10px;background:#eef2ff;border-radius:999px;overflow:hidden}
+  .fill{height:100%;background:#22c55e}
+  .tile{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+</style>
 </head>
 <body>
 <header class="top">
@@ -52,26 +55,25 @@
       </div>
       <div><a href="#">Analytics ▾</a>
         <div class="dd">
-          <a href="#">Job Performance (coming soon)</a>
-          <a href="#">Applications Funnel (coming soon)</a>
+          <a href="/admin-reports.html">Job Performance</a>
         </div>
       </div>
     </nav>
-    <div style="margin-left:auto"><a class="btn alt" href="/index.html">Home</a></div>
+    <div style="margin-left:auto"><a class="btn alt" href="/">Home</a></div>
   </div>
 </header>
 
-<main class="wrap">
-  <div class="hero">
-    <h2 style="margin:0 0 6px">Welcome, Recruiter</h2>
-    <div>Post roles, track responses and manage your hiring pipeline.</div>
-    <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-      <a class="btn" href="/employer.html">Post a Hot Vacancy</a>
-      <a class="btn alt" href="/employer-edit.html">Manage Jobs & Responses</a>
-      <a class="btn alt" href="/employer-apps.html">Open Applications Inbox</a>
-    </div>
+<section class="hero">
+  <h2 style="margin:0 0 6px">Welcome, Recruiter</h2>
+  <div>Post roles, track responses and manage your hiring pipeline.</div>
+  <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+    <a class="btn" href="/employer.html">Post a Hot Vacancy</a>
+    <a class="btn alt" href="/employer-edit.html">Manage Jobs & Responses</a>
+    <a class="btn alt" href="/employer-apps.html">Open Applications Inbox</a>
   </div>
+</section>
 
+<main class="wrap">
   <div class="grid">
     <section class="card">
       <div class="head"><h3 style="margin:0">Active jobs</h3><a class="btn alt" href="/employer-edit.html">Manage</a></div>
@@ -80,56 +82,86 @@
 
     <aside class="card">
       <div class="head"><h3 style="margin:0">Quota usage</h3></div>
-      <div class="sec">Active Jobs: <strong id="jobCount">0</strong></div>
-      <div class="sec">Applications (last 7d): <strong id="app7">0</strong></div>
-      <div class="sec">Applications (all time): <strong id="appAll">0</strong></div>
+      <div class="sec">
+        <div class="muted">Active Jobs</div>
+        <div class="meter" style="margin:6px 0 8px"><div id="qJobs" class="fill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between"><div class="muted">0</div><div id="qJobsNum">0</div></div>
+      </div>
+      <div class="sec">
+        <div class="muted">Applications (last 7d)</div>
+        <div class="meter" style="margin:6px 0 8px"><div id="qApp7" class="fill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between"><div class="muted">0</div><div id="qApp7Num">0</div></div>
+      </div>
+      <div class="sec">
+        <div class="muted">Applications (all time)</div>
+        <div class="meter" style="margin:6px 0 8px"><div id="qAppAll" class="fill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between"><div class="muted">0</div><div id="qAppAllNum">0</div></div>
+      </div>
     </aside>
   </div>
+
+  <section class="card" style="margin-top:16px">
+    <div class="head"><h3 style="margin:0">Guides & tips</h3></div>
+    <div class="sec grid3">
+      <div class="tile"><strong>Write compelling job ads</strong><div class="muted" style="margin-top:6px">Improve click-through and quality</div></div>
+      <div class="tile"><strong>Shortlisting best practices</strong><div class="muted" style="margin-top:6px">Speed up screening workflow</div></div>
+      <div class="tile"><strong>Build a talent pipeline</strong><div class="muted" style="margin-top:6px">Nurture warm candidates</div></div>
+    </div>
+  </section>
 </main>
 
 <script>
 (async function(){
   const { requireAuth, db, ui } = window.app;
-  let user; try { user = await requireAuth(); } catch { window.location.replace('/login.html'); return; }
+  let user; try { user = await requireAuth(); } catch { return location.replace('/login.html'); }
   const prof = await db.getProfile(user.id);
-  if (!prof) return window.location.replace('/registration.html');
-  if (prof.role !== 'employer') return window.location.replace('/dashboard.html');
+  if (!prof) return location.replace('/registration.html');
+  if (prof.role !== 'employer') return location.replace('/dashboard.html');
 
-  try {
-    const companies = await db.myCompanies(user.id);
-    const ids = companies.map(c=>c.id);
-    const jobs = await db.myJobsByCompanyIds(ids);
+  // Load companies for this employer
+  const companies = await db.myCompanies(user.id);
+  const companyIds = companies.map(c=>c.id);
 
-    document.getElementById('jobCount').textContent = jobs.length;
+  // Active jobs
+  const jobs = await db.myJobsByCompanyIds(companyIds);
+  const active = jobs.filter(j=>j.published);
+  document.getElementById('qJobsNum').textContent = active.length;
+  document.getElementById('qJobs').style.width = `${Math.min(100, active.length*10)}%`;
 
-    const jobsWrap = document.getElementById('jobsWrap');
-    if (jobs.length === 0) {
-      jobsWrap.innerHTML = `<div class="muted">No jobs yet. <a href="/employer.html">Post your first job →</a></div>`;
-    } else {
-      jobsWrap.innerHTML = `
-        <table>
-          <thead><tr><th>Title</th><th>Company</th><th>Meta</th><th>Published</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${jobs.map(j=>`
-              <tr>
-                <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
-                <td>${window.app.escapeHTML(j.company?.name||'—')}</td>
-                <td class="muted">${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span></td>
-                <td>${j.published?'✅':'⛔'}</td>
-                <td><a href="/employer-edit.html" class="btn alt">Edit</a></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+  const jobsWrap = document.getElementById('jobsWrap');
+  if(!jobs.length){
+    jobsWrap.innerHTML = `<div class="muted">No jobs yet. <a href="/employer.html">Post your first job →</a></div>`;
+  } else {
+    jobsWrap.innerHTML = `
+      <table>
+        <thead><tr><th>Title</th><th>Company</th><th>Meta</th><th>Published</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${jobs.map(j=>`
+            <tr>
+              <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
+              <td>${window.app.escapeHTML(j.company?.name||'—')}</td>
+              <td class="muted">${window.app.escapeHTML(j.location)} • ${window.app.escapeHTML(j.employment_type)}</td>
+              <td>${j.published?'✅':'⛔'}</td>
+              <td><a href="/employer-edit.html" class="btn alt">Edit</a></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
 
-      const { rows: appsAll } = await db.appsForJobIds(jobs.map(j=>j.id), { page:1, pageSize:5000 });
-      const sevenDaysAgo = Date.now() - 7*24*60*60*1000;
-      const app7 = appsAll.filter(a => new Date(a.created_at).getTime() >= sevenDaysAgo).length;
-      document.getElementById('appAll').textContent = appsAll.length;
-      document.getElementById('app7').textContent = app7;
-    }
-  } catch (e) { console.error(e); ui.error('Failed to load recruiter data'); }
+  // Applications stats
+  if (jobs.length){
+    const { rows: appsAll } = await db.appsForJobIds(jobs.map(j=>j.id), { page:1, pageSize:5000 });
+    const sevenDaysAgo = Date.now() - 7*24*60*60*1000;
+    const app7 = appsAll.filter(a => new Date(a.created_at).getTime() >= sevenDaysAgo).length;
+
+    document.getElementById('qAppAllNum').textContent = appsAll.length;
+    document.getElementById('qApp7Num').textContent = app7;
+
+    document.getElementById('qAppAll').style.width = `${Math.min(100, appsAll.length*5)}%`;
+    document.getElementById('qApp7').style.width = `${Math.min(100, app7*10)}%`;
+  }
 })();
 </script>
 </body>
