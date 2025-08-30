@@ -2,55 +2,270 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GrowIndia Jobs — Sign in</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GrowIndia Jobs</title>
   <style>
-    :root{--blue:#151B54;--blue-600:#0f1440;--orange:#FF6E00;--muted:#64748B;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111}
-    header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid var(--line)}
-    .brand{font-weight:700;color:#111}
-    .nav{display:flex;gap:10px}
-    .pill{padding:10px 16px;border-radius:999px;background:var(--blue);color:#fff;font-weight:700;border:none}
-    .pill--alt{background:var(--orange)}
-    main{max-width:960px;margin:40px auto;padding:0 16px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(2,6,23,.06);padding:24px}
-    h1{font-size:28px;margin:0 0 16px}
-    form{display:grid;gap:14px;margin-top:12px}
-    input{height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit}
-    button.btn{height:46px;border-radius:12px;background:var(--blue);color:#fff;border:none;font-weight:700}
-    a{color:var(--blue);text-decoration:none}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    @media (max-width:720px){.row{grid-template-columns:1fr}}
+    :root{
+      --blue:#151B54;         /* brand blue (updated) */
+      --blue-600:#0F1540;     /* hover/darker */
+      --orange:#FF6E00;
+      --ink:rgba(15,23,42,.9);
+      --bg:#F6F8FC;
+      --card:#FFFFFF;
+      --line:#E5E7EB;
+      --muted:#64748B;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--ink);
+      font:16px/1.5 Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    header{
+      background:#fff;border-bottom:1px solid var(--line);
+      position:sticky;top:0;z-index:10;
+    }
+    .nav{display:flex;align-items:center;justify-content:space-between}
+    .brand{font-weight:700;font-size:20px}
+    .actions{display:flex;gap:12px;align-items:center}
+    .chip{
+      padding:10px 18px;border-radius:999px;font-weight:600;
+      color:#fff;background:var(--blue);box-shadow:0 6px 18px rgba(2,6,23,.08);
+    }
+    .chip.orange{background:var(--orange)}
+    .chip:hover{background:var(--blue-600)}
+    .chip.orange:hover{filter:brightness(.95)}
+    /* hero */
+    .hero{padding:56px 0 24px}
+    .hero h1{font-size:44px;line-height:1.15;margin:0 0 8px}
+    .hero p{color:var(--muted);margin:0 0 24px}
+    .search-wrap{display:flex;justify-content:center}
+    .search{
+      width:100%;max-width:960px;background:#fff;border-radius:16px;
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);
+      display:grid;grid-template-columns:1fr 1fr 150px;gap:0;overflow:hidden;
+    }
+    .search input{
+      padding:18px 16px;border:0;outline:0;font-size:16px;
+    }
+    .search .divider{width:1px;background:var(--line)}
+    .search button{
+      border:0;background:var(--blue);color:#fff;font-weight:700;
+      letter-spacing:.2px;cursor:pointer
+    }
+    .search button:hover{background:var(--blue-600)}
+    /* value props */
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:28px 0}
+    .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 6px 18px rgba(2,6,23,.05)}
+    .card h3{margin:0 0 6px;font-size:18px}
+    .muted{color:var(--muted)}
+    /* sections */
+    .section{margin:28px 0}
+    .section h2{margin:0 0 12px}
+    .jobs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .job{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+    .job h4{margin:0 0 6px;font-size:16px}
+    .job .meta{color:var(--muted);font-size:13px}
+    .job .view{display:inline-block;margin-top:8px;color:#fff;background:var(--blue);padding:8px 12px;border-radius:10px;font-weight:600}
+    .job .view:hover{background:var(--blue-600)}
+    .articles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .article{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+    footer{
+      margin-top:48px;background:#fff;border-top:1px solid var(--line);
+    }
+    footer .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    footer h4{margin:0 0 10px}
+    @media (max-width:1024px){
+      .jobs{grid-template-columns:repeat(2,1fr)}
+      .articles{grid-template-columns:repeat(2,1fr)}
+      .cards{grid-template-columns:1fr}
+      .search{grid-template-columns:1fr 1fr 130px}
+    }
+    @media (max-width:640px){
+      .search{grid-template-columns:1fr;gap:8px;border-radius:12px}
+      .search .divider{display:none}
+      .search button{padding:14px;border-radius:10px}
+    }
   </style>
 </head>
 <body>
   <header>
-    <div class="brand">GrowIndia Jobs</div>
-    <nav class="nav">
-      <a class="pill" href="/register-candidate.html">Candidate</a>
-      <a class="pill pill--alt" href="/login.html?role=employer">Employer</a>
-    </nav>
+    <div class="container nav">
+      <div class="brand">GrowIndia Jobs</div>
+      <div class="actions">
+        <a class="chip" href="/register-candidate.html">Candidate</a>
+        <a class="chip orange" href="/login.html?role=employer">Employer</a>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <div class="card">
-      <h1>Sign in</h1>
-      <p style="color:var(--muted);margin:0 0 12px">Use your email and password to continue.</p>
-      <form id="loginForm">
-        <input type="email" placeholder="Email" required />
-        <input type="password" placeholder="Password" required />
-        <div class="row">
-          <button class="btn" type="submit">Next</button>
-          <a href="/register-candidate.html" style="align-self:center">New here? Create an account →</a>
-        </div>
-        <div style="margin-top:-6px"><a href="/login.html#forgot">Forgot password?</a></div>
-      </form>
-    </div>
+  <main class="container">
+    <section class="hero">
+      <h1>Find work you’ll actually like.</h1>
+      <p class="muted">Search by title, keyword, or location.</p>
+      <div class="search-wrap">
+        <form id="searchForm" class="search">
+          <input id="q" placeholder="Job title, keywords, or company" />
+          <div class="divider"></div>
+          <input id="loc" placeholder="Dehradun, Uttarakhand" />
+          <button type="submit">Find jobs</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="cards">
+      <div class="card">
+        <h3>1-step apply</h3>
+        <div class="muted">Fast applications with your saved profile.</div>
+      </div>
+      <div class="card">
+        <h3>Zero fees</h3>
+        <div class="muted">No charges for candidates.</div>
+      </div>
+      <div class="card">
+        <h3>For employers</h3>
+        <div class="muted">Simple tools to post, review, and hire.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="nav" style="padding:0">
+        <h2>Featured jobs</h2>
+        <a id="browseAll" href="/jobs.html" class="muted">Browse all →</a>
+      </div>
+      <div id="jobs" class="jobs">
+        <!-- populated by JS -->
+      </div>
+      <div id="jobsStatus" class="muted" style="margin-top:8px">Loading…</div>
+    </section>
+
+    <section class="section">
+      <div class="nav" style="padding:0"><h2>Articles & Tutorials</h2> <a class="muted" href="/admin-copy.html">Edit →</a></div>
+      <div id="articles" class="articles"></div>
+      <div id="articlesStatus" class="muted" style="margin-top:8px">Loading…</div>
+    </section>
   </main>
 
-  <!-- Required order -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script defer src="/config.js?v=1"></script>
-  <script defer src="/components.js?v=23"></script>
+  <footer>
+    <div class="container grid" style="padding:28px 20px">
+      <div>
+        <h4>About</h4>
+        <div class="muted">Company<br/>Team<br/>Careers</div>
+      </div>
+      <div>
+        <h4>Employer</h4>
+        <div class="muted">Post a job<br/>Pricing</div>
+      </div>
+      <div>
+        <h4>Help</h4>
+        <div class="muted">Support<br/>Guides</div>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <div class="muted">Terms<br/>Privacy</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts: Supabase CDN first, then your client config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js"></script>
+
+  <script>
+    // Search routing
+    document.getElementById('searchForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const q   = encodeURIComponent(document.getElementById('q').value.trim());
+      const loc = encodeURIComponent(document.getElementById('loc').value.trim());
+      const type = 'all';
+      const url = `/jobs.html?q=${q}&loc=${loc}&type=${type}`;
+      window.location.href = url;
+    });
+
+    // Utilities
+    const sb = window.supabase; // created by /config.js
+    function text(el, t){el.textContent=t}
+    function byId(id){return document.getElementById(id)}
+
+    // Featured jobs (published only)
+    async function loadFeatured(){
+      const jobsEl = byId('jobs');
+      const statusEl = byId('jobsStatus');
+      if(!sb){ text(statusEl, 'Couldn’t load jobs. (No Supabase client)'); return; }
+
+      try{
+        const { data, error } = await sb
+          .from('jobs')
+          .select('id,title,location,employment_type,type,salary_min,salary_max,published,created_at')
+          .eq('published', true)
+          .order('created_at', { ascending:false })
+          .limit(12);
+
+        if(error) throw error;
+        jobsEl.innerHTML = '';
+        if(!data || data.length===0){ text(statusEl, 'No jobs yet.'); return; }
+        data.forEach(j=>{
+          const t = j.title || 'Untitled';
+          const loc = j.location || '—';
+          const kind = j.employment_type || j.type || '—';
+          const sal = (j.salary_min && j.salary_max) ? `₹${j.salary_min}–${j.salary_max}` : '';
+          const card = document.createElement('div');
+          card.className='job';
+          card.innerHTML = `
+            <h4>${t}</h4>
+            <div class="meta">${loc} · ${kind} ${sal?`· ${sal}`:''}</div>
+            <a class="view" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
+          `;
+          jobsEl.appendChild(card);
+        });
+        statusEl.remove();
+      }catch(err){
+        text(statusEl, 'Couldn’t load jobs. Please try again later.');
+        console.error(err);
+      }
+    }
+
+    // Articles & Tutorials – optional: pulls from site_copy key='home_articles'
+    async function loadArticles(){
+      const listEl = byId('articles');
+      const statusEl = byId('articlesStatus');
+      if(!sb){ text(statusEl, 'Couldn’t load articles. (No Supabase client)'); return; }
+
+      try{
+        const { data, error } = await sb
+          .from('site_copy')
+          .select('content')
+          .eq('key', 'home_articles')
+          .maybeSingle();
+
+        const items = (!error && data && data.content && Array.isArray(data.content.items))
+          ? data.content.items
+          : [
+              { title:'How to write an ATS-friendly resume', href:'#' },
+              { title:'Free SQL tutorials for beginners', href:'#' },
+              { title:'Ace your first tech interview', href:'#' },
+            ];
+
+        listEl.innerHTML = '';
+        items.slice(0,6).forEach(a=>{
+          const el = document.createElement('div');
+          el.className='article';
+          el.innerHTML = `<strong>${a.title}</strong><div class="muted" style="margin-top:6px"><a href="${a.href}">Read →</a></div>`;
+          listEl.appendChild(el);
+        });
+        statusEl.remove();
+      }catch(err){
+        text(statusEl, 'Couldn’t load articles.');
+        console.error(err);
+      }
+    }
+
+    loadFeatured();
+    loadArticles();
+  </script>
 </body>
 </html>
