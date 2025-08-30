@@ -98,7 +98,14 @@
   <script src="/config.js"></script>
   <script src="/components.js?v=18"></script>
   <script>
-    // Clean unwanted query-string on home
+    // Clean hash after email confirmation (so /#access_token… becomes /)
+    (function cleanAuthHash(){
+      if (location.hash && /access_token=|type=signup|type=recovery/.test(location.hash)) {
+        history.replaceState(null,'','/');
+      }
+    })();
+
+    // Clean known search params on home
     (function cleanHomeQS(){
       const p = location.pathname;
       if ((p === '/' || p === '/index.html') && location.search){
@@ -119,7 +126,6 @@
 
     // Featured + Articles
     (async function loadData(){
-      // Featured jobs
       try{
         const box = document.getElementById('featured');
         const { data, error } = await db.featuredJobs();
@@ -129,7 +135,7 @@
           `<article class="job">
              <h4>${escapeHtml(j.title)}</h4>
              <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
-             <div class="meta">Salary: ${(j.salary_min||j.salary_max)?`₹${j.salary_min||''}${j.salary_min&&j.salary_max?'–':''}${j.salary_max||''}`:'—'}</div>
+             <div class="meta">Salary: ${(j.salary_min||j.salary_max)?\`₹\${j.salary_min||''}\${j.salary_min&&j.salary_max?'–':''}\${j.salary_max||''}\`:'—'}</div>
              <a class="btn-view" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
            </article>`
         )).join('');
@@ -138,7 +144,6 @@
         ui.toast(err.message || 'Failed to load jobs','error');
       }
 
-      // Articles
       try{
         const area = document.getElementById('articles');
         const { data } = await db.getSiteCopy('home_articles');
