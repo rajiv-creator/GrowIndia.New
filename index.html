@@ -1,30 +1,26 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Sign in — GrowIndia Jobs</title>
-  <style>
-    :root{--blue:#151B54;--blue-600:#0F143E;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-    header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
-    .brand{font-weight:800}
-    .ctas{display:flex;gap:12px}
-    .cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
-    .cta.orange{background:#FF6E00}
-    .wrap{max-width:960px;margin:28px auto;padding:0 16px}
-    h1{font-size:40px;margin:0 0 6px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:18px}
-    label{display:block;margin:12px 0 6px;font-weight:700}
-    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
-    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15);outline:0}
-    .btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:12px 18px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
-    .btn[disabled]{opacity:.6;cursor:not-allowed}
-    .meta{color:var(--muted);font-size:14px}
-  </style>
-</head>
-<body>
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GrowIndia Jobs</title>
+<style>
+:root{--blue:#151B54;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.nav{max-width:1100px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
+.brand{font-weight:800}
+.ctas{display:flex;gap:12px}
+.cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
+.cta.orange{background:#FF6E00}
+.hero{max-width:1100px;margin:40px auto;padding:0 16px}
+h1{font-size:48px;margin:0 0 8px}
+.sub{color:var(--muted)}
+.search{max-width:960px;margin-top:20px;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);display:grid;grid-template-columns:1fr 1fr 160px;overflow:hidden}
+.search input{border:0;padding:16px 18px;font-size:16px}
+.search button{border:0;background:var(--blue);color:#fff;font-weight:800}
+.cards{max-width:1100px;margin:26px auto;padding:0 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(2,6,23,.06)}
+footer{border-top:1px solid var(--line);margin-top:40px;background:#fff}
+.foot{max-width:1100px;margin:0 auto;padding:28px 16px;color:#334155;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+</style></head><body>
 <header>
   <div class="nav">
     <div class="brand">GrowIndia Jobs</div>
@@ -35,76 +31,34 @@
   </div>
 </header>
 
-<main class="wrap">
-  <h1>Sign in</h1>
-  <div class="meta">Use your email and password to continue.</div>
+<section class="hero">
+  <h1>Find work you’ll actually like.</h1>
+  <div class="sub">Search by title, keyword, or location.</div>
+  <form class="search" onsubmit="goJobs(event)">
+    <input id="q" placeholder="Job title, keywords, or company"/>
+    <input id="loc" placeholder="Dehradun, Uttarakhand"/>
+    <button type="submit">Find jobs</button>
+  </form>
+</section>
 
-  <section class="card" style="margin-top:12px">
-    <form id="form" autocomplete="on">
-      <label>Email</label>
-      <input id="email" type="email" placeholder="you@example.com" required>
+<section class="cards">
+  <div class="card"><strong>1-step apply</strong><div class="sub">Fast applications with your saved profile.</div></div>
+  <div class="card"><strong>Zero fees</strong><div class="sub">No charges for candidates.</div></div>
+  <div class="card"><strong>For employers</strong><div class="sub">Simple tools to post, review, and hire.</div></div>
+</section>
 
-      <label>Password</label>
-      <input id="password" type="password" placeholder="••••••" required>
+<footer><div class="foot">
+  <div><strong>About</strong><div>Company<br/>Team<br/>Careers</div></div>
+  <div><strong>Employer</strong><div>Post a job<br/>Pricing</div></div>
+  <div><strong>Help</strong><div>Support<br/>Guides</div></div>
+  <div><strong>Legal</strong><div>Terms<br/>Privacy</div></div>
+</div></footer>
 
-      <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button id="loginBtn" type="button" class="btn" onclick="submitLogin()">Next</button>
-        <a id="fp" href="#" class="meta">Forgot password?</a>
-        <span class="meta" style="margin-left:auto">New here? <a href="/register-candidate.html">Create an account</a>.</span>
-      </div>
-    </form>
-  </section>
-</main>
-
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="/config.js"></script>
-<script src="/components.js?v=20"></script>
 <script>
-  if(!window.ui){ window.ui = { toast:(m)=>alert(m) } }
-
-  // If we came from a verify notice
-  const params = new URLSearchParams(location.search);
-  if(params.get('notice')==='verify'){ ui.toast('Email verified. You can sign in now.', 'success'); }
-
-  async function submitLogin(){
-    const btn = document.getElementById('loginBtn');
-    const email = document.getElementById('email').value.trim();
-    const pass  = document.getElementById('password').value;
-    if(!email || !pass){ ui.toast('Please fill both fields.','error'); return; }
-
-    try{
-      btn.disabled = true;
-      const { data, error } = await window.supabase.auth.signInWithPassword({ email, password: pass });
-      if(error) throw error;
-
-      // Make sure profile exists & has role
-      const { data: userData } = await window.supabase.auth.getUser();
-      const user = userData?.user;
-      if(user){
-        await app.upsertProfile({ user_id:user.id, role:'candidate' });
-      }
-      location.href = '/dashboard.html';
-    }catch(e){
-      ui.toast(e.message || 'Sign-in failed','error');
-    }finally{
-      btn.disabled = false;
-    }
-  }
-
-  document.getElementById('form').addEventListener('submit', (e)=>{ e.preventDefault(); submitLogin(); });
-
-  // Forgot password
-  document.getElementById('fp').addEventListener('click', async (e)=>{
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    if(!email){ ui.toast('Enter your email above first.','error'); return; }
-    const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: location.origin + '/post-auth.html'
-    });
-    if(error) ui.toast(error.message,'error');
-    else ui.toast('Password reset link sent to your email.','success');
-  });
+function goJobs(e){ e.preventDefault();
+  const q=encodeURIComponent(document.getElementById('q').value||'');
+  const loc=encodeURIComponent(document.getElementById('loc').value||'');
+  location.href=`/jobs.html?q=${q}&loc=${loc}&type=all`;
+}
 </script>
-</body>
-</html>
+</body></html>
