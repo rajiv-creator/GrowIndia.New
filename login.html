@@ -4,14 +4,17 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Sign in — GrowIndia Jobs</title>
-  <link rel="stylesheet" href="/app.css">
+
+  <!-- Supabase + your globals -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=12"></script>
-  <script src="/components.js?v=12"></script>
+  <script src="/config.js?v=13"></script>
+  <script src="/components.js?v=13"></script>
+
   <style>
+    :root{--line:#e5e7eb}
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f8fafc;color:#0f172a}
     .wrap{max-width:860px;margin:0 auto;padding:40px 16px}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(2,6,23,.06)}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(2,6,23,.06)}
     h1{margin:0 0 10px}
     label{display:block;margin:12px 0 6px;font-weight:600}
     input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px}
@@ -24,8 +27,9 @@
     <div class="card">
       <h1>Welcome back</h1>
       <p class="muted">Sign in to manage your jobs and applications.</p>
+
       <form id="loginForm">
-        <label>Email</label>
+        <label for="email">Email</label>
         <input id="email" type="email" placeholder="you@example.com" required>
         <button type="submit" id="btnSend">Send magic link</button>
       </form>
@@ -35,13 +39,20 @@
   <script>
     (function(){
       const { ui } = window.app;
+
       document.getElementById('loginForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const email = document.getElementById('email').value.trim();
-        if(!email) return ui.error('Email is required');
+        if(!email){ ui.error('Email is required'); return; }
+
         ui.toast('Sending magic link…');
-        const { error } = await window.supabase.auth.signInWithOtp({ email });
-        if (error) return ui.error(error.message||'Failed to send link');
+        const { error } = await window.supabase.auth.signInWithOtp({
+          email,
+          // IMPORTANT: this makes the link return to post-auth.html (no more "/#")
+          options: { emailRedirectTo: 'https://grow-india-new.vercel.app/post-auth.html' }
+        });
+
+        if (error) { ui.error(error.message || 'Failed to send link'); return; }
         ui.success('Magic link sent! Check your email.');
       });
     })();
