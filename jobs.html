@@ -7,16 +7,15 @@
   <style>
     :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B;--ink:rgba(15,23,42,.9)}
     body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-    .container{max-width:1200px;margin:0 auto;padding:24px 16px}
     header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:68px}
+    .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
     .brand{font-weight:800}
-    .nav-right{display:flex;gap:14px;align-items:center}
-    .nav-right a.link{color:#111827}
-    .btn{display:inline-block;padding:9px 14px;border-radius:999px;font-weight:700;color:#fff}
+    .nav-right{display:flex;gap:12px;align-items:center}
+    .btn-pill{display:inline-block;padding:10px 16px;border-radius:999px;font-weight:800;color:#fff;box-shadow:0 6px 16px rgba(2,6,23,.12)}
     .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
     .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
 
+    .container{max-width:1200px;margin:0 auto;padding:24px 16px}
     .layout{display:grid;grid-template-columns:280px 1fr;gap:16px}
     .panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:16px}
     .label{font-weight:700;margin:8px 0 6px;display:block}
@@ -40,11 +39,8 @@
     <div class="nav">
       <div class="brand">GrowIndia Jobs</div>
       <div class="nav-right">
-        <a class="link" href="/jobs.html">Jobs</a>
-        <a class="link" href="/post-job.html">Post a Job</a>
-        <a class="link" href="/login.html">Sign in</a>
-        <a class="btn btn-blue" href="/register-candidate.html">Candidate</a>
-        <a class="btn btn-orange" href="/login.html?role=employer">Employer</a>
+        <a class="btn-pill btn-blue" href="/register-candidate.html">Candidate</a>
+        <a class="btn-pill btn-orange" href="/login.html?role=employer">Employer</a>
       </div>
     </div>
   </header>
@@ -54,9 +50,7 @@
     <div class="layout">
       <aside class="panel">
         <label class="label">Department (placeholder)</label>
-        <select id="dept">
-          <option value="">All</option>
-        </select>
+        <select id="dept"><option value="">All</option></select>
         <label class="label">Employment Type</label>
         <select id="type">
           <option value="all">All</option>
@@ -72,7 +66,7 @@
         <div class="panel toolbar">
           <form id="searchbar" style="display:flex;gap:8px;flex:1">
             <input id="q" placeholder="Job title, keywords, or company" style="flex:1" />
-            <button class="btn btn-blue" type="submit" style="border:0">Search</button>
+            <button class="btn-pill btn-blue" type="submit" style="border:0">Search</button>
           </form>
           <div class="muted">Sort: Newest</div>
         </div>
@@ -83,7 +77,7 @@
   </div>
 
   <script src="/config.js"></script>
-  <script src="/components.js?v=16"></script>
+  <script src="/components.js?v=17"></script>
   <script>
   (function(){
     const params = new URLSearchParams(location.search);
@@ -112,7 +106,7 @@
         if(!data.length){ grid.innerHTML = '<div class="panel">No jobs found.</div>'; renderPager(0); return; }
         grid.innerHTML = data.map(j=> jobCard(j)).join('');
         renderPager(count||0);
-      }catch(err){ grid.innerHTML = '<div class="panel">Failed to load jobs.</div>'; ui.toast(err.message,'error'); }
+      }catch(err){ grid.innerHTML = '<div class="panel">Couldn’t load jobs right now.</div>'; ui.toast(err.message,'error'); }
     }
 
     function jobCard(j){
@@ -122,7 +116,7 @@
         <div class="meta">${escapeHtml(j.company||'')} · ${escapeHtml(j.location||'')} · ${escapeHtml(j.employment_type||'')}</div>
         <div class="meta">Salary: ${salary}</div>
         <a class="btn-small" href="/job.html?id=${encodeURIComponent(j.id)}">View</a>
-      </article>`
+      </article>`;
     }
 
     function renderPager(total){
