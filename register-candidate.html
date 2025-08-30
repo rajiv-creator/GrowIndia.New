@@ -24,10 +24,11 @@
     input[type="text"],input[type="email"],input[type="password"],input[type="tel"]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
     input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15)}
     input[type="file"]{display:block;margin-top:6px}
-    .actions{margin-top:16px;display:flex;gap:10px;align-items:center}
+    .actions{margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}
     button.primary:hover{background:var(--blue-600)}
     .muted{color:var(--muted)}
+    .link{color:var(--blue);text-decoration:underline;cursor:pointer}
   </style>
 </head>
 <body>
@@ -82,30 +83,43 @@
 
         <div class="actions">
           <button class="primary" type="submit">Next</button>
-          <span class="muted" id="helper">Already have an account? Click “Sign in”.</span>
+          <span class="muted" id="inlineHelp">Already have an account? Click <a id="linkSignin" class="link">Sign in</a>.</span>
         </div>
       </form>
-      <div class="muted" style="margin-top:10px">
-        After creating your account, you’ll land on your dashboard. You can complete your profile anytime.
-        <a href="/register-candidate-step2.html">Complete profile now →</a>
-      </div>
     </section>
   </div>
 
+  <!-- MUST be: UMD → config.js → components.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="/config.js"></script>
-  <script src="/components.js?v=18"></script>
+  <script src="/components.js?v=19"></script>
   <script>
     (function(){
       const tabSignup = document.getElementById('tabSignup');
       const tabSignin = document.getElementById('tabSignin');
       const signup = document.getElementById('signupFields');
       const signin = document.getElementById('signinFields');
-      const helper = document.getElementById('helper');
+      const linkSignin = document.getElementById('linkSignin');
       let mode = 'signup';
 
-      tabSignup.onclick = ()=>{ mode='signup'; tabSignup.classList.add('active'); tabSignin.classList.remove('active'); signup.style.display='block'; signin.style.display='none'; helper.textContent='Already have an account? Click “Sign in”.'; };
-      tabSignin.onclick = ()=>{ mode='signin'; tabSignin.classList.add('active'); tabSignup.classList.remove('active'); signup.style.display='none'; signin.style.display='block'; helper.textContent='New here? Click “Sign up”.'; };
+      function show(modeName){
+        mode = modeName;
+        if(mode==='signup'){
+          tabSignup.classList.add('active'); tabSignin.classList.remove('active');
+          signup.style.display='block'; signin.style.display='none';
+          document.getElementById('inlineHelp').innerHTML =
+            'Already have an account? Click <a id="linkSignin" class="link">Sign in</a>.';
+          document.getElementById('linkSignin').onclick = (e)=>{e.preventDefault();show('signin');};
+        }else{
+          tabSignin.classList.add('active'); tabSignup.classList.remove('active');
+          signup.style.display='none'; signin.style.display='block';
+          document.getElementById('inlineHelp').textContent = 'New here? Switch to “Sign up”.';
+        }
+      }
+
+      tabSignup.onclick = ()=> show('signup');
+      tabSignin.onclick = ()=> show('signin');
+      linkSignin.onclick = (e)=>{ e.preventDefault(); show('signin'); };
 
       document.getElementById('form').addEventListener('submit', async (e)=>{
         e.preventDefault();
@@ -113,36 +127,34 @@
           if(mode==='signup'){
             const full_name = v('full_name'), email = v('email'), password = v('password'), confirm = v('confirm'), phone = v('phone');
             if(password !== confirm){ ui.toast('Passwords do not match','error'); return; }
-
             const { data, error } = await window.supabase.auth.signUp({ email, password });
             if(error) throw error;
 
-            // If email confirmation is ON, there may be no session yet.
             const u = await app.getSessionUser().catch(()=>null);
+            if(!u){ ui.toast('Check your email to verify, then sign in.','success'); return; }
 
-            // Upload CV only if we already have a session
+            // Optional CV upload
             let cv_url = null;
-            if(u){
-              const file = document.getElementById('cv').files[0];
-              if(file){
-                const key = `user-${u.id}/${Date.now()}-${file.name}`.replace(/\s+/g,'-');
-                const up = await window.supabase.storage.from('cvs').upload(key, file, { upsert: true });
-                if(up.error) throw up.error;
-                const { data: pub } = window.supabase.storage.from('cvs').getPublicUrl(key);
-                cv_url = pub.publicUrl;
-              }
-              await app.upsertProfile({ user_id: u.id, role: 'candidate', full_name, phone, cv_url });
+            const file = document.getElementById('cv').files[0];
+            if(file){
+              const key = `user-${u.id}/${Date.now()}-${file.name}`.replace(/\s+/g,'-');
+              const up = await window.supabase.storage.from('cvs').upload(key, file, { upsert: true });
+              if(up.error) throw up.error;
+              const { data: pub } = window.supabase.storage.from('cvs').getPublicUrl(key);
+              cv_url = pub.publicUrl;
             }
 
-            ui.toast('Check your email to verify your account, then sign in.','success');
-            app.go('/dashboard.html'); // Go straight to dashboard (Step-2 optional)
+            await app.upsertProfile({ user_id: u.id, role:'candidate', full_name, phone, cv_url });
+            // Land inside dashboard with profile panel open
+            app.go('/dashboard.html#complete');
+
           }else{
             const email = v('email_in'), password = v('password_in');
             const { error } = await window.supabase.auth.signInWithPassword({ email, password });
             if(error) throw error;
             const u = await app.getSessionUser();
-            await app.upsertProfile({ user_id: u.id, role: 'candidate' });
-            app.go('/dashboard.html'); // Step-2 optional
+            await app.upsertProfile({ user_id: u.id, role:'candidate' });
+            app.go('/dashboard.html#complete');
           }
         }catch(err){
           ui.toast(err.message || 'Something went wrong','error');
