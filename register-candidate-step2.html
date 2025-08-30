@@ -1,20 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Complete your Profile — Candidate (Step 2)</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Candidate — Step 2</title>
   <style>
     :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
     body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
     header{background:#fff;border-bottom:1px solid var(--line)}
     .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
-    .brand{font-weight:800}
-    .nav-right{display:flex;gap:12px;align-items:center}
+    .brand{font-weight:800}.nav-right{display:flex;gap:12px}
     .btn-pill{padding:10px 16px;border-radius:999px;font-weight:800;color:#fff;box-shadow:0 6px 16px rgba(2,6,23,.12)}
     .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
     .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
-
     .container{max-width:800px;margin:0 auto;padding:24px 16px}
     .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
     label{display:block;margin:12px 0 4px;font-weight:700}
@@ -42,17 +40,11 @@
     <div class="muted">Step 2 of 2</div>
     <section class="card">
       <form id="form">
-        <label>Years of experience</label>
-        <input id="years_experience" type="number" min="0" placeholder="e.g., 3" />
-        <label>Key skills (comma-separated)</label>
-        <input id="skills" placeholder="e.g., React, Node.js, SQL" />
-        <label>Preferred locations (comma-separated)</label>
-        <input id="preferred_locations" placeholder="e.g., Dehradun, Delhi NCR" />
-        <label>Expected salary (optional)</label>
-        <input id="expected_salary" type="number" min="0" placeholder="e.g., 600000" />
-        <div class="actions">
-          <button class="primary" type="submit">Finish</button>
-        </div>
+        <label>Years of experience</label><input id="years_experience" type="number" min="0" placeholder="e.g., 3"/>
+        <label>Key skills (comma-separated)</label><input id="skills" placeholder="e.g., React, Node.js, SQL"/>
+        <label>Preferred locations (comma-separated)</label><input id="preferred_locations" placeholder="e.g., Dehradun, Delhi NCR"/>
+        <label>Expected salary (optional)</label><input id="expected_salary" type="number" min="0" placeholder="e.g., 600000"/>
+        <div class="actions"><button class="primary" type="submit">Finish</button></div>
       </form>
     </section>
   </div>
@@ -60,36 +52,34 @@
   <script src="/config.js"></script>
   <script src="/components.js?v=17"></script>
   <script>
-  (async function(){
-    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
-    const user = await app.getSessionUser();
-    const { data: profile } = await app.getProfile(user.id);
-    if(!profile){ app.go('/register-candidate.html'); return; }
-    if(profile.role === 'employer'){ app.go('/employer-home.html'); return; }
+    (async function(){
+      await app.requireAuth({ redirectTo: '/register-candidate.html' });
+      const user = await app.getSessionUser();
+      const { data: profile } = await app.getProfile(user.id);
+      if(!profile){ app.go('/register-candidate.html'); return; }
+      if(profile.years_experience!=null) years_experience.value = profile.years_experience;
+      if(profile.skills) skills.value = profile.skills;
+      if(profile.preferred_locations) preferred_locations.value = profile.preferred_locations;
+      if(profile.expected_salary!=null) expected_salary.value = profile.expected_salary;
 
-    if(profile.years_experience!=null) document.getElementById('years_experience').value = profile.years_experience;
-    if(profile.skills) document.getElementById('skills').value = profile.skills;
-    if(profile.preferred_locations) document.getElementById('preferred_locations').value = profile.preferred_locations;
-    if(profile.expected_salary!=null) document.getElementById('expected_salary').value = profile.expected_salary;
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const payload = {
+          user_id: user.id,
+          years_experience: toInt(years_experience.value),
+          skills: orNull(skills.value.trim()),
+          preferred_locations: orNull(preferred_locations.value.trim()),
+          expected_salary: toInt(expected_salary.value)
+        };
+        const { error } = await app.upsertProfile(payload);
+        if(error){ ui.toast(error.message,'error'); return; }
+        ui.toast('Profile updated','success');
+        app.go('/dashboard.html');
+      });
 
-    document.getElementById('form').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const payload = {
-        user_id: user.id,
-        years_experience: toInt(document.getElementById('years_experience').value),
-        skills: orNull(document.getElementById('skills').value.trim()),
-        preferred_locations: orNull(document.getElementById('preferred_locations').value.trim()),
-        expected_salary: toInt(document.getElementById('expected_salary').value)
-      };
-      const { error } = await app.upsertProfile(payload);
-      if(error){ ui.toast(error.message,'error'); return; }
-      ui.toast('Profile updated','success');
-      app.go('/dashboard.html');
-    });
-
-    function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
-    function orNull(v){ return v? v: null }
-  })();
+      function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
+      function orNull(v){ return v? v: null }
+    })();
   </script>
 </body>
 </html>
