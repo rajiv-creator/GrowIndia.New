@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Reports — GrowIndia Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js?v=13"></script>
+<script src="/components.js?v=13"></script>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0b1220;color:#e5e7eb}
+  .layout{display:flex;min-height:100vh}
+  .side{width:240px;background:#0f172a;border-right:1px solid #1f2b3a}
+  .brand{padding:14px 16px;font-weight:800;border-bottom:1px solid #1f2b3a}
+  .nav{padding:12px 8px}
+  .nav a{display:block;padding:10px 12px;border-radius:10px;color:#dbe1ea}
+  .nav a:hover,.nav a.active{background:#111c2e}
+  .content{flex:1}
+  .top{position:sticky;top:0;background:#0b1220;border-bottom:1px solid #1f2b3a}
+  .topin{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .tile{background:#0f172a;border:1px solid #1f2b3a;border-radius:14px;padding:14px}
+  .tile h3{margin:0 0 6px;font-size:14px;color:#9fb3c8}
+  .kpi{font-size:28px;font-weight:800}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .card{background:#0f172a;border:1px solid #1f2b3a;border-radius:14px}
+  .head{padding:14px;border-bottom:1px solid #1f2b3a}
+  .sec{padding:14px}
+  .bar{height:22px;background:#122036;border:1px solid #22314a;border-radius:999px;overflow:hidden}
+  .fill{height:100%;background:#0ea5e9}
+  .rowline{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center;margin:8px 0}
+  .muted{color:#93a4b8}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="brand">GrowIndia Admin</div>
+    <nav class="nav">
+      <a href="/admin.html">Dashboard</a>
+      <a href="/admin-jobs.html">Jobs</a>
+      <a class="active" href="/admin-reports.html">Reports</a>
+      <a href="/admin-apps.html">Applications</a>
+    </nav>
+  </aside>
+  <div class="content">
+    <header class="top"><div class="topin">
+      <div>Reports</div>
+      <div><a class="btn" href="/">View site</a></div>
+    </div></header>
+
+    <main class="wrap">
+      <section class="grid">
+        <div class="tile"><h3>Total Jobs</h3><div id="k1" class="kpi">—</div></div>
+        <div class="tile"><h3>Active Jobs</h3><div id="k2" class="kpi">—</div></div>
+        <div class="tile"><h3>Applications (30d)</h3><div id="k3" class="kpi">—</div></div>
+        <div class="tile"><h3>Companies</h3><div id="k4" class="kpi">—</div></div>
+      </section>
+
+      <section class="row">
+        <div class="card">
+          <div class="head"><h3 style="margin:0">Jobs by Type</h3></div>
+          <div class="sec" id="byType"><div class="muted">Loading…</div></div>
+        </div>
+
+        <div class="card">
+          <div class="head"><h3 style="margin:0">Applications by Location (last 30d)</h3></div>
+          <div class="sec" id="byLoc"><div class="muted">Loading…</div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const { requireAuth, isAdmin, ui } = window.app;
+  let user; try { user = await requireAuth(); } catch { return location.replace('/login.html'); }
+  if(!(await isAdmin(user.id))) { ui.error('Admins only'); return location.replace('/'); }
+
+  // KPIs
+  async function c(table, filter=cb=>cb){ let q=window.supabase.from(table).select('id',{count:'exact',head:true}); q=filter(q); const { count } = await q; return count||0; }
+  const totalJobs = await c('jobs');
+  const activeJobs = await c('jobs',q=>q.eq('published',true));
+  const companies = await c('companies');
+
+  const since = new Date(Date.now()-30*24*60*60*1000).toISOString();
+  const apps30 = await c('applications',q=>q.gte('created_at', since));
+
+  document.getElementById('k1').textContent = totalJobs;
+  document.getElementById('k2').textContent = activeJobs;
+  document.getElementById('k3').textContent = apps30;
+  document.getElementById('k4').textContent = companies;
+
+  // Jobs by type
+  const { data:jobs } = await window.supabase.from('jobs').select('employment_type').eq('published',true).limit(2000);
+  const tCounts = {};
+  (jobs||[]).forEach(j=>{ const k=(j.employment_type||'—'); tCounts[k]=(tCounts[k]||0)+1; });
+  const maxT = Math.max(1,...Object.values(tCounts));
+  const bt = document.getElementById('byType');
+  bt.innerHTML = Object.keys(tCounts).map(k=>`
+    <div class="rowline">
+      <div class="muted">${k}</div>
+      <div class="bar"><div class="fill" style="width:${(tCounts[k]/maxT)*100}%"></div></div>
+    </div>
+  `).join('') || '<div class="muted">No data</div>';
+
+  // Apps by location (last 30d) — join via jobs
+  const { data:apps } = await window.supabase.from('applications').select('job_id,created_at').gte('created_at', since).limit(5000);
+  const ids = Array.from(new Set((apps||[]).map(a=>a.job_id)));
+  let locMap = {};
+  if(ids.length){
+    const { data:jloc } = await window.supabase.from('jobs').select('id,location').in('id',ids);
+    const byId = new Map((jloc||[]).map(j=>[j.id, j.location||'—']));
+    (apps||[]).forEach(a=>{ const loc = byId.get(a.job_id)||'—'; locMap[loc]=(locMap[loc]||0)+1; });
+  }
+  const maxL = Math.max(1,...Object.values(locMap));
+  const bl = document.getElementById('byLoc');
+  bl.innerHTML = Object.keys(locMap).map(k=>`
+    <div class="rowline">
+      <div class="muted">${window.app.escapeHTML(k)}</div>
+      <div class="bar"><div class="fill" style="width:${(locMap[k]/maxL)*100}%"></div></div>
+    </div>
+  `).join('') || '<div class="muted">No data</div>';
+})();
+</script>
+</body>
+</html>
