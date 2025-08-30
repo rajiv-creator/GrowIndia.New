@@ -1,54 +1,31 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Sign in — GrowIndia Jobs</title>
-  <style>
-    :root{--blue:#151B54;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-    header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
-    .brand{font-weight:800}
-    .ctas{display:flex;gap:12px}
-    .cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
-    .cta.orange{background:#FF6E00}
-    .wrap{max-width:960px;margin:28px auto;padding:0 16px}
-    h1{font-size:40px;margin:0 0 6px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:18px}
-    label{display:block;margin:12px 0 6px;font-weight:700}
-    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
-    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15);outline:0}
-    .btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:12px 18px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
-    .btn[disabled]{opacity:.6;cursor:not-allowed}
-    .meta{color:var(--muted);font-size:14px}
-  </style>
-</head>
-<body>
-<header>
-  <div class="nav">
-    <div class="brand">GrowIndia Jobs</div>
-    <div class="ctas">
-      <a class="cta" href="/register-candidate.html">Candidate</a>
-      <a class="cta orange" href="/login.html?role=employer">Employer</a>
-    </div>
-  </div>
-</header>
-
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sign in — GrowIndia Jobs</title>
+<style>
+:root{--blue:#151B54;--bg:#F6F8FC;--line:#E5E7EB}
+html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.nav{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
+.brand{font-weight:800}
+.cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
+.wrap{max-width:960px;margin:28px auto;padding:0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:18px}
+label{display:block;margin:12px 0 6px;font-weight:700}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15);outline:0}
+.btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:12px 18px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.meta{color:#64748B;font-size:14px}
+</style></head><body>
+<header><div class="nav"><div class="brand">GrowIndia Jobs</div><a class="cta" href="/register-candidate.html">Create account</a></div></header>
 <main class="wrap">
   <h1>Sign in</h1>
-  <div class="meta">Use your email and password to continue.</div>
-
-  <section class="card" style="margin-top:12px">
-    <form id="form" autocomplete="on">
-      <label>Email</label>
-      <input id="email" type="email" placeholder="you@example.com" required>
-
-      <label>Password</label>
-      <input id="password" type="password" placeholder="••••••" required>
-
+  <section class="card">
+    <form id="form">
+      <label>Email</label><input id="email" type="email" required placeholder="you@example.com"/>
+      <label>Password</label><input id="password" type="password" required placeholder="••••••"/>
       <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button id="loginBtn" type="submit" class="btn">Next</button>
+        <button id="loginBtn" class="btn" type="submit">Next</button>
         <a id="fp" href="#" class="meta">Forgot password?</a>
         <span class="meta" style="margin-left:auto">New here? <a href="/register-candidate.html">Create an account</a>.</span>
       </div>
@@ -56,67 +33,39 @@
   </section>
 </main>
 
-<!-- Order -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
-
-<!-- Safety shim (same as register page) -->
+<script src="/components.js?v=22"></script>
 <script>
-  if(!window.ui){ window.ui = { toast:(m)=>alert(m) } }
-  if(!window.app){
-    window.app = {
-      async upsertProfile(payload){
-        if(!payload.role) payload.role='candidate';
-        return window.supabase.from('profiles').upsert(payload,{ onConflict:'user_id' });
-      },
-      async getSessionUser(){
-        const { data:{ user } } = await window.supabase.auth.getUser(); return user;
-      }
-    };
-  }
-</script>
-
-<script src="/components.js?v=21"></script>
-<script>
-  const params = new URLSearchParams(location.search);
-  if(params.get('notice')==='verify'){ ui.toast('Email verified. You can sign in now.','success'); }
-
   const form = document.getElementById('form');
-  form.addEventListener('submit', submitLogin);
-  document.getElementById('fp').addEventListener('click', resetPw);
-
-  async function submitLogin(e){
+  form.addEventListener('submit', async (e)=>{
     e.preventDefault();
-    const btn = document.getElementById('loginBtn');
-    const email = document.getElementById('email').value.trim();
-    const pass  = document.getElementById('password').value;
-    if(!email || !pass){ ui.toast('Please fill both fields.','error'); return; }
+    const btn = document.getElementById('loginBtn'); btn.disabled = true;
     try{
-      btn.disabled = true;
-      const { error } = await window.supabase.auth.signInWithPassword({ email, password: pass });
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const { error } = await window.supabase.auth.signInWithPassword({ email, password });
       if(error) throw error;
-
       const { data:{ user } } = await window.supabase.auth.getUser();
-      if(user) await app.upsertProfile({ user_id:user.id, role:'candidate' });
-
+      if(!app.isEmailConfirmed(user)){
+        await window.supabase.auth.signOut();
+        ui.toast('Please verify your email from the confirmation link before signing in.','error');
+        return;
+      }
+      await app.upsertProfile({ user_id:user.id, role:'candidate' });
       location.href = '/dashboard.html';
-    }catch(err){
-      ui.toast(err.message || 'Sign-in failed','error');
-    }finally{
-      btn.disabled = false;
-    }
-  }
+    }catch(err){ ui.toast(err.message || 'Sign-in failed','error'); }
+    finally{ btn.disabled = false; }
+  });
 
-  async function resetPw(e){
+  document.getElementById('fp').addEventListener('click', async (e)=>{
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
-    if(!email){ ui.toast('Enter your email above first.','error'); return; }
+    if(!email) return ui.toast('Enter your email above first.','error');
     const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
       redirectTo: location.origin + '/post-auth.html'
     });
-    if(error) ui.toast(error.message,'error');
-    else ui.toast('Password reset link sent to your email.','success');
-  }
+    if(error) ui.toast(error.message,'error'); else ui.toast('Reset link sent. Check your email.','success');
+  });
 </script>
-</body>
-</html>
+</body></html>
