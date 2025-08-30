@@ -75,9 +75,7 @@
   <div class="grid">
     <section class="card">
       <div class="head"><h3 style="margin:0">Active jobs</h3><a class="btn alt" href="/employer-edit.html">Manage</a></div>
-      <div class="sec" id="jobsWrap">
-        <div class="muted">Loading…</div>
-      </div>
+      <div class="sec" id="jobsWrap"><div class="muted">Loading…</div></div>
     </section>
 
     <aside class="card">
@@ -91,8 +89,11 @@
 
 <script>
 (async function(){
-  const { requireAuth, db, escapeHTML, ui } = window.app;
+  const { requireAuth, db, ui } = window.app;
   let user; try { user = await requireAuth(); } catch { window.location.replace('/login.html'); return; }
+  const prof = await db.getProfile(user.id);
+  if (!prof) return window.location.replace('/registration.html');
+  if (prof.role !== 'employer') return window.location.replace('/dashboard.html');
 
   try {
     const companies = await db.myCompanies(user.id);
@@ -111,9 +112,9 @@
           <tbody>
             ${jobs.map(j=>`
               <tr>
-                <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a></td>
-                <td>${escapeHTML(j.company?.name||'—')}</td>
-                <td class="muted">${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span></td>
+                <td><a href="/job.html?id=${encodeURIComponent(j.id)}">${window.app.escapeHTML(j.title)}</a></td>
+                <td>${window.app.escapeHTML(j.company?.name||'—')}</td>
+                <td class="muted">${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span></td>
                 <td>${j.published?'✅':'⛔'}</td>
                 <td><a href="/employer-edit.html" class="btn alt">Edit</a></td>
               </tr>
@@ -122,7 +123,6 @@
         </table>
       `;
 
-      // Applications summary
       const { rows: appsAll } = await db.appsForJobIds(jobs.map(j=>j.id), { page:1, pageSize:5000 });
       const sevenDaysAgo = Date.now() - 7*24*60*60*1000;
       const app7 = appsAll.filter(a => new Date(a.created_at).getTime() >= sevenDaysAgo).length;
