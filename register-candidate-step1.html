@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register — Candidate (Step 1)</title>
+  <style>
+    :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B;--ink:rgba(15,23,42,.9)}
+    body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+    .container{max-width:1000px;margin:0 auto;padding:24px 16px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:0;overflow:hidden}
+    .grid{display:grid;grid-template-columns:1fr 1fr}
+    .left{background:#fff;padding:24px;border-right:1px solid var(--line)}
+    .left h2{margin-top:0}
+    .bullets{color:var(--muted)} .bullets li{margin:8px 0}
+    .right{padding:24px}
+    label{display:block;margin:12px 0 4px;color:#0f172a;font-weight:700}
+    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;outline:0}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{margin-top:16px;display:flex;gap:10px;align-items:center}
+    button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+    button.primary:hover{background:var(--blue-600)}
+    .muted{color:var(--muted)}
+    header{background:#fff;border-bottom:1px solid var(--line)}
+    .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:68px}
+    .brand{font-weight:800}
+    .nav-right{display:flex;gap:14px;align-items:center}
+    .nav-right a.link{color:#111827}
+    .btn{padding:9px 14px;border-radius:999px;font-weight:700;color:#fff}
+    .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
+    .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
+    @media (max-width: 900px){.grid{grid-template-columns:1fr}.left{border-right:0;border-bottom:1px solid var(--line)}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="brand">GrowIndia Jobs</div>
+      <div class="nav-right">
+        <a class="link" href="/jobs.html">Jobs</a>
+        <a class="link" href="/post-job.html">Post a Job</a>
+        <a class="link" href="/login.html">Sign in</a>
+        <a class="btn btn-blue" href="/register-candidate.html">Candidate</a>
+        <a class="btn btn-orange" href="/login.html?role=employer">Employer</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <h1 style="margin:0 0 12px">Create your candidate profile</h1>
+    <div class="muted">Step 1 of 2</div>
+
+    <section class="card grid">
+      <aside class="left">
+        <h2>On registering, you can…</h2>
+        <ul id="bullets" class="bullets"><li>Loading…</li></ul>
+        <div style="margin-top:16px" class="muted">Admin can edit this copy in <a href="/admin-copy.html">Admin Copy</a>.</div>
+      </aside>
+      <form id="form" class="right">
+        <div class="muted" id="signedInAs"></div>
+        <label>Full name *</label>
+        <input id="full_name" required placeholder="e.g., Ananya Sharma" />
+        <label>Mobile number *</label>
+        <input id="phone" required placeholder="e.g., 9876543210" />
+        <div class="row">
+          <div>
+            <label>Current location (optional)</label>
+            <input id="current_location" placeholder="City, State" />
+          </div>
+          <div>
+            <label>Headline (optional)</label>
+            <input id="headline" placeholder="e.g., Frontend Developer" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Continue</button>
+          <span class="muted">You’ll add experience & skills in Step 2.</span>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/components.js?v=16"></script>
+  <script>
+  (async function(){
+    await app.requireAuth({ redirectTo: '/login.html?redirect=' + encodeURIComponent(location.pathname) });
+    const user = await app.getSessionUser();
+    document.getElementById('signedInAs').textContent = user?.email ? `Signed in as ${user.email}` : '';
+
+    // Load admin-editable bullets
+    try{
+      const { data } = await db.getSiteCopy('candidate_register_bullets');
+      const bullets = (data?.content?.bullets)||[];
+      const ul = document.getElementById('bullets');
+      ul.innerHTML = bullets.length ? bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join('') : '<li>Build your profile and get noticed</li>';
+    }catch(e){ /* non-fatal */ }
+
+    // Prefill if profile exists; redirect if step 2 already done
+    const { data: profile } = await app.getProfile(user.id);
+    if(profile){
+      document.getElementById('full_name').value = profile.full_name||'';
+      document.getElementById('phone').value = profile.phone||'';
+      document.getElementById('current_location').value = profile.current_location||'';
+      document.getElementById('headline').value = profile.headline||'';
+      if(profile.role === 'employer') { app.go('/employer-home.html'); return; }
+      const step2Done = profile.years_experience != null || (profile.skills && profile.skills.trim() !== '');
+      if(step2Done){ app.go('/dashboard.html'); return; }
+    }
+
+    document.getElementById('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const full_name = document.getElementById('full_name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      if(!full_name || !phone){ ui.toast('Name and mobile are required','error'); return; }
+      const payload = {
+        user_id: user.id,
+        role: 'candidate',
+        full_name,
+        phone,
+        current_location: document.getElementById('current_location').value.trim() || null,
+        headline: document.getElementById('headline').value.trim() || null,
+      };
+      const { error } = await app.upsertProfile(payload);
+      if(error){ ui.toast(error.message,'error'); return; }
+      app.go('/register-candidate-step2.html');
+    });
+
+    function escapeHtml(s=''){return s.replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+  })();
+  </script>
+</body>
+</html>
