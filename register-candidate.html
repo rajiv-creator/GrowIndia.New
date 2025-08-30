@@ -3,110 +3,151 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Create account — GrowIndia Jobs</title>
+  <title>Candidate account — GrowIndia Jobs</title>
   <style>
-    :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-    body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+    :root{--blue:#151B54;--blue-600:#0F143E;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+    html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
     header{background:#fff;border-bottom:1px solid var(--line)}
-    .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
+    .nav{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
     .brand{font-weight:800}
-    .nav-right{display:flex;gap:12px}
-    .btn-pill{padding:10px 16px;border-radius:999px;font-weight:800;color:#fff;box-shadow:0 6px 16px rgba(2,6,23,.12)}
-    .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
-    .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
-    .container{max-width:720px;margin:0 auto;padding:24px 16px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
-    h1{margin:0 0 8px}
-    label{display:block;margin:10px 0 6px;font-weight:700}
-    input[type="text"],input[type="email"],input[type="password"],input[type="tel"]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
-    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15)}
-    input[type="file"]{display:block;margin-top:6px}
-    .actions{margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}
-    button.primary:hover{background:var(--blue-600)}
-    .muted{color:var(--muted)}
-    .link{color:var(--blue);text-decoration:underline;cursor:pointer}
+    .ctas{display:flex;gap:12px}
+    .cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
+    .cta.orange{background:#FF6E00}
+    .wrap{max-width:960px;margin:28px auto;padding:0 16px}
+    h1{font-size:40px;margin:0 0 4px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:18px}
+    label{display:block;margin:12px 0 6px;font-weight:700}
+    input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15);outline:0}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:720px){.row{grid-template-columns:1fr}}
+    .btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:12px 18px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+    .meta{color:var(--muted);font-size:14px}
   </style>
 </head>
 <body>
-  <header>
-    <div class="nav">
-      <div class="brand">GrowIndia Jobs</div>
-      <div class="nav-right">
-        <a class="btn-pill btn-blue" href="/register-candidate.html">Candidate</a>
-        <a class="btn-pill btn-orange" href="/login.html?role=employer">Employer</a>
-      </div>
+<header>
+  <div class="nav">
+    <div class="brand">GrowIndia Jobs</div>
+    <div class="ctas">
+      <a class="cta" href="/register-candidate.html">Candidate</a>
+      <a class="cta orange" href="/login.html?role=employer">Employer</a>
     </div>
-  </header>
-
-  <div class="container">
-    <h1>Candidate account</h1>
-    <div class="muted">Create your account to continue.</div>
-
-    <section class="card">
-      <form id="form">
-        <label>Full name</label>
-        <input id="full_name" type="text" required placeholder="e.g., Ananya Sharma"/>
-
-        <label>Email</label>
-        <input id="email" type="email" required placeholder="you@example.com"/>
-
-        <label>Password</label>
-        <input id="password" type="password" required placeholder="Minimum 6 characters"/>
-
-        <label>Confirm password</label>
-        <input id="confirm" type="password" required placeholder="Re-enter password"/>
-
-        <label>Phone</label>
-        <input id="phone" type="tel" required placeholder="e.g., 9876543210"/>
-
-        <label>Upload CV (PDF/DOC)</label>
-        <input id="cv" type="file" accept=".pdf,.doc,.docx,.rtf" />
-
-        <div class="actions">
-          <button class="primary" type="submit">Next</button>
-          <span class="muted">Already have an account? <a class="link" href="/login.html">Sign in</a>.</span>
-        </div>
-      </form>
-    </section>
   </div>
+</header>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="/config.js"></script>
-  <script src="/components.js?v=19"></script>
-  <script>
-  (function(){
-    document.getElementById('form').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      try{
-        const full_name = v('full_name'), email = v('email'), password = v('password'), confirm = v('confirm'), phone = v('phone');
-        if(password !== confirm){ ui.toast('Passwords do not match','error'); return; }
+<main class="wrap">
+  <h1>Candidate account</h1>
+  <div class="meta">Create your account to continue.</div>
 
-        const { error } = await supabase.auth.signUp({ email, password });
-        if(error) throw error;
+  <section class="card" style="margin-top:12px">
+    <form id="form" autocomplete="on">
+      <label>Full name</label>
+      <input id="full_name" placeholder="e.g., Ananya Sharma" required>
 
-        const u = await app.getSessionUser().catch(()=>null);
-        if(!u){ ui.toast('Check your email to verify, then sign in.','success'); return; }
+      <label>Email</label>
+      <input id="email" type="email" placeholder="you@example.com" required>
 
-        // Optional CV upload
+      <div class="row">
+        <div>
+          <label>Password</label>
+          <input id="password" type="password" minlength="6" placeholder="Minimum 6 characters" required>
+        </div>
+        <div>
+          <label>Confirm password</label>
+          <input id="password2" type="password" minlength="6" placeholder="Re-enter password" required>
+        </div>
+      </div>
+
+      <label>Phone</label>
+      <input id="phone" placeholder="e.g., 9876543210" required>
+
+      <label>Upload CV (PDF/DOC)</label>
+      <input id="cv" type="file" accept=".pdf,.doc,.docx"/>
+
+      <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+        <button id="nextBtn" type="button" class="btn" onclick="submitSignup()">Next</button>
+        <span class="meta">Already have an account? <a href="/login.html">Sign in</a>.</span>
+      </div>
+    </form>
+  </section>
+</main>
+
+<!-- Scripts: Supabase first, then config.js, then components -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script src="/components.js?v=20"></script>
+<script>
+  // fallback toast if components.js hasn’t loaded
+  if(!window.ui){ window.ui = { toast: (m)=>alert(m) } }
+
+  async function submitSignup(){
+    const btn = document.getElementById('nextBtn');
+    const email = document.getElementById('email').value.trim();
+    const pass  = document.getElementById('password').value;
+    const pass2 = document.getElementById('password2').value;
+    const name  = document.getElementById('full_name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const cv    = document.getElementById('cv').files[0];
+
+    if(!email || !pass || !name || !phone){ ui.toast('Please complete all required fields.','error'); return; }
+    if(pass !== pass2){ ui.toast('Passwords do not match.','error'); return; }
+
+    try{
+      btn.disabled = true;
+
+      // 1) Sign up
+      const { data: sign, error: signErr } = await window.supabase.auth.signUp({
+        email, password: pass,
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: location.origin + '/post-auth.html'
+        }
+      });
+      if(signErr) throw signErr;
+
+      // If your project requires email confirmation, there may be no session yet.
+      // We handle both cases gracefully:
+      const { data: { user }, error: uErr } = await window.supabase.auth.getUser();
+      if(uErr) throw uErr;
+
+      if(user){
+        // 2) Optional CV upload
         let cv_url = null;
-        const file = document.getElementById('cv').files[0];
-        if(file){
-          const key = `user-${u.id}/${Date.now()}-${file.name}`.replace(/\s+/g,'-');
-          const up = await supabase.storage.from('cvs').upload(key, file, { upsert: true });
-          if(up.error) throw up.error;
-          const { data: pub } = supabase.storage.from('cvs').getPublicUrl(key);
-          cv_url = pub.publicUrl;
+        if(cv){
+          const path = `${user.id}/${Date.now()}_${cv.name.replace(/\s+/g,'_')}`;
+          const up = await window.supabase.storage.from('cvs').upload(path, cv);
+          if(!up.error){
+            const { data:pub } = await window.supabase.storage.from('cvs').getPublicUrl(path);
+            cv_url = pub?.publicUrl || null;
+          }
         }
 
-        await app.upsertProfile({ user_id: u.id, role:'candidate', full_name, phone, cv_url });
-        app.go('/dashboard.html#complete');
-      }catch(err){
-        ui.toast(err.message || 'Something went wrong','error');
+        // 3) Create/Update profile
+        const payload = {
+          user_id: user.id, role: 'candidate',
+          full_name: name, phone, cv_url
+        };
+        const { error: pErr } = await app.upsertProfile(payload);
+        if(pErr) console.warn(pErr);
+
+        // 4) Go to dashboard
+        location.href = '/dashboard.html#complete';
+      }else{
+        // No session yet -> tell user to verify then sign in
+        ui.toast('Check your email to confirm your account, then sign in.','success');
+        location.href = '/login.html?notice=verify';
       }
-    });
-    function v(id){ return document.getElementById(id).value.trim(); }
-  })();
-  </script>
+    }catch(e){
+      ui.toast(e.message || 'Sign-up failed','error');
+    }finally{
+      btn.disabled = false;
+    }
+  }
+
+  // Also wire Enter key on form
+  document.getElementById('form').addEventListener('submit', (e)=>{ e.preventDefault(); submitSignup(); });
+</script>
 </body>
 </html>
