@@ -1,64 +1,56 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>GrowIndia Jobs</title>
-<style>
-:root{--blue:#151B54;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
-html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-header{background:#fff;border-bottom:1px solid var(--line)}
-.nav{max-width:1100px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
-.brand{font-weight:800}
-.ctas{display:flex;gap:12px}
-.cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
-.cta.orange{background:#FF6E00}
-.hero{max-width:1100px;margin:40px auto;padding:0 16px}
-h1{font-size:48px;margin:0 0 8px}
-.sub{color:var(--muted)}
-.search{max-width:960px;margin-top:20px;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.08), inset 0 1px 0 rgba(255,255,255,.6);display:grid;grid-template-columns:1fr 1fr 160px;overflow:hidden}
-.search input{border:0;padding:16px 18px;font-size:16px}
-.search button{border:0;background:var(--blue);color:#fff;font-weight:800}
-.cards{max-width:1100px;margin:26px auto;padding:0 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(2,6,23,.06)}
-footer{border-top:1px solid var(--line);margin-top:40px;background:#fff}
-.foot{max-width:1100px;margin:0 auto;padding:28px 16px;color:#334155;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-</style></head><body>
-<header>
-  <div class="nav">
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GrowIndia Jobs — Sign in</title>
+  <style>
+    :root{--blue:#151B54;--blue-600:#0f1440;--orange:#FF6E00;--muted:#64748B;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111}
+    header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid var(--line)}
+    .brand{font-weight:700;color:#111}
+    .nav{display:flex;gap:10px}
+    .pill{padding:10px 16px;border-radius:999px;background:var(--blue);color:#fff;font-weight:700;border:none}
+    .pill--alt{background:var(--orange)}
+    main{max-width:960px;margin:40px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(2,6,23,.06);padding:24px}
+    h1{font-size:28px;margin:0 0 16px}
+    form{display:grid;gap:14px;margin-top:12px}
+    input{height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit}
+    button.btn{height:46px;border-radius:12px;background:var(--blue);color:#fff;border:none;font-weight:700}
+    a{color:var(--blue);text-decoration:none}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:720px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
     <div class="brand">GrowIndia Jobs</div>
-    <div class="ctas">
-      <a class="cta" href="/register-candidate.html">Candidate</a>
-      <a class="cta orange" href="/login.html?role=employer">Employer</a>
+    <nav class="nav">
+      <a class="pill" href="/register-candidate.html">Candidate</a>
+      <a class="pill pill--alt" href="/login.html?role=employer">Employer</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Sign in</h1>
+      <p style="color:var(--muted);margin:0 0 12px">Use your email and password to continue.</p>
+      <form id="loginForm">
+        <input type="email" placeholder="Email" required />
+        <input type="password" placeholder="Password" required />
+        <div class="row">
+          <button class="btn" type="submit">Next</button>
+          <a href="/register-candidate.html" style="align-self:center">New here? Create an account →</a>
+        </div>
+        <div style="margin-top:-6px"><a href="/login.html#forgot">Forgot password?</a></div>
+      </form>
     </div>
-  </div>
-</header>
+  </main>
 
-<section class="hero">
-  <h1>Find work you’ll actually like.</h1>
-  <div class="sub">Search by title, keyword, or location.</div>
-  <form class="search" onsubmit="goJobs(event)">
-    <input id="q" placeholder="Job title, keywords, or company"/>
-    <input id="loc" placeholder="Dehradun, Uttarakhand"/>
-    <button type="submit">Find jobs</button>
-  </form>
-</section>
-
-<section class="cards">
-  <div class="card"><strong>1-step apply</strong><div class="sub">Fast applications with your saved profile.</div></div>
-  <div class="card"><strong>Zero fees</strong><div class="sub">No charges for candidates.</div></div>
-  <div class="card"><strong>For employers</strong><div class="sub">Simple tools to post, review, and hire.</div></div>
-</section>
-
-<footer><div class="foot">
-  <div><strong>About</strong><div>Company<br/>Team<br/>Careers</div></div>
-  <div><strong>Employer</strong><div>Post a job<br/>Pricing</div></div>
-  <div><strong>Help</strong><div>Support<br/>Guides</div></div>
-  <div><strong>Legal</strong><div>Terms<br/>Privacy</div></div>
-</div></footer>
-
-<script>
-function goJobs(e){ e.preventDefault();
-  const q=encodeURIComponent(document.getElementById('q').value||'');
-  const loc=encodeURIComponent(document.getElementById('loc').value||'');
-  location.href=`/jobs.html?q=${q}&loc=${loc}&type=all`;
-}
-</script>
-</body></html>
+  <!-- Required order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script defer src="/config.js?v=1"></script>
+  <script defer src="/components.js?v=23"></script>
+</body>
+</html>
