@@ -1,108 +1,136 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>My Dashboard — GrowIndia</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=13"></script>
-  <script src="/components.js?v=13"></script>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f5f7fb}
-    .nav{position:sticky;top:0;background:#fff;border-bottom:1px solid #e5e7eb;z-index:40}
-    .navin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between}
-    .brand{font-weight:800}
-    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px;display:grid;grid-template-columns:300px 1fr;gap:16px}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 24px rgba(2,6,23,.05)}
-    .left .card{padding:16px}
-    .right .head{padding:16px;border-bottom:1px solid #eef2f7}
-    .sec{padding:16px;border-top:1px solid #eef2f7}
-    .job{padding:14px 16px;border-top:1px solid #eef2f7}
-    .job:first-child{border-top:none}
-    .muted{color:#64748b}
-    .pill{background:#eef2ff;border-radius:999px;font-size:12px;padding:3px 8px;display:inline-block}
-    .btn{background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:8px 12px;cursor:pointer}
-    a{color:#0ea5e9;text-decoration:none}
-    .grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-    .tile{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>My Dashboard — GrowIndia</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js?v=13"></script>
+<script src="/components.js?v=13"></script>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#f5f7fb;color:#0f172a}
+  .nav{position:sticky;top:0;background:#fff;border-bottom:1px solid #e5e7eb;z-index:40}
+  .navin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+  .brand{font-weight:800}
+  .hero{max-width:1200px;margin:16px auto 0;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;border-radius:16px;padding:18px}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:320px 1fr;gap:16px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 24px rgba(2,6,23,.05)}
+  .head{padding:14px;border-bottom:1px solid #eef2f7}
+  .sec{padding:14px}
+  .muted{color:#64748b}
+  .meter{height:10px;background:#eef2ff;border-radius:999px;overflow:hidden}
+  .fill{height:100%;background:#22c55e}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .tile{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+  .pill{background:#eef2ff;border-radius:999px;font-size:12px;padding:3px 8px;display:inline-block}
+  .job{padding:14px 16px;border-top:1px solid #eef2f7}
+  .job:first-child{border-top:none}
+  .btn{background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:8px 12px;cursor:pointer}
+  a{color:#0ea5e9;text-decoration:none}
+</style>
 </head>
 <body>
-  <header class="nav"><div class="navin">
-    <div class="brand">GrowIndia Jobs</div>
-    <nav><a href="/jobs.html">Jobs</a> · <a href="/index.html">Home</a></nav>
-  </div></header>
+<header class="nav"><div class="navin">
+  <div class="brand">GrowIndia Jobs</div>
+  <nav><a href="/jobs.html">Jobs</a> · <a href="/">Home</a> · <button id="btnSignOut" class="btn" style="padding:6px 10px">Sign out</button></nav>
+</div></header>
 
-  <main class="wrap">
-    <aside class="left">
-      <div class="card">
-        <h3 id="profName" style="margin:0 0 4px">Welcome</h3>
-        <div class="muted" id="profEmail"></div>
-        <div class="sec">
-          <button class="btn" id="btnSignOut">Sign out</button>
-        </div>
+<section class="hero">
+  <h2 style="margin:0 0 6px">Get the best job recommendations</h2>
+  <div>Tell us your career interests to fine-tune matches. (Coming soon)</div>
+  <div style="margin-top:10px"><button class="btn">Update career preferences</button></div>
+</section>
+
+<main class="wrap">
+  <aside>
+    <div class="card">
+      <div class="head"><strong>Profile performance</strong></div>
+      <div class="sec">
+        <div class="muted">Profile strength</div>
+        <div class="meter" style="margin:6px 0 10px"><div id="mStrength" class="fill" style="width:30%"></div></div>
+
+        <div style="display:flex;justify-content:space-between"><div class="muted">Applications</div><div id="mApps">0</div></div>
+        <div class="meter" style="margin:6px 0 12px"><div id="mAppsFill" class="fill" style="width:10%"></div></div>
+
+        <div style="display:flex;justify-content:space-between"><div class="muted">Resume completeness</div><div id="mResume">0%</div></div>
+        <div class="meter" style="margin:6px 0"><div id="mResumeFill" class="fill" style="width:0%"></div></div>
       </div>
+    </div>
 
-      <div class="card" style="margin-top:12px">
-        <h3 style="margin:0 0 8px">Quick links</h3>
-        <div class="sec"><a href="/jobs.html">Browse jobs</a></div>
-        <div class="sec"><a href="/index.html#search">Search by keyword</a></div>
+    <div class="card" style="margin-top:12px">
+      <div class="head"><strong>Quick links</strong></div>
+      <div class="sec">
+        <div><a href="/jobs.html">Browse jobs</a></div>
+        <div style="margin-top:6px"><a href="/index.html#search">Search by keyword</a></div>
       </div>
-    </aside>
+    </div>
+  </aside>
 
-    <section class="right">
-      <div class="card">
-        <div class="head">
-          <div>
-            <h3 style="margin:0">Recommended jobs for you</h3>
-            <div class="muted">Based on what’s trending now</div>
-          </div>
-        </div>
-        <div id="recs"></div>
+  <section>
+    <div class="card">
+      <div class="head"><h3 style="margin:0">Recommended jobs for you</h3><div class="muted">Based on what’s trending now</div></div>
+      <div id="recs"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="head"><h3 style="margin:0">Top companies</h3></div>
+      <div id="cos" class="sec grid3"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="head"><h3 style="margin:0">Stay updated</h3></div>
+      <div class="sec grid3">
+        <div class="tile"><strong>Email Writing: A Complete Guide</strong><div class="muted" style="margin-top:6px">Tips for clear communication</div></div>
+        <div class="tile"><strong>Interviewing Skills</strong><div class="muted" style="margin-top:6px">Definitions & examples</div></div>
+        <div class="tile"><strong>How to Write a Resume</strong><div class="muted" style="margin-top:6px">Best practices</div></div>
       </div>
+    </div>
+  </section>
+</main>
 
-      <div class="card" style="margin-top:12px">
-        <div class="head"><h3 style="margin:0">Top companies</h3></div>
-        <div id="cos" class="sec grid3"></div>
+<script>
+(async function(){
+  const { requireAuth, db, ui } = window.app;
+  let user; try { user = await requireAuth(); } catch { return location.replace('/login.html'); }
+  const prof = await db.getProfile(user.id);
+  if (!prof) return location.replace('/registration.html');
+  if (prof.role !== 'candidate') return location.replace('/employer-home.html');
+
+  document.getElementById('btnSignOut').onclick = async()=>{ await window.supabase.auth.signOut(); location.replace('/'); };
+
+  // Meters (simple heuristics from existing data)
+  // Resume completeness: full_name+phone → 50/100 each.
+  const resume = (prof.full_name?50:0)+(prof.phone?50:0);
+  document.getElementById('mResume').textContent = `${resume}%`;
+  document.getElementById('mResumeFill').style.width = `${resume}%`;
+  document.getElementById('mStrength').style.width = `${Math.max(30,resume)}%`;
+
+  // Applications by email (if they used same email when applying)
+  try{
+    const { count } = await window.supabase.from('applications').select('id',{count:'exact',head:true}).eq('email', user.email);
+    const apps = count||0;
+    document.getElementById('mApps').textContent = apps;
+    document.getElementById('mAppsFill').style.width = `${Math.min(100, apps*10)}%`;
+  } catch{}
+
+  // Recommended jobs = recent published
+  try{
+    const { data:rows } = await window.supabase.from('jobs')
+      .select('id,title,location,employment_type,company:companies(name),min_salary,max_salary,currency,published')
+      .eq('published',true).order('created_at',{ascending:false}).limit(12);
+
+    const recs = document.getElementById('recs');
+    recs.innerHTML = (rows||[]).map(j=>`
+      <div class="job">
+        <div><a href="/job.html?id=${encodeURIComponent(j.id)}" style="font-weight:700">${window.app.escapeHTML(j.title)}</a></div>
+        <div class="muted" style="margin-top:4px">${window.app.escapeHTML(j.company?.name||'—')} • ${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span></div>
       </div>
+    `).join('') || '<div class="sec muted">No jobs yet.</div>';
 
-      <div class="card" style="margin-top:12px">
-        <div class="head"><h3 style="margin:0">From our blog</h3></div>
-        <div class="sec grid3">
-          <div class="tile"><strong>Email Writing: A Complete Guide</strong><div class="muted" style="margin-top:6px">Tips for clear communication</div></div>
-          <div class="tile"><strong>Interviewing Skills</strong><div class="muted" style="margin-top:6px">Definitions & examples</div></div>
-          <div class="tile"><strong>How to Write a Resume</strong><div class="muted" style="margin-top:6px">Best practices</div></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script>
-  (async function(){
-    const { requireAuth, db, ui } = window.app;
-    let user; try { user = await requireAuth(); } catch { window.location.replace('/login.html'); return; }
-    const prof = await db.getProfile(user.id);
-    if (!prof) return window.location.replace('/registration.html');
-    if (prof.role !== 'candidate') return window.location.replace('/employer-home.html');
-
-    document.getElementById('profName').textContent = prof.full_name || 'Welcome';
-    document.getElementById('profEmail').textContent = user.email || '';
-    document.getElementById('btnSignOut').onclick = async()=>{ await window.supabase.auth.signOut(); window.location.replace('/'); };
-
-    try{
-      const { rows } = await db.listJobsPaged({ page:1, pageSize:8, sort:'newest' });
-      const recs = document.getElementById('recs');
-      recs.innerHTML = rows.map(j=>`
-        <div class="job">
-          <div><a href="/job.html?id=${encodeURIComponent(j.id)}" style="font-weight:700">${window.app.escapeHTML(j.title)}</a></div>
-          <div class="muted" style="margin-top:4px">${window.app.escapeHTML(j.company?.name||'—')} • ${window.app.escapeHTML(j.location)} • <span class="pill">${window.app.escapeHTML(j.employment_type)}</span></div>
-        </div>
-      `).join('');
-
-      const co = Array.from(new Set(rows.map(r=>r.company?.name).filter(Boolean))).slice(0,8);
-      document.getElementById('cos').innerHTML = co.map(n=>`<div class="tile">${window.app.escapeHTML(n)}</div>`).join('');
-    } catch(e){ console.error(e); ui.error('Failed to load recommendations'); }
-  })();
-  </script>
+    const co = Array.from(new Set((rows||[]).map(r=>r.company?.name).filter(Boolean))).slice(0,8);
+    document.getElementById('cos').innerHTML = co.map(n=>`<div class="tile">${window.app.escapeHTML(n)}</div>`).join('');
+  } catch(e){ console.error(e); ui.error('Failed to load recommendations'); }
+})();
+</script>
 </body>
 </html>
