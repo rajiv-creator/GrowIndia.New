@@ -145,7 +145,7 @@
             }
 
             await app.upsertProfile({ user_id: u.id, role:'candidate', full_name, phone, cv_url });
-            // Land inside dashboard with profile panel open
+            // Land inside dashboard (profile panel open)
             app.go('/dashboard.html#complete');
 
           }else{
