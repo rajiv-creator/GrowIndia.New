@@ -5,18 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Dashboard — GrowIndia Jobs</title>
   <style>
-    :root{
-      --blue:#151B54; --blue-600:#0F143E; --orange:#FF6E00;
-      --bg:#F6F8FC; --card:#fff; --line:#E5E7EB; --muted:#64748B;
-    }
+    :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
     html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
     header{background:#fff;border-bottom:1px solid var(--line)}
     .nav{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
     .brand{font-weight:800}
 
-    /* Layout */
-    .page{max-width:1200px;margin:18px auto;display:grid;gap:16px;padding:0 16px;
-          grid-template-columns:260px 1fr 300px;}
+    .page{max-width:1200px;margin:18px auto;display:grid;gap:16px;padding:0 16px;grid-template-columns:260px 1fr 300px;}
     @media (max-width:1100px){ .page{grid-template-columns:260px 1fr;} .right{display:none} }
     @media (max-width:860px){ .page{grid-template-columns:1fr;} .left{order:2} .center{order:1} }
 
@@ -25,17 +20,12 @@
     .btn:hover{background:var(--blue-600)}
     .btn-ghost{display:inline-block;background:#fff;border:1px solid var(--line);color:#0f172a;border-radius:12px;padding:10px 16px;text-decoration:none;font-weight:800}
     .muted{color:var(--muted)}
+    a{pointer-events:auto}
 
     /* Left column */
-    .ring{
-      --p:60; /* percentage */
-      width:110px;height:110px;border-radius:50%;
-      background:
-        conic-gradient(var(--blue) calc(var(--p)*1%), #E6E8F0 0),
-        radial-gradient(#fff 62%, transparent 0);
-      display:grid;place-items:center;
-      margin-right:12px;flex:0 0 auto;
-    }
+    .ring{--p:60;width:110px;height:110px;border-radius:50%;
+      background:conic-gradient(var(--blue) calc(var(--p)*1%), #E6E8F0 0), radial-gradient(#fff 62%, transparent 0);
+      display:grid;place-items:center;margin-right:12px;flex:0 0 auto}
     .ring span{font-weight:800;color:var(--blue)}
     .left .navbtn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#0f172a;text-decoration:none;border:1px solid var(--line);background:#fff;margin:6px 0}
     .left .navbtn.active{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.12)}
@@ -45,6 +35,7 @@
 
     /* Center column */
     .banner{display:flex;gap:12px;align-items:center}
+    .qrBox{border:1px dashed var(--line);border-radius:10px;height:120px;width:120px;display:grid;place-items:center;background:#fafafa}
     .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     .job{border:1px solid var(--line);border-radius:14px;padding:14px}
     .job h4{margin:0 0 6px}
@@ -56,7 +47,7 @@
     .tile{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
     .tile h4{margin:0 0 6px}
 
-    /* Profile completion (inline) */
+    /* Profile completion */
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     label{display:block;margin:12px 0 6px;font-weight:700}
     input,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
@@ -78,13 +69,13 @@
 </header>
 
 <main class="page">
-  <!-- LEFT: profile summary + menu -->
+  <!-- LEFT -->
   <aside class="left">
     <section class="card" id="profileCard" style="display:flex;gap:12px;align-items:center">
       <div class="ring"><span id="pcnt">0%</span></div>
       <div style="flex:1">
         <div id="pname" style="font-weight:800">Your name</div>
-        <div id="pheadline" class="muted small" style="font-size:12px;margin-top:2px"></div>
+        <div id="pheadline" class="muted" style="font-size:12px;margin-top:2px"></div>
         <div class="muted" id="updated" style="font-size:12px;margin-top:4px"></div>
         <div style="margin-top:8px"><a class="btn" href="#complete" id="btnComplete">Complete profile</a></div>
       </div>
@@ -92,36 +83,30 @@
 
     <section class="card">
       <div class="kv">
-        <div class="kvc">
-          <div class="small">Search appearances</div>
-          <div id="k1" style="font-weight:800;font-size:18px">0</div>
-        </div>
-        <div class="kvc">
-          <div class="small">Recruiter actions</div>
-          <div id="k2" style="font-weight:800;font-size:18px">0</div>
-        </div>
+        <div class="kvc"><div class="small">Search appearances</div><div id="k1" style="font-weight:800;font-size:18px">0</div></div>
+        <div class="kvc"><div class="small">Recruiter actions</div><div id="k2" style="font-weight:800;font-size:18px">0</div></div>
       </div>
       <a class="btn-ghost" href="/jobs.html" style="margin-top:10px;display:block;text-align:center">Get 3× boost →</a>
     </section>
 
     <nav>
       <a class="navbtn active" href="/dashboard.html">My home</a>
-      <a class="navbtn" href="/jobs.html">Jobs</a>
+      <a class="navbtn" id="jobsLink" href="/jobs.html">Jobs</a>
       <a class="navbtn" href="/jobs.html?type=company">Companies</a>
       <a class="navbtn" href="/#articles">Blogs</a>
     </nav>
   </aside>
 
-  <!-- CENTER: banner + recommended + resume -->
+  <!-- CENTER -->
   <section class="center">
+    <!-- ✅ Center banner = "Get the app" -->
     <section class="card banner">
+      <div class="qrBox">QR</div>
       <div style="flex:1">
-        <div style="font-weight:800">Become a Pro!</div>
-        <div class="muted" style="margin-top:4px">
-          Get enhanced profile, hidden jobs & more tools to grow your career.
-        </div>
+        <div style="font-weight:800">Get the app</div>
+        <div class="muted" style="margin-top:4px">Scan to download</div>
       </div>
-      <a class="btn-ghost" href="#complete">Upgrade now</a>
+      <a class="btn-ghost" href="/#download">Download</a>
     </section>
 
     <section class="card">
@@ -129,9 +114,7 @@
         <h3 style="margin:0">Recommended jobs for you</h3>
         <a class="btn-ghost" id="viewAll" href="/jobs.html">View all</a>
       </div>
-      <div id="reco" class="jobs" style="margin-top:12px">
-        <div class="muted">Loading…</div>
-      </div>
+      <div id="reco" class="jobs" style="margin-top:12px"><div class="muted">Loading…</div></div>
       <div id="prefHint" style="display:none;margin-top:10px;text-align:center">
         <div class="muted" style="margin-bottom:8px">Get the best recommendations by telling us your career needs</div>
         <a class="btn" href="#complete" id="btnPrefs">Update career preferences</a>
@@ -152,12 +135,11 @@
       </div>
     </section>
 
-    <!-- PROFILE COMPLETION lives inline (opens via #complete) -->
+    <!-- Inline completion -->
     <section id="complete" class="card" style="display:none">
       <h3 style="margin:0 0 8px">Profile completion</h3>
       <div class="muted">Add your basics, experience and education. Use “Add more”.</div>
 
-      <!-- BASICS -->
       <h4 class="h">Basics</h4>
       <div class="grid-2">
         <div><label>Full name</label><input id="full_name" placeholder="Your name"></div>
@@ -174,12 +156,10 @@
         </div>
       </div>
 
-      <!-- EXPERIENCE -->
       <h4 class="h">Experience</h4>
       <div id="expList"></div>
       <div class="toolbar"><button type="button" class="btn-ghost" id="addExp">+ Add experience</button></div>
 
-      <!-- EDUCATION -->
       <h4 class="h">Education</h4>
       <div id="eduList"></div>
       <div class="toolbar"><button type="button" class="btn-ghost" id="addEdu">+ Add education</button></div>
@@ -191,12 +171,13 @@
     </section>
   </section>
 
-  <!-- RIGHT: small promos / articles -->
+  <!-- RIGHT -->
   <aside class="right">
+    <!-- Moved "Become a Pro!" here (smaller tile) -->
     <div class="tile">
-      <h4>Get the app</h4>
-      <div class="muted">Scan to download</div>
-      <div style="margin-top:10px;border:1px dashed var(--line);height:120px;border-radius:10px;display:grid;place-items:center">QR</div>
+      <h4>Become a Pro!</h4>
+      <div class="muted">Get enhanced profile, hidden jobs & more tools.</div>
+      <a class="btn-ghost" href="#complete" style="margin-top:10px;display:inline-block">Upgrade now</a>
     </div>
     <div class="tile">
       <h4>What is email writing?</h4>
@@ -206,7 +187,6 @@
   </aside>
 </main>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
 <script src="/components.js?v=19"></script>
@@ -216,14 +196,12 @@
   const user = await app.getSessionUser();
   const { data: p } = await app.getProfile(user.id);
 
-  /* Welcome/profile left */
+  // Left summary
   pname.textContent = p?.full_name || 'Your name';
   pheadline.textContent = p?.headline || '';
-  if(p?.updated_at){
-    updated.textContent = 'Last updated ' + new Date(p.updated_at).toLocaleString();
-  }
+  if(p?.updated_at){ updated.textContent = 'Last updated ' + new Date(p.updated_at).toLocaleString(); }
 
-  // Completion percent
+  // % completion
   const checks = [
     p?.full_name, p?.phone, p?.headline, p?.dob,
     p?.years_experience!=null, p?.skills, p?.preferred_locations,
@@ -232,115 +210,82 @@
     Array.isArray(p?.education_json)&&p.education_json.length,
     p?.expected_salary!=null
   ];
-  const done = checks.filter(Boolean).length;
-  const total = 12;
-  const pct = Math.min(100, Math.round(done/total*100));
+  const pct = Math.min(100, Math.round(checks.filter(Boolean).length / 12 * 100));
   document.querySelector('.ring').style.setProperty('--p', pct);
   pcnt.textContent = pct + '%';
-
-  // Key figures (simple placeholders until tracking is live)
-  k1.textContent = (Math.floor(pct/10)+1) * 3 - 2; // small growth with pct
+  k1.textContent = (Math.floor(pct/10)+1) * 3 - 2;
   k2.textContent = Math.max(0, Math.floor(pct/20));
 
-  // Open completion from buttons/hash
   btnComplete.onclick = (e)=>{ e.preventDefault(); showComplete(true); };
   if(location.hash === '#complete') showComplete(true);
 
   // Prefill completion form
-  function fill(el,val){ if(val!=null && val!=='') el.value = (el.type==='date') ? String(val).substring(0,10) : val; }
-  fill(full_name, p?.full_name);
-  fill(phone, p?.phone);
-  fill(headline, p?.headline);
-  fill(dob, p?.dob);
-  if(p?.years_experience!=null) years_experience.value = p.years_experience;
+  const fill=(el,val)=>{ if(val!=null && val!=='') el.value = (el.type==='date') ? String(val).substring(0,10) : val; };
+  fill(full_name, p?.full_name); fill(phone, p?.phone); fill(headline, p?.headline);
+  fill(dob, p?.dob); if(p?.years_experience!=null) years_experience.value = p.years_experience;
   if(p?.expected_salary!=null) expected_salary.value = p.expected_salary;
-  fill(skills, p?.skills);
-  fill(preferred_locations, p?.preferred_locations);
-  fill(current_company, p?.current_company);
-  fill(profiles_links, p?.profiles_links);
+  fill(skills, p?.skills); fill(preferred_locations, p?.preferred_locations);
+  fill(current_company, p?.current_company); fill(profiles_links, p?.profiles_links);
 
-  // Experience/Education editors
+  // Jobs link always works
+  document.getElementById('jobsLink').addEventListener('click', (e)=>{ e.preventDefault(); location.href='/jobs.html'; });
+
+  // Dynamic lists
   const expList = document.getElementById('expList');
   const eduList = document.getElementById('eduList');
   const expData = Array.isArray(p?.experience_json)? p.experience_json : [];
   const eduData = Array.isArray(p?.education_json)?  p.education_json  : [];
-  function expItem(d={}){
-    const div=document.createElement('div'); div.className='item'; div.innerHTML=`
-      <div class="row">
-        <div style="grid-column:1/3"><label>Designation</label><input data-k="designation" value="${esc(d.designation)}" placeholder="e.g., HR Manager"></div>
-        <div style="grid-column:3/5"><label>Company</label><input data-k="company" value="${esc(d.company)}" placeholder="e.g., Acme Corp"></div>
-        <div><label>Current?</label><input type="checkbox" data-k="current" ${d.current?'checked':''} style="width:auto;vertical-align:middle;margin-top:16px"></div>
-        <div><label>Start</label><input type="date" data-k="start_date" value="${esc(d.start_date)}"></div>
-        <div><label>End</label><input type="date" data-k="end_date" value="${esc(d.end_date)}"></div>
-        <div style="grid-column:1/-1"><label>Roles / responsibilities</label><textarea rows="3" data-k="description" placeholder="What did you do?">${esc(d.description)}</textarea></div>
-      </div>
-      <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>`;
-    div.querySelector('.remove').onclick=()=>div.remove();
-    return div;
-  }
-  function eduItem(d={}){
-    const div=document.createElement('div'); div.className='item'; div.innerHTML=`
-      <div class="row">
-        <div style="grid-column:1/3"><label>Degree</label><input data-k="degree" value="${esc(d.degree)}" placeholder="e.g., MBA"></div>
-        <div style="grid-column:3/5"><label>Institution</label><input data-k="institution" value="${esc(d.institution)}" placeholder="e.g., DU"></div>
-        <div><label>Score</label><input data-k="score" value="${esc(d.score)}" placeholder="optional"></div>
-        <div><label>Start</label><input type="date" data-k="start_date" value="${esc(d.start_date)}"></div>
-        <div><label>End</label><input type="date" data-k="end_date" value="${esc(d.end_date)}"></div>
-        <div style="grid-column:1/-1"><label>Notes</label><textarea rows="2" data-k="description" placeholder="Majors, highlights…">${esc(d.description)}</textarea></div>
-      </div>
-      <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>`;
-    div.querySelector('.remove').onclick=()=>div.remove();
-    return div;
-  }
-  if(expData.length){ expData.forEach(d=>expList.appendChild(expItem(d))); } else { expList.appendChild(expItem({})); }
-  if(eduData.length){ eduData.forEach(d=>eduList.appendChild(eduItem(d))); } else { eduList.appendChild(eduItem({})); }
+  function expItem(d={}){ const div=document.createElement('div'); div.className='item'; div.innerHTML=`
+    <div class="row">
+      <div style="grid-column:1/3"><label>Designation</label><input data-k="designation" value="${esc(d.designation)}" placeholder="e.g., HR Manager"></div>
+      <div style="grid-column:3/5"><label>Company</label><input data-k="company" value="${esc(d.company)}" placeholder="e.g., Acme Corp"></div>
+      <div><label>Current?</label><input type="checkbox" data-k="current" ${d.current?'checked':''} style="width:auto;vertical-align:middle;margin-top:16px"></div>
+      <div><label>Start</label><input type="date" data-k="start_date" value="${esc(d.start_date)}"></div>
+      <div><label>End</label><input type="date" data-k="end_date" value="${esc(d.end_date)}"></div>
+      <div style="grid-column:1/-1"><label>Roles / responsibilities</label><textarea rows="3" data-k="description" placeholder="What did you do?">${esc(d.description)}</textarea></div>
+    </div>
+    <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>`; div.querySelector('.remove').onclick=()=>div.remove(); return div; }
+  function eduItem(d={}){ const div=document.createElement('div'); div.className='item'; div.innerHTML=`
+    <div class="row">
+      <div style="grid-column:1/3"><label>Degree</label><input data-k="degree" value="${esc(d.degree)}" placeholder="e.g., MBA"></div>
+      <div style="grid-column:3/5"><label>Institution</label><input data-k="institution" value="${esc(d.institution)}" placeholder="e.g., DU"></div>
+      <div><label>Score</label><input data-k="score" value="${esc(d.score)}" placeholder="optional"></div>
+      <div><label>Start</label><input type="date" data-k="start_date" value="${esc(d.start_date)}"></div>
+      <div><label>End</label><input type="date" data-k="end_date" value="${esc(d.end_date)}"></div>
+      <div style="grid-column:1/-1"><label>Notes</label><textarea rows="2" data-k="description" placeholder="Majors, highlights…">${esc(d.description)}</textarea></div>
+    </div>
+    <div class="toolbar"><button type="button" class="btn-ghost remove">Remove</button></div>`; div.querySelector('.remove').onclick=()=>div.remove(); return div; }
+  ;(expData.length?expData:[{}]).forEach(d=>expList.appendChild(expItem(d)));
+  ;(eduData.length?eduData:[{}]).forEach(d=>eduList.appendChild(eduItem(d)));
   addExp.onclick=()=>expList.appendChild(expItem({}));
   addEdu.onclick=()=>eduList.appendChild(eduItem({}));
 
+  // Save
   saveAll.onclick = async ()=>{
     try{
       const payload = {
         user_id: user.id,
-        full_name: nz(full_name.value),
-        phone: nz(phone.value),
-        headline: nz(headline.value),
-        dob: dob.value || null,
-        years_experience: toInt(years_experience.value),
-        expected_salary: toInt(expected_salary.value),
-        skills: nz(skills.value),
-        preferred_locations: nz(preferred_locations.value),
-        current_company: nz(current_company.value),
-        profiles_links: nz(profiles_links.value),
-        experience_json: collect(expList),
-        education_json: collect(eduList)
+        full_name: nz(full_name.value), phone: nz(phone.value), headline: nz(headline.value),
+        dob: dob.value || null, years_experience: toInt(years_experience.value), expected_salary: toInt(expected_salary.value),
+        skills: nz(skills.value), preferred_locations: nz(preferred_locations.value),
+        current_company: nz(current_company.value), profiles_links: nz(profiles_links.value),
+        experience_json: collect(expList), education_json: collect(eduList)
       };
       const { error } = await app.upsertProfile(payload);
       if(error) throw error;
       ui.toast('Profile saved','success');
-      location.hash = ''; // keep panel but clear hash
     }catch(e){ ui.toast(e.message || 'Save failed','error'); }
   };
 
-  // Recommended jobs or hint
+  // Recommendations
   const box = document.getElementById('reco');
   const firstSkill = (p?.skills||'').split(',')[0]?.trim();
-  if(!firstSkill){
-    box.innerHTML = '';
-    prefHint.style.display = 'block';
-  }else{
+  if(!firstSkill){ box.innerHTML=''; prefHint.style.display='block'; }
+  else{
     try{
       const { data, error } = await db.searchJobs({ q:firstSkill, page:1, pageSize:6 });
-      if(error) throw error;
-      renderJobs(data||[]);
-      document.getElementById('viewAll').href = `/jobs.html?q=${encodeURIComponent(firstSkill)}&type=all`;
-    }catch(e){
-      try{
-        const { data } = await db.featuredJobs();
-        renderJobs((data||[]).slice(0,6));
-      }catch(e2){
-        box.innerHTML = '<div class="muted">Couldn’t load recommendations.</div>';
-      }
-    }
+      if(error) throw error; renderJobs(data||[]); viewAll.href = `/jobs.html?q=${encodeURIComponent(firstSkill)}&type=all`;
+    }catch(e){ const { data } = await db.featuredJobs(); renderJobs((data||[]).slice(0,6)); }
   }
   function renderJobs(rows){
     if(!rows?.length){ box.innerHTML = '<div class="muted">No recommendations yet.</div>'; return; }
@@ -349,11 +294,10 @@
         <h4>${esc(j.title)}</h4>
         <div class="meta">· ${esc(j.location||'')} · ${esc(j.employment_type||'')}</div>
         <a class="btn-ghost" href="/job.html?id=${encodeURIComponent(j.id)}" style="margin-top:8px;display:inline-block">View</a>
-      </article>
-    `).join('');
+      </article>`).join('');
   }
 
-  // helpers
+  // Helpers
   function esc(s=''){return String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
   function nz(v){return v && v.trim() ? v.trim() : null;}
   function toInt(v){if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null}
