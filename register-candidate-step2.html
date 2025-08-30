@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Complete your profile</title>
+  <title>Candidate — Step 2</title>
   <style>
     :root{--blue:#151B54;--blue-600:#0F143E;--orange:#FF6E00;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
     body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -13,16 +13,16 @@
     .btn-pill{padding:10px 16px;border-radius:999px;font-weight:800;color:#fff;box-shadow:0 6px 16px rgba(2,6,23,.12)}
     .btn-blue{background:var(--blue)} .btn-blue:hover{background:var(--blue-600)}
     .btn-orange{background:var(--orange)} .btn-orange:hover{filter:brightness(.95)}
-    .container{max-width:900px;margin:0 auto;padding:24px 16px}
+    .container{max-width:880px;margin:0 auto;padding:24px 16px}
     .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:24px}
     label{display:block;margin:12px 0 4px;font-weight:700}
     input, textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
-    textarea{min-height:90px;resize:vertical}
     input:focus, textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15)}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .actions{margin-top:16px;display:flex;gap:10px}
     button.primary{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}
     button.primary:hover{background:var(--blue-600)}
+    button.ghost{background:#fff;color:#151B54;border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}
     .muted{color:var(--muted)}
   </style>
 </head>
@@ -38,48 +38,47 @@
   </header>
 
   <div class="container">
-    <h1 style="margin:0 0 12px">Complete your profile</h1>
-    <div class="muted">Optional — you can finish later from your dashboard.</div>
+    <h1 style="margin:0 0 12px">Tell us more</h1>
+    <div class="muted">Step 2 (optional)</div>
     <section class="card">
       <form id="form">
-        <div class="grid">
+        <div class="row">
           <div>
-            <label>Years of experience</label><input id="years_experience" type="number" min="0" placeholder="e.g., 3"/>
+            <label>Years of experience</label>
+            <input id="years_experience" type="number" min="0" placeholder="e.g., 3"/>
           </div>
           <div>
-            <label>Date of birth</label><input id="dob" type="date" />
-          </div>
-        </div>
-
-        <label>Key skills (comma-separated)</label><input id="skills" placeholder="e.g., React, Node.js, SQL"/>
-
-        <label>Preferred locations (comma-separated)</label><input id="preferred_locations" placeholder="e.g., Dehradun, Delhi NCR"/>
-
-        <label>Expected salary (optional)</label><input id="expected_salary" type="number" min="0" placeholder="e.g., 600000"/>
-
-        <div class="grid">
-          <div>
-            <label>Current company</label><input id="current_company" placeholder="e.g., Acme Pvt Ltd"/>
-          </div>
-          <div>
-            <label>Current title</label><input id="current_title" placeholder="e.g., HR Manager"/>
+            <label>Date of birth</label>
+            <input id="dob" type="date" />
           </div>
         </div>
 
-        <label>Previous companies (comma-separated)</label><input id="previous_companies" placeholder="e.g., TCS, Infosys"/>
+        <label>Key skills (comma-separated)</label>
+        <input id="skills" placeholder="e.g., React, Node.js, SQL"/>
 
-        <label>Education (free-form)</label>
-        <textarea id="education" placeholder="e.g., MBA (HR), ABC University, 2015"></textarea>
+        <div class="row">
+          <div>
+            <label>Current organization</label>
+            <input id="current_company" placeholder="e.g., Acme Corp"/>
+          </div>
+          <div>
+            <label>Previous organizations (comma-separated)</label>
+            <input id="previous_companies" placeholder="e.g., TCS, Infosys"/>
+          </div>
+        </div>
 
-        <label>Experience (free-form timeline)</label>
-        <textarea id="experience" placeholder="e.g., 2019–2024 HR Manager @ Acme; 2015–2019 Recruiter @ Foo"></textarea>
+        <label>Education (degrees, institutions)</label>
+        <textarea id="education" rows="3" placeholder="e.g., B.Tech, IIT Roorkee; MBA, IIM Indore"></textarea>
 
-        <label>LinkedIn profile URL (optional)</label>
-        <input id="linkedin_url" type="url" placeholder="https://www.linkedin.com/in/yourname"/>
+        <label>Profile links (comma-separated)</label>
+        <input id="profiles_links" placeholder="e.g., https://linkedin.com/in/…, https://github.com/…"/>
+
+        <label>Expected salary (optional)</label>
+        <input id="expected_salary" type="number" min="0" placeholder="e.g., 600000"/>
 
         <div class="actions">
-          <button class="primary" type="submit">Save & go to dashboard</button>
-          <a href="/dashboard.html" class="muted">Skip for now →</a>
+          <button class="primary" type="submit">Save & continue</button>
+          <button class="ghost" type="button" id="skip">Skip for now</button>
         </div>
       </form>
     </section>
@@ -87,26 +86,23 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="/config.js"></script>
-  <script src="/components.js?v=18"></script>
+  <script src="/components.js?v=19"></script>
   <script>
     (async function(){
       await app.requireAuth({ redirectTo: '/register-candidate.html' });
       const user = await app.getSessionUser();
-      const { data: p } = await app.getProfile(user.id);
 
-      // Pre-fill
-      if(p){
-        if(p.years_experience!=null) years_experience.value = p.years_experience;
-        if(p.skills) skills.value = p.skills;
-        if(p.preferred_locations) preferred_locations.value = p.preferred_locations;
-        if(p.expected_salary!=null) expected_salary.value = p.expected_salary;
-        if(p.dob) dob.value = p.dob.slice(0,10);
-        if(p.current_company) current_company.value = p.current_company;
-        if(p.current_title) current_title.value = p.current_title;
-        if(p.previous_companies) previous_companies.value = p.previous_companies;
-        if(p.education) education.value = p.education;
-        if(p.experience) experience.value = p.experience;
-        if(p.linkedin_url) linkedin_url.value = p.linkedin_url;
+      // Prefill
+      const { data: profile } = await app.getProfile(user.id);
+      if(profile){
+        if(profile.years_experience!=null) years_experience.value = profile.years_experience;
+        if(profile.skills) skills.value = profile.skills;
+        if(profile.current_company) current_company.value = profile.current_company;
+        if(profile.previous_companies) previous_companies.value = profile.previous_companies;
+        if(profile.education) education.value = profile.education;
+        if(profile.profiles_links) profiles_links.value = profile.profiles_links;
+        if(profile.expected_salary!=null) expected_salary.value = profile.expected_salary;
+        if(profile.dob) dob.value = profile.dob.substring(0,10);
       }
 
       form.addEventListener('submit', async (e)=>{
@@ -115,21 +111,20 @@
           user_id: user.id,
           years_experience: toInt(years_experience.value),
           skills: orNull(skills.value.trim()),
-          preferred_locations: orNull(preferred_locations.value.trim()),
-          expected_salary: toInt(expected_salary.value),
-          dob: orNull(dob.value || null),
           current_company: orNull(current_company.value.trim()),
-          current_title: orNull(current_title.value.trim()),
           previous_companies: orNull(previous_companies.value.trim()),
           education: orNull(education.value.trim()),
-          experience: orNull(experience.value.trim()),
-          linkedin_url: orNull(linkedin_url.value.trim())
+          profiles_links: orNull(profiles_links.value.trim()),
+          expected_salary: toInt(expected_salary.value),
+          dob: orNull(dob.value || null)
         };
         const { error } = await app.upsertProfile(payload);
         if(error){ ui.toast(error.message,'error'); return; }
         ui.toast('Profile saved','success');
-        app.go('/dashboard.html');
+        app.go('/dashboard.html?updated=1');
       });
+
+      document.getElementById('skip').onclick = () => app.go('/dashboard.html?skip=1');
 
       function toInt(v){ if(v===''||v==null) return null; const n=Number(v); return Number.isFinite(n)?n:null }
       function orNull(v){ return v? v: null }
