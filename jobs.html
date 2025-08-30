@@ -4,153 +4,166 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Jobs — GrowIndia</title>
-  <meta name="description" content="Browse open roles on GrowIndia Jobs. Search and filter by location and employment type.">
-  <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/config.js?v=12"></script>
-  <script src="/components.js?v=12"></script>
+  <script src="/config.js?v=13"></script>
+  <script src="/components.js?v=13"></script>
   <style>
-    .container{max-width:1100px;margin:0 auto;padding:24px}
-    .top{display:flex;justify-content:space-between;align-items:center}
-    .sticky{position:sticky;top:0;background:#fff;z-index:10;padding:12px 0;border-bottom:1px solid #e5e7eb}
-    .filters{display:flex;gap:12px;flex-wrap:wrap}
-    .filters input, .filters select{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .chip{padding:4px 8px;border-radius:999px;background:#f1f5f9;font-size:12px}
-    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px}
-    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px}
-    .muted{color:#64748b;font-size:14px}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;font-size:12px}
-    a.joblink{color:#0ea5e9;text-decoration:none;font-weight:600}
-    .pager{display:flex;gap:8px;justify-content:center;margin:24px 0}
-    .pager button{padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#fbfcfe;color:#0f172a}
+    .top{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #e5e7eb}
+    .topin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    .brand{font-weight:800}
+    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;display:grid;grid-template-columns:300px 1fr;gap:16px}
+    .panel{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 28px rgba(2,6,23,.06);padding:14px}
+    .sec{border-top:1px solid #eef2f7;padding:12px 0}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .chip{padding:6px 10px;border-radius:999px;background:#f3f6ff;border:1px solid #e5e7eb;font-size:12px;cursor:pointer}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    input,select{padding:10px;border:1px solid #cbd5e1;border-radius:10px}
+    .job{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 6px 18px rgba(2,6,23,.05);padding:14px;margin-bottom:12px}
+    .job h3{margin:0 0 6px}
+    .muted{color:#64748b}
+    .pill{display:inline-block;background:#eef2ff;border-radius:999px;padding:3px 8px;font-size:12px}
+    .resultTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .pager{display:flex;gap:8px;justify-content:center;margin:14px 0}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
+    .btn.primary{background:#0ea5e9;color:#fff;border:none}
   </style>
 </head>
 <body>
-  <main class="container">
-    <div class="top">
-      <h1>Open Roles</h1>
-      <a class="joblink" href="/home.html">← Home</a>
+<header class="top">
+  <div class="topin">
+    <div class="brand">GrowIndia Jobs</div>
+    <nav><a href="/index.html">Home</a> · <a href="/employer.html">Post a job</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Left filters -->
+  <aside class="panel">
+    <h3 style="margin:0 0 8px">All Filters</h3>
+
+    <div class="sec">
+      <div class="muted" style="font-weight:700;margin-bottom:6px">Keyword</div>
+      <input id="f_q" placeholder="role, company, skills">
     </div>
 
-    <div class="sticky">
-      <div class="filters">
-        <input id="f_q" placeholder="Search jobs…">
-        <label>Location <select id="f_location"></select></label>
-        <label>Type <select id="f_type"></select></label>
-        <label>Sort
-          <select id="f_sort">
-            <option value="newest">Newest</option>
-            <option value="pay-max">Pay (Max → Min)</option>
-            <option value="pay-min">Pay (Min → Max)</option>
-          </select>
-        </label>
-        <button id="btnReset">Reset</button>
-      </div>
-      <div class="chips">
-        <span id="count" class="chip">Loading…</span>
-        <span id="chip_location" class="chip" style="display:none"></span>
-        <span id="chip_type" class="chip" style="display:none"></span>
-        <span id="chip_sort" class="chip" style="display:none"></span>
-      </div>
+    <div class="sec">
+      <div class="muted" style="font-weight:700;margin-bottom:6px">Location</div>
+      <select id="f_location"></select>
     </div>
 
-    <div id="jobList" class="list"></div>
-    <div id="empty" class="muted" style="display:none;margin-top:12px">No jobs found.</div>
+    <div class="sec">
+      <div class="muted" style="font-weight:700;margin-bottom:6px">Employment type</div>
+      <select id="f_type"></select>
+    </div>
 
+    <div class="sec">
+      <button id="btnReset" class="btn">Reset filters</button>
+    </div>
+  </aside>
+
+  <!-- Right content -->
+  <section>
+    <div class="panel">
+      <div class="resultTop">
+        <div id="count" class="muted">Loading…</div>
+        <div class="controls">
+          <label>Sort
+            <select id="f_sort">
+              <option value="newest">Newest</option>
+              <option value="pay-max">Pay (Max → Min)</option>
+              <option value="pay-min">Pay (Min → Max)</option>
+            </select>
+          </label>
+          <button id="btnSearch" class="btn primary">Search</button>
+        </div>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div id="list"></div>
     <div class="pager">
-      <button id="prevBtn">Prev</button>
+      <button id="prev" class="btn">Prev</button>
       <div id="pageInfo" class="muted"></div>
-      <button id="nextBtn">Next</button>
+      <button id="next" class="btn">Next</button>
     </div>
-  </main>
+  </section>
+</main>
 
-  <script>
-    (async function(){
-      const { ui, q, db, escapeHTML, setQueryParams, debounce } = window.app;
-      const pageSize = 12;
+<script>
+(async function(){
+  const { db, escapeHTML, setQueryParams, debounce, ui } = window.app;
+  const pageSize = 12;
+  function state(){ const u=new URL(location.href); return { page:Math.max(1,Number(u.searchParams.get('page')||'1')), q:u.searchParams.get('q')||'', location:u.searchParams.get('location')||'all', type:u.searchParams.get('type')||'all', sort:u.searchParams.get('sort')||'newest' }; }
 
-      function readState(){
-        const url = new URL(location.href);
-        return {
-          page: Math.max(1, Number(url.searchParams.get('page')||'1')),
-          location: url.searchParams.get('location') || 'all',
-          employment_type: url.searchParams.get('type') || 'all',
-          q: url.searchParams.get('q') || '',
-          sort: url.searchParams.get('sort') || 'newest'
-        };
-      }
+  async function loadFilters(){
+    const { locations, employment_types } = await db.distinctJobFilters();
+    const locSel = document.getElementById('f_location');
+    const typeSel = document.getElementById('f_type');
+    locSel.innerHTML = ['all',...locations].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
+    typeSel.innerHTML = ['all',...employment_types].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
+  }
 
-      async function loadFilters(){
-        try {
-          const { locations, employment_types } = await db.distinctJobFilters();
-          q('#f_location').innerHTML = ['all', ...locations].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All locations':escapeHTML(v)}</option>`).join('');
-          q('#f_type').innerHTML = ['all', ...employment_types].map(v=>`<option value="${escapeHTML(v)}">${v==='all'?'All types':escapeHTML(v)}</option>`).join('');
-        } catch (err) { console.error(err); ui.error('Failed to load filters'); }
-      }
+  function renderChips(s){
+    const chips = document.getElementById('chips');
+    const arr=[];
+    if(s.q) arr.push(`"${escapeHTML(s.q)}"`);
+    if(s.location!=='all') arr.push(`Location: ${escapeHTML(s.location)}`);
+    if(s.type!=='all') arr.push(`Type: ${escapeHTML(s.type)}`);
+    chips.innerHTML = arr.map(t=>`<span class="chip">${t}</span>`).join('');
+  }
 
-      function showChips(s, total){
-        q('#count').textContent = `${total} job${total===1?'':'s'}`;
-        const lc = q('#chip_location'), tc = q('#chip_type'), sc = q('#chip_sort');
-        lc.style.display = s.location!=='all' ? 'inline-block' : 'none';
-        lc.textContent = `Location: ${s.location}`;
-        tc.style.display = s.employment_type!=='all' ? 'inline-block' : 'none';
-        tc.textContent = `Type: ${s.employment_type}`;
-        sc.style.display = s.sort!=='newest' ? 'inline-block' : 'none';
-        sc.textContent = s.sort==='pay-max' ? 'Sort: Pay (Max)' : (s.sort==='pay-min' ? 'Sort: Pay (Min)' : '');
-      }
+  async function render(){
+    const s = state();
+    document.getElementById('f_q').value=s.q;
+    document.getElementById('f_location').value=s.location;
+    document.getElementById('f_type').value=s.type;
+    document.getElementById('f_sort').value=s.sort;
 
-      async function render(){
-        const s = readState();
-        q('#f_q').value = s.q; q('#f_location').value = s.location;
-        q('#f_type').value = s.employment_type; q('#f_sort').value = s.sort;
+    try{
+      const { rows, total } = await db.listJobsPaged({
+        page:s.page, pageSize,
+        location: s.location==='all'?null:s.location,
+        employment_type: s.type==='all'?null:s.type,
+        q: s.q || null, sort: s.sort
+      });
+      document.getElementById('count').textContent=`${total} job${total===1?'':'s'} found`;
 
-        try {
-          const { rows, total } = await db.listJobsPaged({
-            page: s.page, pageSize,
-            location: s.location==='all'?null:s.location,
-            employment_type: s.employment_type==='all'?null:s.employment_type,
-            q: s.q || null, sort: s.sort
-          });
+      const list=document.getElementById('list'); list.innerHTML='';
+      rows.forEach(j=>{
+        const el=document.createElement('div'); el.className='job';
+        const snippet = (j.description||'').replace(/\s+/g,' ').slice(0,150);
+        el.innerHTML = `
+          <h3><a href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a></h3>
+          <div class="muted" style="margin:4px 0 6px">
+            ${escapeHTML(j.company?.name||'—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
+          </div>
+          <div class="muted">${escapeHTML(snippet)}${snippet.length===150?'…':''}</div>
+          <div style="margin-top:8px;color:#0a3a5f;font-weight:700">${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}</div>
+        `;
+        list.appendChild(el);
+      });
 
-          const list = q('#jobList'); list.innerHTML='';
-          if (rows.length===0) q('#empty').style.display='block'; else q('#empty').style.display='none';
-          rows.forEach(j=>{
-            const el = document.createElement('div'); el.className='card';
-            el.innerHTML = `
-              <a class="joblink" href="/job.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a>
-              <div class="muted" style="margin:6px 0">
-                ${escapeHTML(j.company?.name || '—')} • ${escapeHTML(j.location)} • <span class="pill">${escapeHTML(j.employment_type)}</span>
-              </div>
-              <div class="muted">${j.min_salary?escapeHTML(j.min_salary):''}${j.max_salary?'–'+escapeHTML(j.max_salary):''} ${escapeHTML(j.currency||'')}</div>
-            `;
-            list.appendChild(el);
-          });
+      const totalPages=Math.max(1,Math.ceil(total/pageSize));
+      document.getElementById('pageInfo').textContent=`Page ${s.page} of ${totalPages}`;
+      document.getElementById('prev').disabled=s.page<=1;
+      document.getElementById('next').disabled=s.page>=totalPages;
+      renderChips(s);
+    } catch(e){ console.error(e); ui.error('Failed to load jobs'); }
+  }
 
-          const totalPages = Math.max(1, Math.ceil(total / pageSize));
-          q('#pageInfo').textContent = `Page ${s.page} of ${totalPages}`;
-          q('#prevBtn').disabled = s.page<=1;
-          q('#nextBtn').disabled = s.page>=totalPages;
-          showChips(s, total);
-        } catch (err) { console.error(err); ui.error('Failed to load jobs'); }
-      }
+  await loadFilters();
+  render();
 
-      await loadFilters();
-
-      // Instant search (debounced)
-      q('#f_q').addEventListener('input', debounce(()=>{
-        setQueryParams({ page:1, q:q('#f_q').value.trim() }); render();
-      }, 350));
-      q('#f_location').addEventListener('change', ()=>{ setQueryParams({ page:1, location:q('#f_location').value }); render(); });
-      q('#f_type').addEventListener('change', ()=>{ setQueryParams({ page:1, type:q('#f_type').value }); render(); });
-      q('#f_sort').addEventListener('change', ()=>{ setQueryParams({ page:1, sort:q('#f_sort').value }); render(); });
-      q('#btnReset').addEventListener('click', ()=>{ setQueryParams({ page:1, location:null, type:null, q:null, sort:'newest' }); render(); });
-
-      q('#prevBtn').addEventListener('click', ()=>{ const s=readState(); setQueryParams({ page:s.page-1 }); render(); });
-      q('#nextBtn').addEventListener('click', ()=>{ const s=readState(); setQueryParams({ page:s.page+1 }); render(); });
-
-      render();
-    })();
-  </script>
+  document.getElementById('btnSearch').onclick=()=>{ setQueryParams({page:1,q:document.getElementById('f_q').value.trim(), location:document.getElementById('f_location').value, type:document.getElementById('f_type').value, sort:document.getElementById('f_sort').value}); render(); };
+  document.getElementById('f_q').addEventListener('input', debounce(()=>document.getElementById('btnSearch').click(),400));
+  document.getElementById('f_location').onchange=()=>document.getElementById('btnSearch').click();
+  document.getElementById('f_type').onchange=()=>document.getElementById('btnSearch').click();
+  document.getElementById('f_sort').onchange=()=>document.getElementById('btnSearch').click();
+  document.getElementById('btnReset').onclick=()=>{ setQueryParams({page:1,q:null,location:null,type:null,sort:'newest'}); render(); };
+  document.getElementById('prev').onclick=()=>{ const s=state(); setQueryParams({page:s.page-1}); render(); };
+  document.getElementById('next').onclick=()=>{ const s=state(); setQueryParams({page:s.page+1}); render(); };
+})();
+</script>
 </body>
 </html>
