@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Edit Job — GrowIndia Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js?v=13"></script>
+<script src="/components.js?v=13"></script>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0b1220;color:#e5e7eb}
+  .layout{display:flex;min-height:100vh}
+  .side{width:240px;background:#0f172a;border-right:1px solid #1f2b3a}
+  .brand{padding:14px 16px;font-weight:800;border-bottom:1px solid #1f2b3a}
+  .nav{padding:12px 8px}
+  .nav a{display:block;padding:10px 12px;border-radius:10px;color:#dbe1ea}
+  .nav a:hover,.nav a.active{background:#111c2e}
+  .content{flex:1}
+  .top{position:sticky;top:0;background:#0b1220;border-bottom:1px solid #1f2b3a}
+  .topin{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+  .wrap{max-width:900px;margin:0 auto;padding:16px}
+  .card{background:#0f172a;border:1px solid #1f2b3a;border-radius:14px}
+  .head{padding:14px;border-bottom:1px solid #1f2b3a}
+  .sec{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sec > div{display:flex;flex-direction:column}
+  label{margin-bottom:6px;color:#9fb3c8;font-weight:600}
+  input,select,textarea{padding:12px;border:1px solid #22314a;border-radius:10px;background:#0f172a;color:#e5e7eb}
+  textarea{min-height:180px}
+  .row{padding:14px;border-top:1px solid #1f2b3a}
+  .btn{padding:10px 12px;border-radius:10px;border:1px solid #2b3b52;background:#122036;color:#e5e7eb;cursor:pointer}
+  .btn.pri{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="brand">GrowIndia Admin</div>
+    <nav class="nav">
+      <a href="/admin.html">Dashboard</a>
+      <a class="active" href="/admin-jobs.html">Jobs</a>
+      <a href="/admin-reports.html">Reports</a>
+    </nav>
+  </aside>
+  <div class="content">
+    <header class="top"><div class="topin">
+      <div id="title">New Job</div>
+      <div><a class="btn" href="/admin-jobs.html">Back</a></div>
+    </div></header>
+
+    <main class="wrap">
+      <form id="form" class="card">
+        <div class="head"><h3 style="margin:0">Job details</h3></div>
+
+        <div class="sec">
+          <div>
+            <label>Title</label>
+            <input id="titleInput" required>
+          </div>
+          <div>
+            <label>Company</label>
+            <select id="company" required></select>
+          </div>
+
+          <div>
+            <label>Location</label>
+            <input id="location" placeholder="e.g., Delhi">
+          </div>
+          <div>
+            <label>Employment type</label>
+            <select id="type">
+              <option value="full-time">Full-time</option>
+              <option value="part-time">Part-time</option>
+              <option value="contract">Contract</option>
+              <option value="internship">Internship</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Min Salary</label>
+            <input id="min" type="number" min="0">
+          </div>
+          <div>
+            <label>Max Salary</label>
+            <input id="max" type="number" min="0">
+          </div>
+
+          <div>
+            <label>Currency</label>
+            <input id="cur" value="INR">
+          </div>
+          <div>
+            <label>Published</label>
+            <select id="published"><option value="true">Yes</option><option value="false">No</option></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Description</label>
+          <textarea id="desc" style="width:100%"></textarea>
+        </div>
+
+        <div class="row" style="display:flex;gap:10px">
+          <button class="btn pri" type="submit" id="btnSave">Save</button>
+          <button class="btn" type="button" id="btnDelete">Delete</button>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const { requireAuth, isAdmin, ui, escapeHTML } = window.app;
+  let user; try { user = await requireAuth(); } catch { return location.replace('/login.html'); }
+  if(!(await isAdmin(user.id))) { ui.error('Admins only'); return location.replace('/'); }
+
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id'); if(id) document.getElementById('title').textContent='Edit Job';
+
+  // Load companies
+  const { data:cos, error:ce } = await window.supabase.from('companies').select('id,name').order('name',{ascending:true});
+  if(ce){ ui.error('Failed to load companies'); return; }
+  const sel=document.getElementById('company');
+  sel.innerHTML=cos.map(c=>`<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('');
+
+  // If editing, load job
+  if(id){
+    const { data:j, error } = await window.supabase.from('jobs').select('*').eq('id',id).maybeSingle();
+    if(error||!j){ ui.error('Job not found'); return; }
+    document.getElementById('titleInput').value=j.title||'';
+    document.getElementById('company').value=j.company_id||'';
+    document.getElementById('location').value=j.location||'';
+    document.getElementById('type').value=j.employment_type||'full-time';
+    document.getElementById('min').value=j.min_salary||'';
+    document.getElementById('max').value=j.max_salary||'';
+    document.getElementById('cur').value=j.currency||'INR';
+    document.getElementById('published').value=String(!!j.published);
+    document.getElementById('desc').value=j.description||'';
+  } else {
+    document.getElementById('btnDelete').style.display='none';
+  }
+
+  document.getElementById('form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const payload={
+      title:document.getElementById('titleInput').value.trim(),
+      company_id:document.getElementById('company').value,
+      location:document.getElementById('location').value.trim(),
+      employment_type:document.getElementById('type').value,
+      min_salary: window.app.numberOrNull(document.getElementById('min').value),
+      max_salary: window.app.numberOrNull(document.getElementById('max').value),
+      currency:document.getElementById('cur').value.trim()||'INR',
+      published:document.getElementById('published').value==='true',
+      description:document.getElementById('desc').value.trim()
+    };
+    try{
+      if(id){
+        const { error } = await window.supabase.from('jobs').update(payload).eq('id',id);
+        if(error) throw error;
+        ui.success('Saved'); location.replace('/admin-jobs.html');
+      } else {
+        const { error } = await window.supabase.from('jobs').insert(payload);
+        if(error) throw error;
+        ui.success('Created'); location.replace('/admin-jobs.html');
+      }
+    }catch(err){ console.error(err); ui.error('Save failed'); }
+  });
+
+  document.getElementById('btnDelete').onclick=async()=>{
+    if(!id) return;
+    if(!confirm('Delete this job?')) return;
+    const { error } = await window.supabase.from('jobs').delete().eq('id',id);
+    if(error){ ui.error('Delete failed'); return; }
+    ui.success('Deleted'); location.replace('/admin-jobs.html');
+  };
+})();
+</script>
+</body>
+</html>
