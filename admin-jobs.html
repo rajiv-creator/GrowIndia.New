@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Jobs — GrowIndia Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js?v=13"></script>
+<script src="/components.js?v=13"></script>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#0b1220;color:#e5e7eb}
+  .layout{display:flex;min-height:100vh}
+  .side{width:240px;background:#0f172a;border-right:1px solid #1f2b3a}
+  .brand{padding:14px 16px;font-weight:800;border-bottom:1px solid #1f2b3a}
+  .nav{padding:12px 8px}
+  .nav a{display:block;padding:10px 12px;border-radius:10px;color:#dbe1ea}
+  .nav a:hover,.nav a.active{background:#111c2e}
+  .content{flex:1}
+  .top{position:sticky;top:0;background:#0b1220;border-bottom:1px solid #1f2b3a}
+  .topin{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  input,select{padding:10px;border:1px solid #22314a;border-radius:10px;background:#0f172a;color:#e5e7eb}
+  .btn{padding:10px 12px;border-radius:10px;border:1px solid #2b3b52;background:#122036;color:#e5e7eb;cursor:pointer}
+  .btn.pri{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+  .card{background:#0f172a;border:1px solid #1f2b3a;border-radius:14px}
+  .head{padding:14px;border-bottom:1px solid #1f2b3a}
+  .sec{padding:14px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-top:1px solid #1f2b3a;text-align:left}
+  .muted{color:#93a4b8}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="brand">GrowIndia Admin</div>
+    <nav class="nav">
+      <a href="/admin.html">Dashboard</a>
+      <a class="active" href="/admin-jobs.html">Jobs</a>
+      <a href="/admin-reports.html">Reports</a>
+      <a href="/admin-apps.html">Applications</a>
+    </nav>
+  </aside>
+  <div class="content">
+    <header class="top"><div class="topin">
+      <div>Jobs</div>
+      <div>
+        <a class="btn" href="/">View site</a>
+        <a class="btn" id="btnSignOut">Sign out</a>
+      </div>
+    </div></header>
+
+    <main class="wrap">
+      <div class="card">
+        <div class="head">
+          <div class="controls">
+            <input id="q" placeholder="Search title…">
+            <select id="status">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="hidden">Hidden</option>
+            </select>
+            <button id="btnSearch" class="btn pri">Search</button>
+            <a class="btn" href="/admin-job-edit.html">+ New job</a>
+          </div>
+        </div>
+        <div class="sec" id="list"><div class="muted">Loading…</div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const { requireAuth, isAdmin, ui, escapeHTML, db } = window.app;
+  let user; try { user = await requireAuth(); } catch { return location.replace('/login.html'); }
+  if(!(await isAdmin(user.id))) { ui.error('Admins only'); return location.replace('/'); }
+
+  document.getElementById('btnSignOut').onclick = async()=>{ await window.supabase.auth.signOut(); location.replace('/'); };
+
+  function st(){ const u=new URL(location.href); return { q:u.searchParams.get('q')||'', status:u.searchParams.get('status')||'all' }; }
+  function set(params){ const u=new URL(location.href); Object.entries(params).forEach(([k,v])=>{ if(!v||v==='all') u.searchParams.delete(k); else u.searchParams.set(k,v);}); history.replaceState(null,'',u.toString()); }
+
+  async function load(){
+    const s = st();
+    document.getElementById('q').value = s.q;
+    document.getElementById('status').value = s.status;
+
+    let q = window.supabase.from('jobs').select('id,title,location,employment_type,published,created_at,company:companies(name)').order('created_at',{ascending:false}).limit(1000);
+    if(s.q) q = q.ilike('title', `%${s.q}%`);
+    if(s.status==='active') q = q.eq('published',true);
+    if(s.status==='hidden') q = q.eq('published',false);
+    const { data, error } = await q;
+    if(error){ console.error(error); return ui.error('Failed to load jobs'); }
+    const rows = data||[];
+    const list = document.getElementById('list');
+    if(!rows.length){ list.innerHTML = '<div class="muted">No jobs found.</div>'; return; }
+    list.innerHTML = `<table>
+      <thead><tr><th>Title</th><th>Company</th><th>Meta</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${rows.map(j=>`
+          <tr>
+            <td><a href="/admin-job-edit.html?id=${encodeURIComponent(j.id)}">${escapeHTML(j.title)}</a></td>
+            <td>${escapeHTML(j.company?.name||'—')}</td>
+            <td class="muted">${escapeHTML(j.location)} • ${escapeHTML(j.employment_type)}</td>
+            <td>${j.published?'✅ Active':'⛔ Hidden'}</td>
+            <td>
+              <a class="btn" href="/admin-job-edit.html?id=${encodeURIComponent(j.id)}">Edit</a>
+              <button class="btn" data-act="toggle" data-id="${j.id}" data-next="${!j.published}">${j.published?'Unpublish':'Publish'}</button>
+              <button class="btn" data-act="del" data-id="${j.id}">Delete</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+
+    list.querySelectorAll('button[data-act="toggle"]').forEach(b=>b.onclick=async()=>{
+      try{ await db.toggleJobPublished(b.dataset.id, b.dataset.next==='true'); ui.success('Updated'); load(); }catch(e){ ui.error('Failed'); }
+    });
+    list.querySelectorAll('button[data-act="del"]').forEach(b=>b.onclick=async()=>{
+      if(!confirm('Delete this job?')) return;
+      const { error } = await window.supabase.from('jobs').delete().eq('id', b.dataset.id);
+      if(error){ ui.error('Delete failed'); return;}
+      ui.success('Deleted'); load();
+    });
+  }
+
+  document.getElementById('btnSearch').onclick = ()=>{ set({ q:document.getElementById('q').value.trim(), status:document.getElementById('status').value }); load(); };
+  load();
+})();
+</script>
+</body>
+</html>
