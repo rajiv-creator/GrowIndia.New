@@ -1,118 +1,357 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard — GrowIndia Jobs</title>
-  <style>
-    :root{--blue:#151B54;--orange:#FF6E00;--muted:#64748B;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111}
-    header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid var(--line)}
-    .brand{font-weight:700}
-    .wrap{max-width:1180px;margin:24px auto;padding:0 16px}
-    .grid{display:grid;grid-template-columns:280px 1fr 320px;gap:16px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(2,6,23,.06);padding:16px}
-    .big{padding:20px}
-    h3{margin:0 0 10px}
-    .btn{display:inline-block;padding:10px 14px;border-radius:12px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700}
-    .btn--ghost{background:#fff;color:var(--blue);border:1px solid var(--line)}
-    .sub{color:var(--muted);font-size:14px}
-    .jobs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .job{border:1px solid var(--line);border-radius:12px;padding:12px}
-    input, textarea{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:inherit}
-    textarea{height:96px;padding:10px;resize:vertical}
-    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width:1100px){.grid{grid-template-columns:1fr}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard — GrowIndia Jobs</title>
+<style>
+:root{--blue:#151B54;--blue-600:#0F1540;--orange:#FF6E00;--ink:rgba(15,23,42,.9);--bg:#F6F8FC;--card:#fff;--line:#E5E7EB;--muted:#64748B}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:inherit;text-decoration:none}
+.container{max-width:1180px;margin:0 auto;padding:20px}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:700}
+.grid{display:grid;grid-template-columns:280px 1fr;gap:16px;margin-top:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 18px rgba(2,6,23,.06)}
+.card .pad{padding:16px}
+.progress{height:140px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#eef2ff,#fff);border-radius:12px;border:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:999px;background:var(--blue);color:#fff;font-weight:700;border:0;cursor:pointer}
+.btn:hover{background:var(--blue-600)}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#F1F5FF;color:var(--blue);font-weight:700}
+.muted{color:var(--muted)}
+h2{margin:0 0 10px}
+label{display:block;font-weight:600;margin:10px 0 6px}
+input[type="text"],input[type="number"],input[type="date"],textarea{
+  width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.group{border:1px dashed var(--line);border-radius:12px;padding:12px;margin-top:8px}
+.actions{display:flex;gap:8px;margin-top:12px}
+.small{font-size:13px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <header>
+<header>
+  <div class="container nav">
     <div class="brand">GrowIndia Jobs</div>
-    <nav style="display:flex;gap:10px">
-      <a class="btn btn--ghost" href="/login.html" onclick="window.supabase?.auth.signOut()">Sign out</a>
-    </nav>
-  </header>
+    <div><a class="btn" href="/jobs.html">Browse jobs</a></div>
+  </div>
+</header>
 
-  <div class="wrap">
-    <div class="grid">
+<main class="container">
+  <div class="grid">
+    <!-- Left -->
+    <div class="card">
+      <div class="pad">
+        <div class="progress"><div>
+          <div class="badge" id="progressPct">0%</div>
+          <div class="muted small" style="margin-top:8px;text-align:center">Profile completeness</div>
+        </div></div>
 
-      <!-- Left rail -->
-      <div class="card big">
-        <div style="display:flex;gap:16px;align-items:center">
-          <div style="width:76px;height:76px;border-radius:50%;background:#e5e7eb"></div>
-          <div>
-            <div class="sub">Welcome</div>
-            <div id="uName" style="font-weight:800">Your name</div>
-          </div>
-        </div>
-        <div style="margin-top:16px"><a class="btn btn--ghost" href="#complete">Complete profile</a></div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
-          <div class="card"><div class="sub">Search appearances</div><div style="font-weight:800">0</div></div>
-          <div class="card"><div class="sub">Recruiter actions</div><div style="font-weight:800">0</div></div>
+        <div style="margin-top:12px">
+          <button class="btn" id="completeBtn">Complete your profile →</button>
         </div>
 
-        <div style="margin-top:16px"><a class="btn btn--ghost" href="/jobs.html">Jobs</a></div>
-        <div style="margin-top:8px"><a class="btn btn--ghost" href="/companies.html">Companies</a></div>
-        <div style="margin-top:8px"><a class="btn btn--ghost" href="/blogs.html">Blogs</a></div>
+        <div class="pad" style="padding-left:0">
+          <div class="muted small" style="margin-top:10px">My home</div>
+          <div class="muted small">Jobs</div>
+          <div class="muted small">Companies</div>
+          <div class="muted small">Blogs</div>
+        </div>
       </div>
+    </div>
 
-      <!-- Middle column -->
-      <div style="display:grid;gap:16px">
-        <div class="card big">
-          <h3>Recommended jobs for you</h3>
-          <div class="sub" id="jobs">Loading…</div>
-        </div>
-
-        <div class="card big" id="complete">
-          <h3>Profile completion</h3>
-          <p class="sub" style="margin-top:-4px">Add your basics; you can do more later.</p>
-
-          <div class="two">
-            <div><div class="sub">Full name</div><input id="p_full" placeholder="e.g., Ananya Sharma" /></div>
-            <div><div class="sub">Phone</div><input id="p_phone" placeholder="e.g., 9876543210" /></div>
+    <!-- Right -->
+    <div>
+      <!-- Recommended jobs -->
+      <div class="card">
+        <div class="pad">
+          <div class="row" style="align-items:center">
+            <h2 style="margin:0">Recommended jobs for you</h2>
+            <div style="text-align:right"><a class="muted" href="/jobs.html">View all</a></div>
           </div>
-
-          <div class="two" style="margin-top:10px">
-            <div><div class="sub">Headline</div><input id="p_head" placeholder="e.g., Frontend Developer" /></div>
-            <div><div class="sub">Expected salary (₹)</div><input id="p_sal" placeholder="e.g., 600000" /></div>
-          </div>
-
-          <div style="margin-top:14px">
-            <button id="saveProfile" class="btn">Save</button>
-            <a class="btn btn--ghost" style="margin-left:8px" href="/jobs.html">Browse jobs</a>
-          </div>
+          <div class="muted" id="recStatus">Loading…</div>
+          <div id="recs" class="row" style="margin-top:10px"></div>
         </div>
       </div>
 
-      <!-- Right rail -->
-      <div style="display:grid;gap:16px">
-        <div class="card big">
-          <h3>Get the app</h3>
-          <div class="sub">Scan to download</div>
-          <div style="margin:10px 0 16px;height:120px;background:#eef2ff;border:1px dashed #c7d2fe;border-radius:12px;display:flex;align-items:center;justify-content:center">QR</div>
-          <a class="btn btn--ghost" href="#">Download</a>
-        </div>
+      <!-- Profile completion form -->
+      <div id="complete" class="card" style="margin-top:16px">
+        <div class="pad">
+          <h2>Profile completion</h2>
+          <div class="muted small">Add your basics, experience and education. Use “Add more”.</div>
 
-        <div class="card big">
-          <h3>Become a Pro!</h3>
-          <div class="sub">Get enhanced profile, hidden jobs &amp; more tools.</div>
-          <a class="btn btn--ghost" style="margin-top:10px" href="#">Upgrade now</a>
-        </div>
+          <form id="profileForm" style="margin-top:12px">
+            <div class="row">
+              <div>
+                <label>Full name</label>
+                <input id="full_name" type="text" />
+              </div>
+              <div>
+                <label>Phone</label>
+                <input id="phone" type="text" />
+              </div>
+            </div>
 
-        <div class="card big">
-          <h3>What is email writing?</h3>
-          <div class="sub">A complete guide for clear communication</div>
-          <a class="btn btn--ghost" style="margin-top:10px" href="#">Know more</a>
+            <div class="row">
+              <div>
+                <label>Headline</label>
+                <input id="headline" type="text" placeholder="e.g., HR Manager" />
+              </div>
+              <div>
+                <label>Date of birth</label>
+                <input id="date_of_birth" type="date" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Years of experience</label>
+                <input id="years_experience" type="number" min="0" placeholder="e.g., 3"/>
+              </div>
+              <div>
+                <label>Expected salary (₹)</label>
+                <input id="expected_salary" type="number" min="0" placeholder="e.g., 600000"/>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Current location</label>
+                <input id="current_location" type="text" placeholder="City, State"/>
+              </div>
+              <div>
+                <label>Preferred locations (comma-separated)</label>
+                <input id="preferred_locations" type="text" placeholder="e.g., Delhi, NCR"/>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Key skills (comma-separated)</label>
+                <input id="skills" type="text" placeholder="e.g., React, Node.js, SQL"/>
+              </div>
+              <div>
+                <label>Profile links (comma-separated)</label>
+                <input id="profile_links" type="text" placeholder="LinkedIn, GitHub…"/>
+              </div>
+            </div>
+
+            <!-- Experience -->
+            <div style="margin-top:6px">
+              <label>Experience</label>
+              <div id="expList"></div>
+              <div class="actions"><button type="button" class="btn" id="addExp">+ Add experience</button></div>
+            </div>
+
+            <!-- Education -->
+            <div style="margin-top:6px">
+              <label>Education</label>
+              <div id="eduList"></div>
+              <div class="actions"><button type="button" class="btn" id="addEdu">+ Add education</button></div>
+            </div>
+
+            <div class="actions" style="justify-content:flex-start">
+              <button class="btn" type="submit" id="saveBtn">Save</button>
+              <a class="btn" href="/jobs.html" style="background:#111827">Browse jobs</a>
+            </div>
+
+            <div id="saveMsg" class="muted small" style="margin-top:8px"></div>
+          </form>
         </div>
       </div>
-
     </div>
   </div>
+</main>
 
-  <!-- Required order -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script defer src="/config.js?v=1"></script>
-  <script defer src="/components.js?v=23"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<script>
+const sb = window.supabase;
+const expList = document.getElementById('expList');
+const eduList = document.getElementById('eduList');
+const saveMsg = document.getElementById('saveMsg');
+const saveBtn = document.getElementById('saveBtn');
+
+function expBlock(v={}) {
+  const wrap = document.createElement('div'); wrap.className='group';
+  wrap.innerHTML = `
+    <div class="row">
+      <div><input type="text" placeholder="Company" value="${v.company||''}"></div>
+      <div><input type="text" placeholder="Designation" value="${v.title||''}"></div>
+    </div>
+    <div class="row">
+      <div><input type="text" placeholder="Start (e.g., 2019-05)" value="${v.start||''}"></div>
+      <div><input type="text" placeholder="End (e.g., 2023-08 or Present)" value="${v.end||''}"></div>
+    </div>
+    <div><textarea rows="2" placeholder="Notes / Responsibilities">${v.notes||''}</textarea></div>
+    <div class="actions"><button type="button" class="btn" onclick="this.closest('.group').remove()">Remove</button></div>
+  `;
+  return wrap;
+}
+function eduBlock(v={}) {
+  const wrap = document.createElement('div'); wrap.className='group';
+  wrap.innerHTML = `
+    <div class="row">
+      <div><input type="text" placeholder="Degree" value="${v.degree||''}"></div>
+      <div><input type="text" placeholder="Institution" value="${v.institution||''}"></div>
+    </div>
+    <div class="row">
+      <div><input type="text" placeholder="Start (e.g., 2016-08)" value="${v.start||''}"></div>
+      <div><input type="text" placeholder="End (e.g., 2020-05)" value="${v.end||''}"></div>
+    </div>
+    <div><textarea rows="2" placeholder="Notes / Score / Highlights">${v.notes||''}</textarea></div>
+    <div class="actions"><button type="button" class="btn" onclick="this.closest('.group').remove()">Remove</button></div>
+  `;
+  return wrap;
+}
+document.getElementById('addExp').onclick = ()=> expList.appendChild(expBlock());
+document.getElementById('addEdu').onclick = ()=> eduList.appendChild(eduBlock());
+
+function getExpData(){
+  return Array.from(expList.querySelectorAll('.group')).map(g=>{
+    const [company,title]=g.querySelectorAll('input'); const inputs=g.querySelectorAll('input');
+    return {
+      company: inputs[0].value.trim(),
+      title:   inputs[1].value.trim(),
+      start:   inputs[2].value.trim(),
+      end:     inputs[3].value.trim(),
+      notes:   g.querySelector('textarea').value.trim()
+    };
+  });
+}
+function getEduData(){
+  return Array.from(eduList.querySelectorAll('.group')).map(g=>{
+    const inputs=g.querySelectorAll('input');
+    return {
+      degree:inputs[0].value.trim(),
+      institution:inputs[1].value.trim(),
+      start:inputs[2].value.trim(),
+      end:inputs[3].value.trim(),
+      notes:g.querySelector('textarea').value.trim()
+    };
+  });
+}
+function setProgress(pct){ document.getElementById('progressPct').textContent = `${pct}%`; }
+
+async function ensureSession(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ location.href='/login.html'; return null; }
+  return session;
+}
+
+function fillForm(row){
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el && val!=null) el.value=val; };
+  set('full_name',row.full_name);
+  set('phone',row.phone);
+  set('headline',row.headline);
+  set('date_of_birth', row.date_of_birth ? row.date_of_birth.split('T')[0] : '');
+  set('years_experience',row.years_experience);
+  set('expected_salary',row.expected_salary);
+  set('current_location',row.current_location);
+  set('preferred_locations',row.preferred_locations);
+  set('skills',row.skills);
+  set('profile_links',row.profile_links);
+
+  const exps = row.experiences || [];
+  const edus = row.educations || [];
+  expList.innerHTML=''; eduList.innerHTML='';
+  (exps||[]).forEach(e=>expList.appendChild(expBlock(e)));
+  (edus||[]).forEach(e=>eduList.appendChild(eduBlock(e)));
+}
+
+function computeProgress(){
+  const fields = ['full_name','headline','years_experience','current_location','skills'];
+  let c=0; fields.forEach(id=>{ const el=document.getElementById(id); if(el && el.value.trim()) c++; });
+  setProgress(Math.round((c/fields.length)*100));
+}
+
+async function loadProfile(userId){
+  const { data, error } = await sb.from('profiles').select('*').eq('user_id', userId).maybeSingle();
+  if(error){ console.error(error); return {}; }
+  const row = data||{};
+  fillForm(row);
+  computeProgress();
+  return row;
+}
+
+// Save
+document.getElementById('profileForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  saveBtn.disabled = true; saveBtn.textContent='Saving…'; saveMsg.textContent='';
+
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ location.href='/login.html'; return; }
+  const uid = session.user.id;
+
+  // Prepare payload (only send columns that exist)
+  let currentRow = await sb.from('profiles').select('*').eq('user_id', uid).maybeSingle();
+  const cols = Object.keys(currentRow.data||{});
+
+  function take(key, value){
+    if(cols.includes(key)) return {[key]: value};
+    return {};
+  }
+
+  const payload = {
+    ...take('user_id', uid),
+    ...take('role','candidate'),
+    ...take('full_name', document.getElementById('full_name').value.trim()),
+    ...take('phone', document.getElementById('phone').value.trim()),
+    ...take('headline', document.getElementById('headline').value.trim()),
+    ...take('date_of_birth', document.getElementById('date_of_birth').value || null),
+    ...take('years_experience', parseInt(document.getElementById('years_experience').value||'0',10)),
+    ...take('expected_salary', parseInt(document.getElementById('expected_salary').value||'0',10)),
+    ...take('current_location', document.getElementById('current_location').value.trim()),
+    ...take('preferred_locations', document.getElementById('preferred_locations').value.trim()),
+    ...take('skills', document.getElementById('skills').value.trim()),
+    ...take('profile_links', document.getElementById('profile_links').value.trim()),
+  };
+
+  const exps = getExpData();
+  const edus = getEduData();
+  if(cols.includes('experiences')) payload.experiences = exps;
+  else if(cols.includes('experience_text')) payload.experience_text = JSON.stringify(exps);
+  if(cols.includes('educations')) payload.educations = edus;
+  else if(cols.includes('education_text')) payload.education_text = JSON.stringify(edus);
+
+  try{
+    const { error } = await sb.from('profiles').upsert(payload, { onConflict:'user_id' });
+    if(error) throw error;
+    saveMsg.textContent='Saved ✔';
+    computeProgress();
+  }catch(err){
+    console.error(err);
+    saveMsg.textContent='Error: '+(err.message||err);
+  }finally{
+    saveBtn.disabled=false; saveBtn.textContent='Save';
+  }
+});
+
+// Recommended jobs (simple newest)
+async function loadRecs(){
+  const recs = document.getElementById('recs'); const status=document.getElementById('recStatus');
+  try{
+    const { data } = await sb.from('jobs').select('id,title,location,employment_type,published').eq('published',true).order('created_at',{ascending:false}).limit(4);
+    recs.innerHTML=''; (data||[]).forEach(j=>{
+      const c=document.createElement('div'); c.className='card'; c.innerHTML=`<div class="pad">
+        <div><strong>${j.title||'Untitled'}</strong></div>
+        <div class="muted small">${j.location||'—'} · ${j.employment_type||'—'}</div>
+        <div class="actions" style="margin-top:8px"><a class="btn" href="/job.html?id=${encodeURIComponent(j.id)}">View</a></div>
+      </div>`; recs.appendChild(c);
+    }); status.remove();
+  }catch{ status.textContent='No recommendations.'; }
+}
+
+// Entry
+(async ()=>{
+  const session = await ensureSession(); if(!session) return;
+  await loadRecs();
+  await loadProfile(session.user.id);
+  document.getElementById('completeBtn').onclick=()=>document.getElementById('complete').scrollIntoView({behavior:'smooth'});
+})();
+</script>
 </body>
 </html>
