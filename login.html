@@ -1,71 +1,76 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Sign in — GrowIndia Jobs</title>
-<style>
-:root{--blue:#151B54;--bg:#F6F8FC;--line:#E5E7EB}
-html,body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-header{background:#fff;border-bottom:1px solid var(--line)}
-.nav{max-width:960px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:72px}
-.brand{font-weight:800}
-.cta{background:var(--blue);color:#fff;border-radius:24px;padding:10px 18px;text-decoration:none;font-weight:800}
-.wrap{max-width:960px;margin:28px auto;padding:0 16px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(2,6,23,.06);padding:18px}
-label{display:block;margin:12px 0 6px;font-weight:700}
-input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px}
-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,27,84,.15);outline:0}
-.btn{display:inline-block;background:var(--blue);color:#fff;border-radius:12px;padding:12px 18px;text-decoration:none;font-weight:800;border:0;cursor:pointer}
-.btn[disabled]{opacity:.6;cursor:not-allowed}
-.meta{color:#64748B;font-size:14px}
-</style></head><body>
-<header><div class="nav"><div class="brand">GrowIndia Jobs</div><a class="cta" href="/register-candidate.html">Create account</a></div></header>
-<main class="wrap">
-  <h1>Sign in</h1>
-  <section class="card">
-    <form id="form">
-      <label>Email</label><input id="email" type="email" required placeholder="you@example.com"/>
-      <label>Password</label><input id="password" type="password" required placeholder="••••••"/>
-      <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button id="loginBtn" class="btn" type="submit">Next</button>
-        <a id="fp" href="#" class="meta">Forgot password?</a>
-        <span class="meta" style="margin-left:auto">New here? <a href="/register-candidate.html">Create an account</a>.</span>
-      </div>
-    </form>
-  </section>
-</main>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign in — GrowIndia Jobs</title>
+  <style>
+    :root{--blue:#151B54;--blue-600:#0f1440;--orange:#FF6E00;--muted:#64748B;--bg:#F6F8FC;--card:#fff;--line:#E5E7EB}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111}
+    header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid var(--line)}
+    .brand{font-weight:700}
+    .nav{display:flex;gap:10px}
+    .pill{padding:10px 16px;border-radius:999px;background:var(--blue);color:#fff;font-weight:700;border:none}
+    .pill--alt{background:var(--orange)}
+    main{max-width:960px;margin:40px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(2,6,23,.06);padding:24px}
+    h1{font-size:28px;margin:0 0 16px}
+    form{display:grid;gap:14px;margin-top:12px}
+    input{height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit}
+    button.btn{height:46px;border-radius:12px;background:var(--blue);color:#fff;border:none;font-weight:700}
+    a{color:var(--blue);text-decoration:none}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:720px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">GrowIndia Jobs</div>
+    <nav class="nav">
+      <a class="pill" href="/register-candidate.html">Candidate</a>
+      <a class="pill pill--alt" href="/login.html?role=employer">Employer</a>
+    </nav>
+  </header>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="/config.js"></script>
-<script src="/components.js?v=22"></script>
-<script>
-  const form = document.getElementById('form');
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const btn = document.getElementById('loginBtn'); btn.disabled = true;
-    try{
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const { error } = await window.supabase.auth.signInWithPassword({ email, password });
-      if(error) throw error;
-      const { data:{ user } } = await window.supabase.auth.getUser();
-      if(!app.isEmailConfirmed(user)){
-        await window.supabase.auth.signOut();
-        ui.toast('Please verify your email from the confirmation link before signing in.','error');
-        return;
-      }
-      await app.upsertProfile({ user_id:user.id, role:'candidate' });
-      location.href = '/dashboard.html';
-    }catch(err){ ui.toast(err.message || 'Sign-in failed','error'); }
-    finally{ btn.disabled = false; }
-  });
+  <main>
+    <div class="card">
+      <h1>Sign in</h1>
+      <p style="color:var(--muted);margin:0 0 12px">Use your email and password to continue.</p>
+      <form id="loginForm">
+        <input type="email" placeholder="Email" required />
+        <input type="password" placeholder="Password" required />
+        <div class="row">
+          <button class="btn" type="submit">Next</button>
+          <a href="/register-candidate.html" style="align-self:center">New here? Create an account.</a>
+        </div>
+        <div style="margin-top:-6px"><a id="forgotLink" href="#forgot">Forgot password?</a></div>
+      </form>
+    </div>
+  </main>
 
-  document.getElementById('fp').addEventListener('click', async (e)=>{
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    if(!email) return ui.toast('Enter your email above first.','error');
-    const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: location.origin + '/post-auth.html'
+  <!-- Required order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script defer src="/config.js?v=1"></script>
+  <script defer src="/components.js?v=23"></script>
+
+  <script>
+    // optional: wire forgot password link using supabase, after config/components load
+    window.addEventListener('DOMContentLoaded', () => {
+      const link = document.getElementById('forgotLink');
+      const form = document.getElementById('loginForm');
+      link?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = form?.querySelector('input[type="email"]')?.value?.trim();
+        if (!email) { alert('Enter your email above, then click “Forgot password?”.'); return; }
+        try{
+          const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: location.origin + '/post-auth.html#reset',
+          });
+          if (error) throw error;
+          alert('Password reset link sent if the email exists.');
+        }catch(err){ alert(err.message || 'Could not start reset'); }
+      });
     });
-    if(error) ui.toast(error.message,'error'); else ui.toast('Reset link sent. Check your email.','success');
-  });
-</script>
-</body></html>
+  </script>
+</body>
+</html>
